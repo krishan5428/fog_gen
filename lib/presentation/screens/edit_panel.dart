@@ -1,6 +1,8 @@
 import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fire_nex/presentation/screens/panel_details.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
 import 'package:fire_nex/utils/navigation.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -161,22 +163,19 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
 
                                     // show snackbar
                                     if (mounted) {
-                                      ScaffoldMessenger.of(
+                                      SnackBarHelper.showSnackBar(
                                         context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Panel updated successfully",
-                                          ),
-                                          duration: Duration(seconds: 2),
-                                        ),
+                                        'Panel updated successfully',
                                       );
-
-                                      // wait a bit so user sees snackbar
                                       await Future.delayed(
                                         const Duration(milliseconds: 500),
                                       );
-                                      CustomNavigation.instance.pop(context);
+                                      CustomNavigation.instance.pushReplace(
+                                        context: context,
+                                        screen: PanelDetailsScreen(
+                                          panelData: panel,
+                                        ),
+                                      );
                                     }
                                   }
                                 }

@@ -16,7 +16,7 @@ Future<bool?> showAddNumberBottomSheet(
   required List<String> existingNumbers,
 }) async {
   final TextEditingController newIntNumber = TextEditingController();
-  String? errorText; // for showing error inside the bottom sheet
+  String? errorText;
 
   return showModalBottomSheet<bool>(
     context: parent,
@@ -161,7 +161,7 @@ Future<bool?> showAddNumberBottomSheet(
                               if (message.isNotEmpty &&
                                   panel.panelSimNumber.trim().isNotEmpty) {
                                 debugPrint('sms executed');
-                                await sendSmsSilently(
+                                await sendSms(
                                   panel.panelSimNumber,
                                   message,
                                 );

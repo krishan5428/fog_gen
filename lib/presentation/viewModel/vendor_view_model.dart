@@ -34,4 +34,20 @@ class VendorViewModel {
   Future<VendorData?> getVendorByUserId(int userId) {
     return _vendorRepository.getVendorByUserId(userId);
   }
+
+  Future<void> updateVendorName(int userId, String newName) {
+    return _vendorRepository.updateVendorName(userId, newName);
+  }
+
+  Future<void> updateVendorMobile(int userId, String newMobile) {
+    return _vendorRepository.updateVendorMobile(userId, newMobile);
+  }
+
+  Future<void> updateVendorEmailId(int userId, String newEmail) {
+    return _vendorRepository.updateVendorEmail(userId, newEmail);
+  }
+
+  Future<void> deleteVendor(int userId) async {
+    await _vendorRepository.deleteVendor(userId);
+  }
 }

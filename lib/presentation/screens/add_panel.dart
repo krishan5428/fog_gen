@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
@@ -30,11 +32,13 @@ class _AddPanelPageState extends State<AddPanelPage> {
   late final PanelFormControllers formControllers;
   int _currentStep = 0;
   final List<Map<String, dynamic>> _steps = [];
+  // String? device;
 
   @override
   void initState() {
     super.initState();
     formControllers = PanelFormControllers();
+    // getDevice();
 
     if (widget.panelType == 'FIRE PANEL') {
       panelNames.addAll([
@@ -92,13 +96,26 @@ class _AddPanelPageState extends State<AddPanelPage> {
     });
   }
 
-  Future<void> _goToNext() async {
-    final step = _steps[_currentStep];
+  // void getDevice() async {
+  //   device = await SharedPreferenceHelper.getDeviceType();
+  // }
 
+  Future<void> _goToNext() async {
+    final panelVM = context.read<PanelViewModel>();
+    final siteSimList = panelVM.sitePanelInfoList;
+
+    debugPrint("Site + SIM list:");
+    for (var info in siteSimList) {
+      debugPrint("- Site: ${info.siteName}, SIM: ${info.panelSimNumber}");
+    }
+
+    final step = _steps[_currentStep];
+    _trackSteps("validating", _currentStep);
+
+    // --- Validation logic ---
     if (step['type'] == 'dropdown') {
       if (selectedPanelName == null) {
         SnackBarHelper.showSnackBar(context, 'Please select a Panel Category');
-
         return;
       }
     } else {
@@ -108,8 +125,21 @@ class _AddPanelPageState extends State<AddPanelPage> {
 
       if (value.isEmpty) {
         SnackBarHelper.showSnackBar(context, 'Please fill in $label');
-
         return;
+      }
+
+      if (label == 'Site Name') {
+        final newSite = value.toLowerCase().trim();
+
+        // Check if the site already exists
+        final siteExists = siteSimList.any(
+          (info) => info.siteName.toLowerCase() == newSite,
+        );
+
+        if (siteExists) {
+          SnackBarHelper.showSnackBar(context, 'This Site Name already exists');
+          return; // stop moving to next step
+        }
       }
 
       if (label == 'Panel Sim Number') {
@@ -117,6 +147,19 @@ class _AddPanelPageState extends State<AddPanelPage> {
           SnackBarHelper.showSnackBar(
             context,
             'Panel Sim Number must be 10 or 13 digits',
+          );
+          return;
+        }
+
+        final newPanelSimNumber = value.trim();
+        final numberExists = siteSimList.any(
+          (info) => info.panelSimNumber == newPanelSimNumber,
+        );
+
+        if (numberExists) {
+          SnackBarHelper.showSnackBar(
+            context,
+            'This Panel Sim Number already exists',
           );
           return;
         }
@@ -142,18 +185,86 @@ class _AddPanelPageState extends State<AddPanelPage> {
       }
     }
 
+    if (step['label'] == 'Admin Sim Number' &&
+        formControllers.adminNumberController.text.trim().isNotEmpty) {
+      final adminNumber = formControllers.adminNumberController.text.trim();
+      final panelSimNumber =
+          formControllers.panelSimNumberController.text.trim();
+      var message = '';
+
+      if (fourGComPanels.contains(selectedPanelName)) {
+        message = 'SECURICO 1234 ADD ADMIN +91-$adminNumber END';
+      } else if (neuronPanels.contains(selectedPanelName)) {
+        message = '''
+< 1234 TEL NO
+#01-+91$adminNumber*
+#02-+910000000000*
+#03-+910000000000*
+#04-+910000000000*
+#05-+910000000000*
+>
+''';
+      } else {
+        message = 'null';
+      }
+
+      final result = await showConfirmationDialog(
+        context: context,
+        message: 'Sending your 1st message to the Panel, to add Admin Number!',
+        cancelText: "",
+        confirmText: "SEND SMS",
+        title: 'Setting Panel',
+      );
+      if (result == true) {
+        await sendSms(panelSimNumber, message);
+      }
+    }
+
+    if (step['label'] == 'Address' &&
+        formControllers.addressController.text.trim().isNotEmpty) {
+      final address = formControllers.addressController.text.trim();
+      final panelSimNumber =
+          formControllers.panelSimNumberController.text.trim();
+      var message = '';
+
+      if (fourGComPanels.contains(selectedPanelName)) {
+        message = 'SECURICO 1234 ADD SIGNATURE $address* END';
+      } else if (neuronPanels.contains(selectedPanelName)) {
+        message = '< 1234 SIGNATURE $address* >';
+      } else {
+        message = 'null';
+      }
+
+      final result = await showConfirmationDialog(
+        context: context,
+        message: 'Sending your 2nd message to the Panel, to add Address!',
+        cancelText: "",
+        confirmText: "SEND SMS",
+        title: 'Setting Panel',
+      );
+      if (result == true) {
+        await sendSms(panelSimNumber, message);
+      }
+    }
+
+    // --- Move to next step ---
     if (_currentStep < _steps.length - 1) {
       setState(() {
         _currentStep++;
+        _trackSteps("moved_to", _currentStep);
       });
     } else {
+      _trackSteps("final_confirmation", _currentStep, selectedPanelName);
       final confirmed = await showConfirmationDialog(
         context: context,
         message: 'Do you want to add panel named $selectedPanelName?',
       );
 
       if (confirmed == true) {
+        _trackSteps("confirm_submit", _currentStep);
         _addPanelToDB();
+      } else {
+        _trackSteps("cancelled_submit", _currentStep);
       }
     }
   }
@@ -180,9 +291,9 @@ class _AddPanelPageState extends State<AddPanelPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2));
-      await sendSmsSilently(panelSimNumber, message1);
+      await sendSms(panelSimNumber, message1);
       await Future.delayed(const Duration(seconds: 2));
-      await sendSmsSilently(panelSimNumber, message2);
+      await sendSms(panelSimNumber, message2);
 
       ProgressDialog.dismiss(context);
       SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
@@ -216,9 +327,9 @@ class _AddPanelPageState extends State<AddPanelPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2));
-      await sendSmsSilently(panelSimNumber, message1);
+      await sendSms(panelSimNumber, message1);
       await Future.delayed(const Duration(seconds: 2));
-      await sendSmsSilently(panelSimNumber, message2);
+      await sendSms(panelSimNumber, message2);
 
       ProgressDialog.dismiss(context);
       SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
@@ -245,13 +356,13 @@ class _AddPanelPageState extends State<AddPanelPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2));
-      await sendSmsSilently(panelSimNumber, message1);
+      await sendSms(panelSimNumber, message1);
 
       await Future.delayed(const Duration(milliseconds: 3500));
-      await sendSmsSilently(panelSimNumber, message2);
+      await sendSms(panelSimNumber, message2);
 
       await Future.delayed(const Duration(milliseconds: 5500));
-      await sendSmsSilently(panelSimNumber, message3);
+      await sendSms(panelSimNumber, message3);
 
       ProgressDialog.dismiss(context);
       SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
@@ -283,7 +394,7 @@ class _AddPanelPageState extends State<AddPanelPage> {
     debugPrint('Address: $address');
     debugPrint('User ID: $userId');
 
-    final result = await panelViewModel.insertPanel(
+    await panelViewModel.insertPanel(
       widget.panelType,
       selectedPanelName!,
       panelSimNumber,
@@ -294,25 +405,39 @@ class _AddPanelPageState extends State<AddPanelPage> {
       userId!,
     );
 
-    if (!mounted) return;
+    // if (device == 'ANDROID') {
+    //   _performAddPanel();
+    // } else {
+    SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+    CustomNavigation.instance.pushReplace(
+      context: context,
+      screen: PanelListPage(),
+    );
+    // }
 
-    switch (result) {
-      case InsertPanelResult.success:
-        _performAddPanel();
-        break;
-      case InsertPanelResult.simNumberExists:
-        SnackBarHelper.showSnackBar(
-          context,
-          'Panel Sim Number already exists!',
-        );
-        break;
-      case InsertPanelResult.siteNameExists:
-        SnackBarHelper.showSnackBar(context, 'Site Name already exists!');
-        break;
-      case InsertPanelResult.failure:
-        SnackBarHelper.showSnackBar(context, 'Something went wrong!');
-        break;
-    }
+    // switch (result) {
+    //   case InsertPanelResult.success:
+    //     _performAddPanel();
+    //     break;
+    //   case InsertPanelResult.simNumberExists:
+    //     SnackBarHelper.showSnackBar(
+    //       context,
+    //       'Panel Sim Number already exists!',
+    //     );
+    //     break;
+    //   case InsertPanelResult.siteNameExists:
+    //     SnackBarHelper.showSnackBar(context, 'Site Name already exists!');
+    //     break;
+    //   case InsertPanelResult.failure:
+    //     SnackBarHelper.showSnackBar(context, 'Something went wrong!');
+    //     break;
+    // }
+  }
+
+  @override
+  void dispose() {
+    formControllers.dispose();
+    super.dispose();
   }
 
   void _goToPreviousStep() {
@@ -321,6 +446,19 @@ class _AddPanelPageState extends State<AddPanelPage> {
         _currentStep--;
       });
     }
+  }
+
+  void _trackSteps(String action, int stepIndex, [String? extra]) {
+    developer.log(
+      "STEP TRACKING",
+      name: "ADD PANEL PAGE",
+      error: {
+        "action": action,
+        "step": stepIndex,
+        "label": _steps[stepIndex]['label'],
+        "extra": extra,
+      },
+    );
   }
 
   @override
@@ -410,7 +548,7 @@ class _AddPanelPageState extends State<AddPanelPage> {
                       )
                       : FormSection(
                         label: currentStepData['label'],
-                        keyboardType: currentStepData['keyboardType'],
+                        // keyboardType: currentStepData['keyboardType'],
                         controller: currentStepData['controller'],
                         maxLength: currentStepData['maxLength'],
                       ),

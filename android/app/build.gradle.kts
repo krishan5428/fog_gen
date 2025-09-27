@@ -4,7 +4,6 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -16,9 +15,9 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.securico.fire_nex"
+    namespace = "com.securicoelectronics.firenexv2"
     compileSdk = 36
-    ndkVersion = "27.0.12077973" // Required for some plugins
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -30,8 +29,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.securico.fire_nex"
-        minSdk = 23 // must be >= 23 for telephony and others
+        applicationId = "com.securicoelectronics.firenexv2"
+        minSdk = flutter.minSdkVersion // must be >= 23 for telephony and others
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

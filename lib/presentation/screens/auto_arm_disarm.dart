@@ -122,7 +122,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
 
       if (autoArmTime != null && autoArmTime.isNotEmpty) {
         await Future.delayed(const Duration(milliseconds: 500));
-        sendSmsSilently(
+        sendSms(
           widget.panelSimNumber,
           "$adminCode AUTO ARM #$autoArmTime* DIS END",
         );
@@ -157,7 +157,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
 
       if (autoDisarmTime != null && autoDisarmTime.isNotEmpty) {
         await Future.delayed(const Duration(milliseconds: 500));
-        sendSmsSilently(
+        sendSms(
           widget.panelSimNumber,
           "$adminCode AUTO ARM #$autoDisarmTime* DIS END",
         );
@@ -211,7 +211,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
 
       if (holiday != null && holiday.isNotEmpty) {
         await Future.delayed(const Duration(milliseconds: 500));
-        sendSmsSilently(
+        sendSms(
           widget.panelSimNumber,
           "$adminCode SET HOLIDAY #$holiday* DIS END",
         );
@@ -300,7 +300,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
 
     if (result == true) {
       await _automationViewModel.addHolidayTime(widget.panelSimNumber, time);
-      sendSmsSilently(
+      sendSms(
         widget.panelSimNumber,
         "$adminCode SET HOLIDAY #${time.substring(0, 3)}*  END",
       );
@@ -328,7 +328,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
 
     if (confirmed == true) {
       await _automationViewModel.addAutoArmTime(widget.panelSimNumber, time);
-      sendSmsSilently(
+      sendSms(
         widget.panelSimNumber,
         "$adminCode AUTO ARM #$time* ENA END",
       );
@@ -353,7 +353,7 @@ class _AutomationPageState extends State<AutoArmDisarmPage> {
     if (adminCode == null) return showSnackBar("Admin code not available");
 
     await _automationViewModel.addAutoDisarmTime(widget.panelSimNumber, time);
-    sendSmsSilently(
+    sendSms(
       widget.panelSimNumber,
       "$adminCode AUTO DISARM #$time*  END",
     );

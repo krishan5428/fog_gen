@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateAfterDelay() async {
     print('Waiting...');
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     print("Checking login state...");
     bool isLoggedIn = await SharedPreferenceHelper.getLoginState();
@@ -95,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
           ),
           Positioned(
-            bottom: 10,
+            bottom: 20,
             left: 0,
             right: 0,
             child: Row(

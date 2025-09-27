@@ -160,9 +160,9 @@ class AddNumberSolitarePage extends StatelessWidget {
           } else {
             message = "";
           }
-          await sendSmsSilently(panel.panelSimNumber, message);
+          await sendSms(panel.panelSimNumber, message);
         } else {
-          await sendSmsSilently(
+          await sendSms(
             panel.panelSimNumber,
             'SECURICO 1234 REMOVE USER0$index END',
           );

@@ -1,0 +1,137 @@
+import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
+import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class VendorUpdateBottomSheetDialog extends StatefulWidget {
+  final int userId;
+  final String formKey; // "name", "mobile", "password", "email"
+  final String? currentValue;
+
+  const VendorUpdateBottomSheetDialog({
+    super.key,
+    required this.userId,
+    required this.formKey,
+    this.currentValue,
+  });
+
+  @override
+  State<VendorUpdateBottomSheetDialog> createState() =>
+      _VendorUpdateBottomSheetDialogState();
+}
+
+class _VendorUpdateBottomSheetDialogState
+    extends State<VendorUpdateBottomSheetDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _controller = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.formKey != "password") {
+      _controller.text = widget.currentValue ?? "";
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final vendorViewModel = context.read<VendorViewModel>();
+    setState(() => _loading = true);
+
+    try {
+      switch (widget.formKey) {
+        case "name":
+          await vendorViewModel.updateVendorName(widget.userId, _controller.text);
+          break;
+        case "mobile":
+          await vendorViewModel.updateVendorMobile(widget.userId, _controller.text);
+          break;
+        case "email":
+          await vendorViewModel.updateVendorEmailId(widget.userId, _controller.text);
+          break;
+      }
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "${widget.formKey.toUpperCase()} updated successfully",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update ${widget.formKey}")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Update ${widget.formKey.toUpperCase()}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.colorPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _controller,
+                  obscureText: widget.formKey == "password",
+                  decoration: InputDecoration(
+                    labelText: "Enter ${widget.formKey}",
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please enter ${widget.formKey}";
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _loading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.colorPrimary,
+                        foregroundColor: AppColors.white,
+                      ),
+                      onPressed: _save,
+                      child: const Text("Save"),
+                    ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,3 +1,4 @@
+import 'package:fire_nex/data/database/app_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/utils/silent_sms.dart';
 
@@ -11,138 +12,162 @@ import '../widgets/vertical_gap.dart';
 
 void showChangeAddressBottomSheet(
   BuildContext context,
-  String adminCode,
-  String panelSimNumber,
-  String panelName,
+  PanelData panelData,
   PanelViewModel viewModel,
 ) {
   final TextEditingController newAddressController = TextEditingController();
+  String? errorText;
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    // for full height when keyboard opens
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10),
-              Center(
-                child: Container(
-                  height: 4,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Update Address",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.colorPrimary,
-                ),
-              ),
-              VerticalSpace(height: 20),
-              FormSection(
-                label: 'New Address',
-                controller: newAddressController,
-                keyboardType: TextInputType.number,
-                maxLength: 40,
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? 'Enter valid address'
-                            : null,
-              ),
-              VerticalSpace(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(color: AppColors.colorAccent),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Container(
+                      height: 4,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.colorPrimary,
-                      foregroundColor: AppColors.white,
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Update Address",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.colorPrimary,
                     ),
-                    onPressed: () async {
-                      final newAddress = newAddressController.text.trim();
+                  ),
+                  VerticalSpace(height: 20),
+                  FormSection(
+                    label: 'New Address',
+                    controller: newAddressController,
+                    keyboardType: TextInputType.text,
+                    maxLength: 40,
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Enter valid address'
+                                : null,
+                  ),
+                  if (errorText != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        errorText!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: AppColors.colorAccent),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.colorPrimary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        onPressed: () async {
+                          final newAddress = newAddressController.text.trim();
 
-                      final result = await showConfirmationDialog(
-                        context: context,
-                        message: 'Do you want to update Address?',
-                        cancelText: 'No',
-                        confirmText: 'Yes',
-                      );
+                          if (newAddress.isEmpty) {
+                            setState(() {
+                              errorText = 'Address Field must be filled!';
+                            });
+                            return;
+                          }
 
-                      if (result == true) {
-                        final message = getAddressMessage(
-                          newAddress: newAddress,
-                          panelName: panelName,
-                        );
+                          final result = await showConfirmationDialog(
+                            context: context,
+                            message: 'Do you want to update Address?',
+                            cancelText: 'No',
+                            confirmText: 'Yes',
+                          );
 
-                        sendSmsSilently(panelSimNumber, message);
+                          if (result == true) {
+                            final message = getAddressMessage(
+                              newAddress: newAddress,
+                              panelName: panelData.panelName,
+                            );
 
-                        print("Generated Panel Command: $message");
+                            sendSms(panelData.panelSimNumber, message);
 
-                        final success = await viewModel.updateAddress(
-                          panelSimNumber,
-                          newAddress,
-                        );
+                            print("Generated Panel Command: $message");
 
-                        if (success) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => PanelDetailsScreen(
-                                    panelSimNumber: panelSimNumber,
+                            final success = await viewModel.updateAddress(
+                              panelData.panelSimNumber,
+                              newAddress,
+                            );
+
+                            if (success) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => PanelDetailsScreen(
+                                        panelData: panelData,
+                                      ),
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Address updated successfully',
                                   ),
-                            ),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Admin code updated successfully'),
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to update admin code'),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    child: const Text("Submit"),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Failed to update admin code'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: const Text("Submit"),
+                      ),
+                    ],
                   ),
+                  VerticalSpace(height: 10),
                 ],
               ),
-              VerticalSpace(height: 10),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     },
   );

@@ -28,4 +28,22 @@ class VendorRepository {
   Future<VendorData?> getVendorByUserId(int userId) {
     return _db.vendorDao.getVendorByUserId(userId);
   }
+
+
+  // update
+  Future<void> updateVendorName(int userId, String newName) {
+    return _db.vendorDao.updateVendorName(userId, newName);
+  }
+
+  Future<void> updateVendorMobile(int userId, String newMobile) {
+    return _db.vendorDao.updateVendorMobile(userId, newMobile);
+  }
+
+  Future<void> updateVendorEmail(int userId, String newEmail) {
+    return _db.vendorDao.updateVendorEmail(userId, newEmail);
+  }
+
+  Future<void> deleteVendor(int userId) async {
+    await _db.vendorDao.deleteVendor(userId);
+  }
 }

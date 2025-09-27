@@ -7,6 +7,7 @@ import 'package:fire_nex/presentation/screens/edit_panel.dart';
 import 'package:fire_nex/presentation/screens/more_settings.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
+import 'package:fire_nex/utils/navigation.dart';
 import 'package:fire_nex/utils/silent_sms.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,9 +18,52 @@ import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
 
-class PanelDetailsScreen extends StatelessWidget {
-  final String panelSimNumber;
-  const PanelDetailsScreen({super.key, required this.panelSimNumber});
+class PanelDetailsScreen extends StatefulWidget {
+  final PanelData panelData;
+  const PanelDetailsScreen({super.key, required this.panelData});
+
+  @override
+  State<PanelDetailsScreen> createState() => _PanelDetailsScreenState();
+
+  static Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+          const Text(" : ", style: TextStyle(fontSize: 14)),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: AppColors.colorPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final panel = widget.panelData;
+    context.read<PanelViewModel>().setCurrentPanel(panel);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +83,7 @@ class PanelDetailsScreen extends StatelessWidget {
         if (confirmDelete == true) {
           final viewModel = context.read<PanelViewModel>();
           final panel = await viewModel.getPanelByPanelSimNumber(
-            panelSimNumber,
+            widget.panelData.panelSimNumber,
           );
 
           if (panel != null) {
@@ -69,22 +113,19 @@ class PanelDetailsScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: FutureBuilder<PanelData?>(
         future: context.read<PanelViewModel>().getPanelByPanelSimNumber(
-          panelSimNumber,
+          widget.panelData.panelSimNumber,
         ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData) {
-            return const Center(child: Text('Panel details not found!'));
-          }
+          final panel = snapshot.data ?? widget.panelData;
 
-          final panel = snapshot.data!;
           // Store into provider
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.read<PanelViewModel>().setCurrentPanel(panel);
-          });
+          // WidgetsBinding.instance.addPostFrameCallback((_) {
+          //   context.read<PanelViewModel>().setCurrentPanel(panel);
+          // });
           return Stack(
             children: [
               SingleChildScrollView(
@@ -122,19 +163,29 @@ class PanelDetailsScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           const SizedBox(height: 10),
-                          _infoRow("PANEL NAME", panel.panelName),
-                          _infoRow("SITE NAME", panel.siteName),
-                          _infoRow("PANEL SIM NO.", panel.panelSimNumber),
-                          _infoRow("ADMIN MOBILE NO.", panel.adminMobileNumber),
-                          _infoRow("ADDRESS", panel.address),
+                          PanelDetailsScreen._infoRow(
+                            "PANEL NAME",
+                            panel.panelName,
+                          ),
+                          PanelDetailsScreen._infoRow(
+                            "SITE NAME",
+                            panel.siteName,
+                          ),
+                          PanelDetailsScreen._infoRow(
+                            "PANEL SIM NO.",
+                            panel.panelSimNumber,
+                          ),
+                          PanelDetailsScreen._infoRow(
+                            "ADMIN MOBILE NO.",
+                            panel.adminMobileNumber,
+                          ),
+                          PanelDetailsScreen._infoRow("ADDRESS", panel.address),
                           const SizedBox(height: 30),
                           CustomButton(
                             onPressed:
                                 () => showChangeAddressBottomSheet(
                                   context,
-                                  panel.adminCode,
-                                  panel.panelSimNumber,
-                                  panel.panelName,
+                                  widget.panelData,
                                   context.read<PanelViewModel>(),
                                 ),
                             buttonText: "Update Address",
@@ -166,7 +217,7 @@ class PanelDetailsScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: CustomButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => CustomNavigation.instance.pop(context),
                                   buttonText: "BACK",
                                   backgroundColor: AppColors.litePrimary,
                                   foregroundColor: AppColors.colorPrimary,
@@ -176,12 +227,11 @@ class PanelDetailsScreen extends StatelessWidget {
                               Expanded(
                                 child: CustomButton(
                                   onPressed:
-                                      () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => EditPanelScreen(),
-                                        ),
-                                      ),
+                                      () =>
+                                          CustomNavigation.instance.pushReplace(
+                                            context: context,
+                                            screen: EditPanelScreen(),
+                                          ),
                                   buttonText: "EDIT",
                                 ),
                               ),
@@ -233,37 +283,6 @@ class PanelDetailsScreen extends StatelessWidget {
     );
   }
 
-  static Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-          ),
-          const Text(" : ", style: TextStyle(fontSize: 14)),
-          Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.colorPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _performDeleteActionWithDialog(
     BuildContext context,
     PanelData panelData,
@@ -291,13 +310,13 @@ class PanelDetailsScreen extends StatelessWidget {
       ];
 
       for (final msg in messages) {
-        await sendSmsSilently(simNumber, msg);
-        await Future.delayed(const Duration(seconds: 3)); // spacing
+        await sendSms(simNumber, msg);
+        await Future.delayed(const Duration(seconds: 3));
       }
     } else if (neuronPanels.contains(panelName)) {
-      await sendSmsSilently(simNumber, "< 1234 CLEAR TEL >");
+      await sendSms(simNumber, "< 1234 CLEAR TEL >");
       await Future.delayed(const Duration(seconds: 3));
-      await sendSmsSilently(
+      await sendSms(
         simNumber,
         "< 1234 SIGNATURE ADD SIGNATURE FOR THIS PANEL* >",
       );
@@ -313,7 +332,7 @@ class PanelDetailsScreen extends StatelessWidget {
         context: context,
         message: "Your panel has been reset with the default configurations.",
       );
-      backPage(); // ✅ return to previous screen after success
+      backPage();
     } else {
       showInfoDialog(context: context, message: "Failed to delete the panel.");
     }

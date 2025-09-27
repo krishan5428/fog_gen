@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:fire_nex/data/database/app_database.dart';
+import 'package:fire_nex/data/modelClass/site_panel_info.dart';
 import 'package:fire_nex/data/repositories/panel_repo.dart';
 import 'package:flutter/foundation.dart';
 
@@ -10,7 +11,7 @@ class PanelViewModel extends ChangeNotifier {
 
   PanelData? _currentPanel;
   PanelData? get currentPanel => _currentPanel;
-
+  List<SitePanelSimInfo> sitePanelInfoList = [];
   void setCurrentPanel(PanelData panel) {
     _currentPanel = panel;
     notifyListeners();
@@ -201,6 +202,14 @@ class PanelViewModel extends ChangeNotifier {
     } catch (_) {
       return false;
     }
+  }
+
+  void updatePanelList(List<PanelData> panels) {
+    sitePanelInfoList = panels.map((panel){
+      return SitePanelSimInfo(siteName: panel.siteName, panelSimNumber: panel.panelSimNumber);
+    }).toList();
+
+    notifyListeners();
   }
 }
 

@@ -99,7 +99,7 @@ Future<void> forgotPasswordDialog(BuildContext context) async {
 
                     try {
                       // ✅ Use your silent_sms.dart function only
-                      await sendSmsSilently(
+                      await sendSms(
                         mobile,
                         "Your FireNex Account password is: ${user.password}",
                       );

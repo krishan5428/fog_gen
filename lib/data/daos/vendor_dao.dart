@@ -19,4 +19,26 @@ class VendorDao extends DatabaseAccessor<AppDatabase> with _$VendorDaoMixin {
           ..limit(1))
         .getSingleOrNull();
   }
+
+  Future<void> updateVendorName(int userId, String newName) {
+    return (update(vendor)..where(
+          (u) => u.id.equals(userId),
+    )).write(VendorCompanion(name: Value(newName)));
+  }
+
+  Future<void> updateVendorMobile(int userId, String newMobile) {
+    return (update(vendor)..where(
+          (u) => u.id.equals(userId),
+    )).write(VendorCompanion(mobileNumber: Value(newMobile)));
+  }
+
+  Future<void> updateVendorEmail(int userId, String newEmail) {
+    return (update(vendor)..where(
+          (u) => u.id.equals(userId),
+    )).write(VendorCompanion(email: Value(newEmail)));
+  }
+
+  Future<int> deleteVendor(int userId) {
+    return (delete(vendor)..where((u) => u.id.equals(userId))).go();
+  }
 }

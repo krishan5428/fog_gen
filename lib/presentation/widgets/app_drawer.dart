@@ -47,7 +47,7 @@ class _AddDrawerState extends State<AppDrawer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
-                    'assets/images/logo.png',
+                    'assets/images/sec_logo.png',
                     width: spacingBwtView * 15,
                   ),
                 ],
@@ -205,7 +205,7 @@ class _AddDrawerState extends State<AppDrawer> {
       leading: Icon(icon, color: Colors.grey.shade800, size: fontSize * 1.2),
       title: Text(
         text,
-        style: TextStyle(color: Colors.grey.shade800, fontSize: fontSize),
+        style: TextStyle(color: Colors.grey.shade800, fontSize: fontSize, fontWeight: FontWeight.w600),
       ),
       onTap: onTap,
     );

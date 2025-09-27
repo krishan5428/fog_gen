@@ -1,7 +1,6 @@
 import 'package:fire_nex/presentation/screens/alert_module.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
 

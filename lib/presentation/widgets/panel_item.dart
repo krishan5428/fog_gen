@@ -60,7 +60,7 @@ class PanelCard extends StatelessWidget {
                       CustomNavigation.instance.push(
                         context: context,
                         screen: PanelDetailsScreen(
-                          panelSimNumber: panelData.panelSimNumber,
+                          panelData: panelData,
                         ),
                       );
                     },
@@ -173,7 +173,7 @@ class PanelCard extends StatelessWidget {
     required int outputNumber,
     required String title,
     required String confirmationMessage,
-    int delaySeconds = 5,
+    int delaySeconds = 10,
   }) async {
     final confirm = await showConfirmationDialog(
       context: context,
@@ -186,10 +186,10 @@ class PanelCard extends StatelessWidget {
       final onMessage = "< 1234 OUTPUT $outputNumber ON >";
       final offMessage = "< 1234 OUTPUT $outputNumber OFF >";
 
-      sendSmsSilently(simNumber, onMessage);
+      sendSms(simNumber, onMessage);
 
       Future.delayed(Duration(seconds: delaySeconds), () {
-        sendSmsSilently(simNumber, offMessage);
+        sendSms(simNumber, offMessage);
       });
     }
   }

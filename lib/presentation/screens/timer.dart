@@ -73,7 +73,7 @@ class _TimerPageState extends State<TimerPage> {
       await loadTimers();
 
       String message = "$adminCode ENTRY TIME #${time.padLeft(3, '0')}*  END";
-      sendSmsSilently(widget.panelSimNumber, message);
+      sendSms(widget.panelSimNumber, message);
       showSnackBar("Entry time added successfully");
     } else {
       showSnackBar("Entry time cancelled");
@@ -91,7 +91,7 @@ class _TimerPageState extends State<TimerPage> {
       await loadTimers();
 
       String message = "$adminCode EXIT TIME #${time.padLeft(3, '0')}*  END";
-      sendSmsSilently(widget.panelSimNumber, message);
+      sendSms(widget.panelSimNumber, message);
 
       showSnackBar("Exit time added successfully");
     } else {
@@ -110,7 +110,7 @@ class _TimerPageState extends State<TimerPage> {
       await loadTimers();
 
       String message = "$adminCode SOUNDER TIME #${time.padLeft(2, '0')}*  END";
-      sendSmsSilently(widget.panelSimNumber, message);
+      sendSms(widget.panelSimNumber, message);
 
       showSnackBar("Sounder time added successfully");
     } else {

@@ -39,6 +39,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      // final device = getDeviceType();
+
       if (mobile == "9899446573" && password == "123456") {
         final dummyUserId = 999999;
 

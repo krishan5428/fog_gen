@@ -49,7 +49,7 @@ class CustomButton extends StatelessWidget {
                     Text(
                       buttonText.toUpperCase(),
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         fontSize: buttonTextSize,
                       ),
                     ),

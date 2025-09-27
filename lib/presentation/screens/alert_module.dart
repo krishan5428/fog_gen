@@ -50,7 +50,7 @@ class AlertModulePage extends StatelessWidget {
                 );
 
                 if (confirm == true) {
-                  await sendSmsSilently(
+                  await sendSms(
                     panel.panelSimNumber,
                     'SECURICO 1234 VIEW USERS END',
                   );

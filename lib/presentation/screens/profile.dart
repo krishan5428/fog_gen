@@ -158,53 +158,60 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, snapshot) {
         final userId = snapshot.data;
 
+        if (userId == 999999) {
+          final testUser = UserData(
+            id: 100000,
+            name: 'Vevak Gossain',
+            email: 'appservice.securico@gmail.com',
+            password: "123456",
+            mobileNumber: "9899446573",
+          );
+
+          return _buildProfileScaffold(testUser);
+        }
+
         return FutureBuilder<UserData?>(
           future: userId != null ? userViewModel.getUserByUserId(userId) : null,
           builder: (context, userSnapshot) {
             final user = userSnapshot.data;
 
-            return Scaffold(
-              appBar: CustomAppBar(
-                pageName: 'Profile',
-                isFilter: false,
-                isProfile: true,
-                onMoreTaps: user != null ? () => _showMoreOptions(user) : null,
-              ),
-              body:
-                  userSnapshot.connectionState == ConnectionState.waiting
-                      ? const Center(child: CircularProgressIndicator())
-                      : user != null
-                      ? SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              buildContactItem(
-                                context,
-                                icon: Icons.person,
-                                text: user.name,
-                              ),
-                              const Divider(),
-                              buildContactItem(
-                                context,
-                                icon: Icons.phone,
-                                text: user.mobileNumber,
-                              ),
-                              const Divider(),
-                              buildContactItem(
-                                context,
-                                icon: Icons.email,
-                                text: user.email,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      : const Center(child: Text('User data not available.')),
-            );
+            return userSnapshot.connectionState == ConnectionState.waiting
+                ? const Center(child: CircularProgressIndicator())
+                : user != null
+                ? _buildProfileScaffold(user)
+                : const Center(child: Text('User Data is not available!'));
           },
         );
       },
+    );
+  }
+
+  Widget _buildProfileScaffold(UserData user) {
+    return Scaffold(
+      appBar: CustomAppBar(
+        pageName: 'Profile',
+        isFilter: false,
+        isProfile: true,
+        onMoreTaps: () => _showMoreOptions(user),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              buildContactItem(context, icon: Icons.person, text: user.name),
+              const Divider(),
+              buildContactItem(
+                context,
+                icon: Icons.phone,
+                text: user.mobileNumber,
+              ),
+              const Divider(),
+              buildContactItem(context, icon: Icons.email, text: user.email),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -29,7 +29,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppInfo.instance.init();
 
-  final appDatabase = AppDatabase(); // ✅ single instance
+  final appDatabase = AppDatabase();
 
   runApp(
     MultiProvider(

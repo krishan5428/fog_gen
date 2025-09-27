@@ -63,7 +63,7 @@ class PlayRecoModulePage extends StatelessWidget {
                       try {
                         await Future.delayed(const Duration(seconds: 2));
                         await Future(
-                          () => sendSmsSilently(panelSimNumber, message1),
+                          () => sendSms(panelSimNumber, message1),
                         );
 
                         ProgressDialog.dismiss(context);
@@ -118,7 +118,7 @@ class PlayRecoModulePage extends StatelessWidget {
                       try {
                         await Future.delayed(const Duration(seconds: 2));
                         await Future(
-                          () => sendSmsSilently(panelSimNumber, message1),
+                          () => sendSms(panelSimNumber, message1),
                         );
 
                         ProgressDialog.dismiss(context);
@@ -168,7 +168,7 @@ class PlayRecoModulePage extends StatelessWidget {
                       try {
                         await Future.delayed(const Duration(seconds: 2));
                         await Future(
-                          () => sendSmsSilently(panelSimNumber, message1),
+                          () => sendSms(panelSimNumber, message1),
                         );
 
                         ProgressDialog.dismiss(context);
@@ -221,7 +221,7 @@ class PlayRecoModulePage extends StatelessWidget {
                       try {
                         await Future.delayed(const Duration(seconds: 2));
                         await Future(
-                          () => sendSmsSilently(panelSimNumber, message1),
+                          () => sendSms(panelSimNumber, message1),
                         );
 
                         ProgressDialog.dismiss(context);

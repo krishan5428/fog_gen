@@ -1,15 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.securico.fire_nex">
-
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
-
-    <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    package="com.securicoelectronics.firenexv2">
 
     <application
-        android:label="fire_nex"
+        android:label="FireNex"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

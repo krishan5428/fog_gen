@@ -11,17 +11,18 @@ class SnackBarHelper {
   static void _showSnackBar(BuildContext context, String message) {
     final fontSize = Responsive.fontSize(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: AppColors.white, fontSize: fontSize),
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: TextStyle(color: AppColors.white, fontSize: fontSize),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.colorPrimary,
+          duration: const Duration(seconds: 3),
         ),
-        // backgroundColor: bgColor,
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.colorPrimary,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+      );
   }
 }
