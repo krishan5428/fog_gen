@@ -1,19 +1,13 @@
+import 'package:fire_nex/utils/navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
-import '../../utils/navigation.dart';
+import '../widgets/open_web_page.dart';
 
-Future<bool?> showConfirmationDialog({
-  required BuildContext context,
-  String title = "Confirmation",
-  required String message,
-  String confirmText = "YES",
-  String cancelText = "NO",
-}) {
-  return showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
+void showUrlDialog(BuildContext pContext, String url, String title) {
+  showDialog(
+    context: pContext,
+    builder: (dialogContext) {
       return Dialog(
         backgroundColor: AppColors.lightGrey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -26,40 +20,44 @@ Future<bool?> showConfirmationDialog({
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
-              Text(message, style: const TextStyle(fontSize: 14)),
+              Text(
+                'Choose an action for this link:',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () {
-                      CustomNavigation.instance.popWithResult(
-                        context: context,
-                        result: false,
-                      );
+                      // Clipboard.setData(ClipboardData(text: url));
+                      CustomNavigation.instance.pop(dialogContext);
+                      // SnackBarHelper.showSnackBar(
+                      //   pContext,
+                      //   'Link copied to clipboard',
+                      // );
                     },
-                    child: Text(
-                      cancelText,
+                    child: const Text(
+                      "Cancel",
                       style: TextStyle(color: AppColors.colorPrimary),
                     ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed:
-                        () => CustomNavigation.instance.popWithResult(
-                          context: context,
-                          result: true,
-                        ), // confirm
+                    onPressed: () {
+                      CustomNavigation.instance.pop(dialogContext);
+                      openWebPage(pContext, url);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.colorPrimary,
                       foregroundColor: AppColors.white,
                     ),
-                    child: Text(confirmText),
+                    child: const Text("Open Link"),
                   ),
                 ],
               ),

@@ -1,3 +1,4 @@
+import 'package:fire_nex/utils/navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/presentation/screens/add_panel.dart';
@@ -36,32 +37,27 @@ class PanelTypeDialog extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             _buildCard(
-              imagePath: 'assets/images/fire_panel.png',
+              imagePath: 'assets/images/fire_panels.png',
               title: 'FIRE PANEL',
-              aspectRatio: 8 / 3,
+              aspectRatio: 8 / 4,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddPanelPage(panelType: 'FIRE PANEL'),
-                  ),
+                CustomNavigation.instance.pop(context);
+                CustomNavigation.instance.push(
+                  context: context,
+                  screen: AddPanelPage(panelType: 'FIRE PANEL'),
                 );
               },
             ),
             const SizedBox(height: 10),
             _buildCard(
-              imagePath: 'assets/images/dialers.png',
+              imagePath: 'assets/images/fire_dialers.png',
               title: 'FIRE DIALERS',
-              aspectRatio: 8 / 3,
+              aspectRatio: 8 / 4,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => AddPanelPage(panelType: 'FIRE DIALERS'),
-                  ),
+                CustomNavigation.instance.pop(context);
+                CustomNavigation.instance.push(
+                  context: context,
+                  screen: AddPanelPage(panelType: 'FIRE DIALERS'),
                 );
               },
             ),

@@ -21,7 +21,7 @@ class ProgressDialog {
               backgroundColor: AppColors.white,
               content: Row(
                 children: [
-                  const CircularProgressIndicator(),
+                  const CircularProgressIndicator(color: AppColors.colorPrimary,),
                   const SizedBox(width: 20),
                   Expanded(child: Text(message)),
                 ],

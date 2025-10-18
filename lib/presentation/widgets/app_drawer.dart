@@ -1,3 +1,5 @@
+import 'package:fire_nex/constants/urls.dart';
+import 'package:fire_nex/presentation/dialog/url_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/presentation/dialog/progress.dart';
 import 'package:fire_nex/presentation/screens/about_us.dart';
@@ -11,7 +13,6 @@ import '../../utils/auth_helper.dart';
 import '../../utils/responsive.dart';
 import '../dialog/panel_type.dart';
 import '../screens/login.dart';
-import 'open_web_page.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -122,20 +123,14 @@ class _AddDrawerState extends State<AppDrawer> {
                   icon: Icons.support,
                   text: "Contact Us",
                   onTap: () {
-                    openWebPage(
-                      context,
-                      'https://www.securicoelectronics.com/contact-securico/',
-                    );
+                    showUrlDialog(context, contactUsUrl, "Contact Us");
                   },
                 ),
                 _drawerItem(
                   icon: Icons.business,
                   text: "About Us",
                   onTap: () {
-                    openWebPage(
-                      context,
-                      'https://www.securicoelectronics.com/about/',
-                    );
+                    showUrlDialog(context, aboutUsUrl, "About Us");
                   },
                 ),
                 // _drawerItem(icon: Icons.help, text: "Need Help", onTap: () {}),
@@ -143,20 +138,14 @@ class _AddDrawerState extends State<AppDrawer> {
                   icon: Icons.question_answer,
                   text: "Enquiry",
                   onTap: () {
-                    openWebPage(
-                      context,
-                      'https://www.securicoelectronics.com/contact-securico/',
-                    );
+                    showUrlDialog(context, contactUsUrl, "Enquiry");
                   },
                 ),
                 _drawerItem(
                   icon: Icons.web,
                   text: "Official Website",
                   onTap: () {
-                    openWebPage(
-                      context,
-                      'https://www.securicoelectronics.com/',
-                    );
+                    showUrlDialog(context, contactUsUrl, "Official Website");
                   },
                 ),
                 // _drawerItem(
@@ -205,7 +194,11 @@ class _AddDrawerState extends State<AppDrawer> {
       leading: Icon(icon, color: Colors.grey.shade800, size: fontSize * 1.2),
       title: Text(
         text,
-        style: TextStyle(color: Colors.grey.shade800, fontSize: fontSize, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: Colors.grey.shade800,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       onTap: onTap,
     );

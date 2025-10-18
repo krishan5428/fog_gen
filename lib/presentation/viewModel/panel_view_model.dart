@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:fire_nex/data/database/app_database.dart';
 import 'package:fire_nex/data/modelClass/site_panel_info.dart';
 import 'package:fire_nex/data/repositories/panel_repo.dart';
+import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:flutter/foundation.dart';
 
 class PanelViewModel extends ChangeNotifier {
@@ -12,6 +13,7 @@ class PanelViewModel extends ChangeNotifier {
   PanelData? _currentPanel;
   PanelData? get currentPanel => _currentPanel;
   List<SitePanelSimInfo> sitePanelInfoList = [];
+  String? device;
   void setCurrentPanel(PanelData panel) {
     _currentPanel = panel;
     notifyListeners();
@@ -22,16 +24,27 @@ class PanelViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<InsertPanelResult> insertPanel(
-    String panelType,
-    String panelCategory,
-    String panelSimNumber,
-    String mobileNumber,
-    String siteName,
-    String address,
-    String adminCode,
-    int userId,
-  ) async {
+  void getDevice() async {
+    device = await SharedPreferenceHelper.getDeviceType();
+  }
+
+  Future<InsertPanelResult> insertPanel({
+    required String panelType,
+    required String panelCategory,
+    required String panelSimNumber,
+    required String mobileNumber,
+    required String siteName,
+    required String address,
+    required String adminCode,
+    required int userId,
+    required String ipAddress,
+    required String staticIP,
+    required String port,
+    required String staticPort,
+    required String pass,
+    required bool isIPPanel,
+    required bool isIPGPRSPanel,
+  }) async {
     final normalizedSiteName = siteName.trim().toLowerCase();
 
     final existingSim = await _panelRepository.getPanelByPanelSimNumber(
@@ -57,6 +70,13 @@ class PanelViewModel extends ChangeNotifier {
       address: address,
       adminCode: adminCode,
       userId: userId,
+      isIPPanel: isIPPanel,
+      ipAddress: ipAddress,
+      port: port,
+      staticIPAddress: staticIP,
+      staticPort: staticPort,
+      ipPassword: pass,
+      isIPGPRSPanel: isIPGPRSPanel,
     );
 
     try {
@@ -104,6 +124,11 @@ class PanelViewModel extends ChangeNotifier {
   Future<bool> updatePanelDetails({
     required String siteName,
     required String simNumber,
+    required String ipAddress,
+    required String staticIP,
+    required String port,
+    required String staticPort,
+    required String pass,
   }) async {
     try {
       if (_currentPanel == null) return false;
@@ -111,6 +136,11 @@ class PanelViewModel extends ChangeNotifier {
       final updated = _currentPanel!.copyWith(
         siteName: siteName.trim().toLowerCase(),
         panelSimNumber: simNumber.trim(),
+        ipAddress: ipAddress.trim(),
+        port: port.trim(),
+        staticIPAddress: staticIP.trim(),
+        staticPort: staticPort.trim(),
+        ipPassword: pass.trim(),
       );
 
       final result = await _panelRepository.updatePanel(updated);
@@ -195,19 +225,22 @@ class PanelViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> deletePanel(String panelSimNumber) async {
+  Future<void> deletePanel(String panelSimNumber) async {
     try {
-      final result = await _panelRepository.deletePanel(panelSimNumber);
-      return result > 0;
+      _panelRepository.deletePanel(panelSimNumber);
     } catch (_) {
-      return false;
+      debugPrint('Error while deleting panel');
     }
   }
 
   void updatePanelList(List<PanelData> panels) {
-    sitePanelInfoList = panels.map((panel){
-      return SitePanelSimInfo(siteName: panel.siteName, panelSimNumber: panel.panelSimNumber);
-    }).toList();
+    sitePanelInfoList =
+        panels.map((panel) {
+          return SitePanelSimInfo(
+            siteName: panel.siteName,
+            panelSimNumber: panel.panelSimNumber,
+          );
+        }).toList();
 
     notifyListeners();
   }

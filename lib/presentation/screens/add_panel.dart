@@ -12,11 +12,12 @@ import 'package:provider/provider.dart';
 import '../../constants/strings.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
-import '../../utils/silent_sms.dart';
-import '../dialog/progress.dart';
+import '../dialog/progress_with_message.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/form_section.dart';
+import 'add_ip_gprs_panel.dart';
+import 'add_ip_panel.dart';
 
 class AddPanelPage extends StatefulWidget {
   final String panelType;
@@ -32,13 +33,13 @@ class _AddPanelPageState extends State<AddPanelPage> {
   late final PanelFormControllers formControllers;
   int _currentStep = 0;
   final List<Map<String, dynamic>> _steps = [];
-  // String? device;
+  String? device;
 
   @override
   void initState() {
     super.initState();
     formControllers = PanelFormControllers();
-    // getDevice();
+    getDevice();
 
     if (widget.panelType == 'FIRE PANEL') {
       panelNames.addAll([
@@ -59,8 +60,32 @@ class _AddPanelPageState extends State<AddPanelPage> {
     _steps.add({'type': 'dropdown', 'label': 'Panel Category'});
   }
 
+  void _handleOtherPanelProcedure(String panelName) {
+    if (panelName == 'FIRE PANEL-2 ZONE - F02L I' ||
+        panelName == 'FIRE PANEL-4 ZONE - F04L I') {
+      Future.delayed(const Duration(milliseconds: 300));
+      CustomNavigation.instance.pushReplace(
+        context: context,
+        screen: AddIpPanelPage(
+          panelType: widget.panelType,
+          panelName: panelName,
+        ),
+      );
+    } else if (panelName == 'FIRE PANEL-2 ZONE - F02L GI' ||
+        panelName == 'FIRE PANEL-4 ZONE - F04L GI') {
+      Future.delayed(const Duration(milliseconds: 300));
+      CustomNavigation.instance.pushReplace(
+        context: context,
+        screen: AddPanelFormScreen(
+          panelType: widget.panelType,
+          panelName: panelName,
+        ),
+      );
+    }
+  }
+
   void updateFieldRow() {
-    _steps.clear(); // reset steps
+    _steps.clear();
     _steps.addAll([
       {'type': 'dropdown', 'label': 'Panel Category'},
       {
@@ -89,16 +114,16 @@ class _AddPanelPageState extends State<AddPanelPage> {
       },
     ]);
 
-    debugPrint("Other panel selected: $selectedPanelName");
+    debugPrint("panel selected: $selectedPanelName");
 
     setState(() {
-      _currentStep = 0; // restart flow
+      _currentStep = 0;
     });
   }
 
-  // void getDevice() async {
-  //   device = await SharedPreferenceHelper.getDeviceType();
-  // }
+  void getDevice() async {
+    device = await SharedPreferenceHelper.getDeviceType();
+  }
 
   Future<void> _goToNext() async {
     final panelVM = context.read<PanelViewModel>();
@@ -112,7 +137,6 @@ class _AddPanelPageState extends State<AddPanelPage> {
     final step = _steps[_currentStep];
     _trackSteps("validating", _currentStep);
 
-    // --- Validation logic ---
     if (step['type'] == 'dropdown') {
       if (selectedPanelName == null) {
         SnackBarHelper.showSnackBar(context, 'Please select a Panel Category');
@@ -131,14 +155,13 @@ class _AddPanelPageState extends State<AddPanelPage> {
       if (label == 'Site Name') {
         final newSite = value.toLowerCase().trim();
 
-        // Check if the site already exists
         final siteExists = siteSimList.any(
           (info) => info.siteName.toLowerCase() == newSite,
         );
 
         if (siteExists) {
           SnackBarHelper.showSnackBar(context, 'This Site Name already exists');
-          return; // stop moving to next step
+          return;
         }
       }
 
@@ -186,6 +209,7 @@ class _AddPanelPageState extends State<AddPanelPage> {
     }
 
     if (step['label'] == 'Admin Sim Number' &&
+        device == 'IOS' &&
         formControllers.adminNumberController.text.trim().isNotEmpty) {
       final adminNumber = formControllers.adminNumberController.text.trim();
       final panelSimNumber =
@@ -216,11 +240,17 @@ class _AddPanelPageState extends State<AddPanelPage> {
         title: 'Setting Panel',
       );
       if (result == true) {
-        await sendSms(panelSimNumber, message);
+        if (!mounted) return;
+        await ProgressDialogWithMessage.show(
+          context,
+          messages: [message],
+          panelSimNumber: panelSimNumber,
+        );
       }
     }
 
     if (step['label'] == 'Address' &&
+        device == 'IOS' &&
         formControllers.addressController.text.trim().isNotEmpty) {
       final address = formControllers.addressController.text.trim();
       final panelSimNumber =
@@ -243,11 +273,14 @@ class _AddPanelPageState extends State<AddPanelPage> {
         title: 'Setting Panel',
       );
       if (result == true) {
-        await sendSms(panelSimNumber, message);
+        await ProgressDialogWithMessage.show(
+          context,
+          messages: [message],
+          panelSimNumber: panelSimNumber,
+        );
       }
     }
 
-    // --- Move to next step ---
     if (_currentStep < _steps.length - 1) {
       setState(() {
         _currentStep++;
@@ -287,20 +320,24 @@ class _AddPanelPageState extends State<AddPanelPage> {
     String message1 = 'SECURICO 1234 ADD ADMIN +91-$adminNumber END';
     String message2 = 'SECURICO 1234 ADD SIGNATURE $address* END';
 
-    ProgressDialog.show(context, message: 'Sending panel SMS...');
+    final messages = [message1, message2];
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      await sendSms(panelSimNumber, message1);
-      await Future.delayed(const Duration(seconds: 2));
-      await sendSms(panelSimNumber, message2);
-
-      ProgressDialog.dismiss(context);
-      SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: PanelListPage(),
+      final result = await ProgressDialogWithMessage.show(
+        context,
+        messages: messages,
+        panelSimNumber: panelSimNumber,
       );
+
+      debugPrint("result :  $result");
+
+      if (result == true) {
+        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+        CustomNavigation.instance.pushReplace(
+          context: context,
+          screen: PanelListPage(),
+        );
+      }
     } catch (e) {
       CustomNavigation.instance.pop(context);
       SnackBarHelper.showSnackBar(context, 'Error');
@@ -323,20 +360,24 @@ class _AddPanelPageState extends State<AddPanelPage> {
 ''';
     String message2 = '< 1234 SIGNATURE $address* >';
 
-    ProgressDialog.show(context, message: 'Sending panel SMS...');
+    final messages = [message1, message2];
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      await sendSms(panelSimNumber, message1);
-      await Future.delayed(const Duration(seconds: 2));
-      await sendSms(panelSimNumber, message2);
-
-      ProgressDialog.dismiss(context);
-      SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: PanelListPage(),
+      final result = await ProgressDialogWithMessage.show(
+        context,
+        messages: messages,
+        panelSimNumber: panelSimNumber,
       );
+
+      debugPrint("result :  $result");
+
+      if (result == true) {
+        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+        CustomNavigation.instance.pushReplace(
+          context: context,
+          screen: PanelListPage(),
+        );
+      }
     } catch (e) {
       CustomNavigation.instance.pop(context);
       SnackBarHelper.showSnackBar(context, 'Error');
@@ -352,24 +393,25 @@ class _AddPanelPageState extends State<AddPanelPage> {
     final String message2 = '1234 TEL NO INTRUSION #01-$adminNumber* END';
     final String message3 = '1234 TEL NO FIRE #01-$adminNumber* END';
 
-    ProgressDialog.show(context, message: 'Sending panel SMS...');
+    final messages = [message1, message2, message3];
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      await sendSms(panelSimNumber, message1);
-
-      await Future.delayed(const Duration(milliseconds: 3500));
-      await sendSms(panelSimNumber, message2);
-
-      await Future.delayed(const Duration(milliseconds: 5500));
-      await sendSms(panelSimNumber, message3);
-
-      ProgressDialog.dismiss(context);
-      SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: PanelListPage(),
+      final result = await ProgressDialogWithMessage.show(
+        context,
+        messages: messages,
+        panelSimNumber: panelSimNumber,
       );
+
+      if (result == true) {
+        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+        CustomNavigation.instance.pushReplace(
+          context: context,
+          screen: PanelListPage(),
+        );
+      } else {
+        CustomNavigation.instance.pop(context);
+        SnackBarHelper.showSnackBar(context, 'Error');
+      }
     } catch (e) {
       CustomNavigation.instance.pop(context);
       SnackBarHelper.showSnackBar(context, 'Error sending SMS: $e');
@@ -385,53 +427,33 @@ class _AddPanelPageState extends State<AddPanelPage> {
     final address = formControllers.addressController.text.trim();
     final userId = await SharedPreferenceHelper.getUserId();
 
-    debugPrint('Inserting Panel with the following values:');
-    debugPrint('Panel Type: ${widget.panelType}');
-    debugPrint('Panel Name: $selectedPanelName');
-    debugPrint('Site Name: $siteName');
-    debugPrint('Panel SIM Number: $panelSimNumber');
-    debugPrint('Admin SIM Number: $adminNumber');
-    debugPrint('Address: $address');
-    debugPrint('User ID: $userId');
-
     await panelViewModel.insertPanel(
-      widget.panelType,
-      selectedPanelName!,
-      panelSimNumber,
-      adminNumber,
-      siteName,
-      address,
-      "1234",
-      userId!,
+      panelType: widget.panelType,
+      panelCategory: selectedPanelName!,
+      panelSimNumber: panelSimNumber,
+      mobileNumber: adminNumber,
+      address: address,
+      siteName: siteName,
+      adminCode: '1234',
+      userId: userId!,
+      isIPPanel: false,
+      isIPGPRSPanel: false,
+      ipAddress: '',
+      port: '',
+      staticPort: '',
+      pass: '',
+      staticIP: '',
     );
 
-    // if (device == 'ANDROID') {
-    //   _performAddPanel();
-    // } else {
-    SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-    CustomNavigation.instance.pushReplace(
-      context: context,
-      screen: PanelListPage(),
-    );
-    // }
-
-    // switch (result) {
-    //   case InsertPanelResult.success:
-    //     _performAddPanel();
-    //     break;
-    //   case InsertPanelResult.simNumberExists:
-    //     SnackBarHelper.showSnackBar(
-    //       context,
-    //       'Panel Sim Number already exists!',
-    //     );
-    //     break;
-    //   case InsertPanelResult.siteNameExists:
-    //     SnackBarHelper.showSnackBar(context, 'Site Name already exists!');
-    //     break;
-    //   case InsertPanelResult.failure:
-    //     SnackBarHelper.showSnackBar(context, 'Something went wrong!');
-    //     break;
-    // }
+    if (device == 'ANDROID') {
+      _performAddPanel();
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+      CustomNavigation.instance.pushReplace(
+        context: context,
+        screen: PanelListPage(),
+      );
+    }
   }
 
   @override
@@ -468,13 +490,14 @@ class _AddPanelPageState extends State<AddPanelPage> {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: CustomAppBar(
-        pageName: 'Add Panel',
+        pageName: 'Add Panel Details',
         isFilter: false,
         isDash: false,
+        isProfile: false,
         onBack: () {
           CustomNavigation.instance.pushReplace(
             context: context,
-            screen: PanelListPage(),
+            screen: const PanelListPage(),
           );
         },
       ),
@@ -540,6 +563,7 @@ class _AddPanelPageState extends State<AddPanelPage> {
                                 setState(() {
                                   selectedPanelName = value;
                                   updateFieldRow();
+                                  _handleOtherPanelProcedure(value!);
                                 });
                               },
                             ),

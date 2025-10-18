@@ -1,20 +1,25 @@
 import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fire_nex/core/responses/socket_repository.dart';
 import 'package:fire_nex/data/database/app_database.dart';
 import 'package:fire_nex/presentation/bottom_sheet_dialog/change_admin_mobile_number.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
 import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
+import 'package:fire_nex/presentation/dialog/progress.dart';
+import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
 import 'package:fire_nex/presentation/screens/edit_panel.dart';
 import 'package:fire_nex/presentation/screens/more_settings.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
 import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
+import 'package:fire_nex/utils/responsive.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../constants/strings.dart';
+import '../../core/utils/application_class.dart';
+import '../../core/utils/packets.dart';
+import '../../utils/auth_helper.dart';
 import '../bottom_sheet_dialog/change_address.dart';
-import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
 
@@ -58,53 +63,127 @@ class PanelDetailsScreen extends StatefulWidget {
 }
 
 class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
+  String? device;
+
   @override
   void initState() {
     super.initState();
-    final panel = widget.panelData;
-    context.read<PanelViewModel>().setCurrentPanel(panel);
+    getDevice();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final panel = widget.panelData;
+      context.read<PanelViewModel>().setCurrentPanel(panel);
+    });
+  }
+
+  void getDevice() async {
+    device = await SharedPreferenceHelper.getDeviceType();
   }
 
   @override
   Widget build(BuildContext context) {
+    final spacingBwtView = Responsive.spacingBwtView(context);
     Future<void> deletePanel() async {
-      final result = await showConfirmationDialog(
+      final firstConfirm = await showConfirmationDialog(
         context: context,
         message: 'Are you sure you want to delete this panel?',
       );
+      if (firstConfirm != true) return;
 
-      if (result == true) {
-        final confirmDelete = await showConfirmationDialog(
-          context: context,
-          message:
-              'After deleting the Panel, you will not configure the panel.\nSure?',
-        );
+      final secondConfirm = await showConfirmationDialog(
+        context: context,
+        message:
+            'After deleting the Panel, you will not configure the panel.\nSure?',
+      );
+      if (secondConfirm != true) return;
 
-        if (confirmDelete == true) {
-          final viewModel = context.read<PanelViewModel>();
-          final panel = await viewModel.getPanelByPanelSimNumber(
-            widget.panelData.panelSimNumber,
+      bool? isSend = false;
+      bool? deleteConfirm = false;
+
+      final panel = widget.panelData;
+
+      if (panel.isIPPanel || panel.isIPGPRSPanel) {
+        ProgressDialog.show(context);
+        final _ =
+            Application()
+              ..mIPAddress = panel.ipAddress
+              ..mPortNumber = int.tryParse(panel.port)
+              ..mPassword = panel.ipPassword;
+
+        try {
+          final socketRepo = SocketRepository();
+          final response = await socketRepo.sendPacketSR1(
+            Packets.getPacket(isReadPacket: false, args: ["012", "2"]),
           );
 
-          if (panel != null) {
-            await _performDeleteActionWithDialog(
-              context,
-              panel,
-              (panelData) => viewModel.deletePanel(panelData.panelSimNumber),
-              () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const PanelListPage()),
-              ),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Panel Deleted Successfully')),
+          if (response == "S*012#0*E") {
+            ProgressDialog.dismiss(context);
+            SnackBarHelper.showSnackBar(context, 'Done');
+            deleteConfirm = true;
+          } else {
+            ProgressDialog.dismiss(context);
+            if (panel.isIPGPRSPanel) {
+              final fallback = await showConfirmationDialog(
+                context: context,
+                title: 'Network Unavailable❗️',
+                message:
+                    'We couldn’t reach the device through IP.\n Would you like to try sending the command by SMS?',
+              );
+              if (fallback == true) {
+                isSend = await _performDeleteActionWithDialog(context, panel);
+                deleteConfirm = true;
+              }
+            } else if (panel.isIPPanel) {
+              await showInfoDialog(
+                context: context,
+                message:
+                    'Seems like the panel is not connected!\nPlease check the Panel and try again!',
+              );
+            }
+          }
+        } catch (e) {
+          ProgressDialog.dismiss(context);
+          debugPrint("Error sending packet: $e");
+
+          final errorText = e.toString().toLowerCase();
+          final isConnectionFailed =
+              errorText.contains('socketexception') ||
+              errorText.contains('connection refused') ||
+              errorText.contains('timed out') ||
+              errorText.contains('did not respond') ||
+              errorText.contains('failed');
+
+          if (isConnectionFailed) {
+            showInfoDialog(
+              context: context,
+              message:
+                  'Unable to connect to the panel.\nPlease check the network connection and try again.',
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to delete panel')),
-            );
+            SnackBarHelper.showSnackBar(context, 'Unexpected error: $e');
           }
         }
+      } else {
+        isSend = await _performDeleteActionWithDialog(context, panel);
+        deleteConfirm = true;
+      }
+
+      if (isSend == true && deleteConfirm == true) {
+        context.read<PanelViewModel>().deletePanel(panel.panelSimNumber);
+        await showInfoDialog(
+          context: context,
+          message: "The panel has been reset with the default configurations.",
+          onOk: () {
+            CustomNavigation.instance.pushReplace(
+              context: context,
+              screen: const PanelListPage(),
+            );
+          },
+        );
+      } else {
+        await showInfoDialog(
+          context: context,
+          message: "Failed to delete the panel.",
+        );
       }
     }
 
@@ -122,14 +201,9 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
 
           final panel = snapshot.data ?? widget.panelData;
 
-          // Store into provider
-          // WidgetsBinding.instance.addPostFrameCallback((_) {
-          //   context.read<PanelViewModel>().setCurrentPanel(panel);
-          // });
           return Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 80),
                 child: Column(
                   children: [
                     Container(
@@ -162,24 +236,169 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Column(
                         children: [
-                          const SizedBox(height: 10),
-                          PanelDetailsScreen._infoRow(
-                            "PANEL NAME",
-                            panel.panelName,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "SITE NAME",
-                            panel.siteName,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "PANEL SIM NO.",
-                            panel.panelSimNumber,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "ADMIN MOBILE NO.",
-                            panel.adminMobileNumber,
-                          ),
-                          PanelDetailsScreen._infoRow("ADDRESS", panel.address),
+                          if (panel.isIPGPRSPanel) ...[
+                            DefaultTabController(
+                              length: 2,
+                              child: Column(
+                                children: [
+                                  TabBar(
+                                    labelColor: AppColors.colorPrimary,
+                                    unselectedLabelColor: Colors.grey,
+                                    indicatorColor: AppColors.colorPrimary,
+
+                                    labelStyle: const TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                    unselectedLabelStyle: const TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 14,
+                                    ),
+
+                                    tabs: const [
+                                      Tab(text: "GSM Dialer"),
+                                      Tab(text: "IP Comm"),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    height: spacingBwtView * 20,
+                                    child: TabBarView(
+                                      children: [
+                                        /// --- GPRS DETAILS TAB ---
+                                        SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              PanelDetailsScreen._infoRow(
+                                                "PANEL NAME",
+                                                panel.panelName,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "SITE NAME",
+                                                panel.siteName.toUpperCase(),
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "PANEL SIM NO.",
+                                                panel.panelSimNumber,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "ADMIN MOBILE NO.",
+                                                panel.adminMobileNumber,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "ADDRESS",
+                                                panel.address,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        /// --- IP DETAILS TAB ---
+                                        SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              PanelDetailsScreen._infoRow(
+                                                "IP ADDRESS",
+                                                panel.ipAddress,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "PORT NUMBER",
+                                                panel.port,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "STATIC IP ADDRESS",
+                                                panel.staticIPAddress,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "STATIC PORT NUMBER",
+                                                panel.staticPort,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "PASSWORD",
+                                                panel.ipPassword,
+                                              ),
+                                              PanelDetailsScreen._infoRow(
+                                                "ADDRESS",
+                                                panel.address,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          /// ✅ Only IP Panel
+                          if (panel.isIPPanel && !panel.isIPGPRSPanel) ...[
+                            PanelDetailsScreen._infoRow(
+                              "PANEL NAME",
+                              panel.panelName,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "SITE NAME",
+                              panel.siteName,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "IP ADDRESS",
+                              panel.ipAddress,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "PORT NUMBER",
+                              panel.port,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "STATIC IP ADDRESS",
+                              panel.staticIPAddress,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "STATIC PORT NUMBER",
+                              panel.staticPort,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "PASSWORD",
+                              panel.ipPassword,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "ADDRESS",
+                              panel.address,
+                            ),
+                          ],
+
+                          /// ✅ Normal GPRS Panel
+                          if (!panel.isIPPanel && !panel.isIPGPRSPanel) ...[
+                            PanelDetailsScreen._infoRow(
+                              "PANEL NAME",
+                              panel.panelName,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "SITE NAME",
+                              panel.siteName,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "PANEL SIM NO.",
+                              panel.panelSimNumber,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "ADMIN MOBILE NO.",
+                              panel.adminMobileNumber,
+                            ),
+                            PanelDetailsScreen._infoRow(
+                              "ADDRESS",
+                              panel.address,
+                            ),
+                          ],
+
                           const SizedBox(height: 30),
                           CustomButton(
                             onPressed:
@@ -190,26 +409,23 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                                 ),
                             buttonText: "Update Address",
                           ),
-
-                          const SizedBox(height: 10),
-                          CustomButton(
-                            onPressed:
-                                () => showAdminMobileNumberChangeBottomSheet(
-                                  context,
-                                  panel,
-                                  context.read<PanelViewModel>(),
-                                ),
-                            buttonText: "Update Admin Mobile Number",
-                          ),
+                          if (!panel.isIPPanel)
+                            CustomButton(
+                              onPressed:
+                                  () => showAdminMobileNumberChangeBottomSheet(
+                                    context,
+                                    panel,
+                                    context.read<PanelViewModel>(),
+                                  ),
+                              buttonText: "Update Admin Mobile Number",
+                            ),
                           const SizedBox(height: 10),
                           CustomButton(
                             buttonText: "MORE SETTINGS",
                             onPressed:
-                                () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => MoreSettingsScreen(),
-                                  ),
+                                () => CustomNavigation.instance.push(
+                                  context: context,
+                                  screen: MoreSettingsScreen(panelData: panel),
                                 ),
                           ),
                           const SizedBox(height: 10),
@@ -217,7 +433,10 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                             children: [
                               Expanded(
                                 child: CustomButton(
-                                  onPressed: () => CustomNavigation.instance.pop(context),
+                                  onPressed:
+                                      () => CustomNavigation.instance.pop(
+                                        context,
+                                      ),
                                   buttonText: "BACK",
                                   backgroundColor: AppColors.litePrimary,
                                   foregroundColor: AppColors.colorPrimary,
@@ -230,7 +449,7 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                                       () =>
                                           CustomNavigation.instance.pushReplace(
                                             context: context,
-                                            screen: EditPanelScreen(),
+                                            screen: const EditPanelScreen(),
                                           ),
                                   buttonText: "EDIT",
                                 ),
@@ -258,9 +477,9 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                       color: AppColors.colorPrimary,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Text(
                           "DELETE",
                           style: TextStyle(
@@ -283,58 +502,41 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
     );
   }
 
-  Future<void> _performDeleteActionWithDialog(
+  Future<bool?> _performDeleteActionWithDialog(
     BuildContext context,
     PanelData panelData,
-    Future<bool> Function(PanelData) deletePanelData,
-    VoidCallback backPage,
   ) async {
-    final simNumber = panelData.panelSimNumber;
-    final panelName = panelData.panelName;
-    ProgressDialog.show(context);
+    final messages = _buildDeletionMessages(panelData.panelName);
+    if (messages == null) {
+      await showInfoDialog(
+        context: context,
+        message: "Failed to delete the panel.",
+      );
+      return false;
+    }
 
+    final result = await ProgressDialogWithMessage.show(
+      context,
+      messages: messages,
+      panelSimNumber: panelData.panelSimNumber,
+    );
+    return result;
+  }
+
+  List<String>? _buildDeletionMessages(String panelName) {
     if (fourGComPanels.contains(panelName)) {
-      final messages = [
+      return [
         'SECURICO 1234 ADD ADMIN +91-0000000000 END',
-        'SECURICO 1234 REMOVE USER01 END',
-        'SECURICO 1234 REMOVE USER02 END',
-        'SECURICO 1234 REMOVE USER03 END',
-        'SECURICO 1234 REMOVE USER04 END',
-        'SECURICO 1234 REMOVE USER05 END',
-        'SECURICO 1234 REMOVE USER06 END',
-        'SECURICO 1234 REMOVE USER07 END',
-        'SECURICO 1234 REMOVE USER08 END',
-        'SECURICO 1234 REMOVE USER09 END',
-        'SECURICO 1234 REMOVE USER10 END',
+        for (int i = 1; i <= 10; i++)
+          'SECURICO 1234 REMOVE USER${i.toString().padLeft(2, '0')} END',
         'SECURICO 1234 ADD SIGNATURE ADD SIGNATURE FOR THIS PANEL* END',
       ];
-
-      for (final msg in messages) {
-        await sendSms(simNumber, msg);
-        await Future.delayed(const Duration(seconds: 3));
-      }
     } else if (neuronPanels.contains(panelName)) {
-      await sendSms(simNumber, "< 1234 CLEAR TEL >");
-      await Future.delayed(const Duration(seconds: 3));
-      await sendSms(
-        simNumber,
-        "< 1234 SIGNATURE ADD SIGNATURE FOR THIS PANEL* >",
-      );
-    } else {
-      showInfoDialog(context: context, message: "Failed to delete the panel.");
+      return [
+        '< 1234 CLEAR TEL >',
+        '< 1234 SIGNATURE ADD SIGNATURE FOR THIS PANEL* >',
+      ];
     }
-
-    final success = await deletePanelData(panelData);
-    ProgressDialog.dismiss(context);
-
-    if (success) {
-      showInfoDialog(
-        context: context,
-        message: "Your panel has been reset with the default configurations.",
-      );
-      backPage();
-    } else {
-      showInfoDialog(context: context, message: "Failed to delete the panel.");
-    }
+    return null;
   }
 }

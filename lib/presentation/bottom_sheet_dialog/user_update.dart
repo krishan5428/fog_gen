@@ -1,5 +1,7 @@
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
+import 'package:fire_nex/utils/navigation.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -60,13 +62,10 @@ class _UpdateUserFieldBottomSheetState
       }
 
       if (mounted) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "${widget.formKey.toUpperCase()} updated successfully",
-            ),
-          ),
+        CustomNavigation.instance.popWithResult(context: context, result: true);
+        SnackBarHelper.showSnackBar(
+          context,
+          '${widget.formKey.toUpperCase()} updated successfully',
         );
       }
     } catch (e) {
@@ -98,10 +97,22 @@ class _UpdateUserFieldBottomSheetState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 10),
+                Center(
+                  child: Container(
+                    height: 4,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Text(
                   "Update ${widget.formKey.toUpperCase()}",
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: AppColors.colorPrimary,
                   ),

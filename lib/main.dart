@@ -1,10 +1,6 @@
 import 'package:fire_nex/presentation/screens/splash.dart';
-import 'package:fire_nex/presentation/viewModel/automation_view_model.dart';
 import 'package:fire_nex/presentation/viewModel/complaint_view_model.dart';
-import 'package:fire_nex/presentation/viewModel/fire_view_model.dart';
-import 'package:fire_nex/presentation/viewModel/intrusion_view_model.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
-import 'package:fire_nex/presentation/viewModel/timer_view_model.dart';
 import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
 import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
 import 'package:fire_nex/utils/app_info.dart';
@@ -16,12 +12,8 @@ import 'constants/app_colors.dart';
 import 'core/logic/cubits/login_cubit.dart';
 import 'core/repo/user_repo.dart';
 import 'data/database/app_database.dart';
-import 'data/repositories/automation_repo.dart';
 import 'data/repositories/complaint_repo.dart';
-import 'data/repositories/fire_repo.dart';
-import 'data/repositories/intrusion_repo.dart';
 import 'data/repositories/panel_repo.dart';
-import 'data/repositories/timer_repo.dart';
 import 'data/repositories/user_repository.dart';
 import 'data/repositories/vendor_repository.dart';
 
@@ -45,18 +37,6 @@ void main() async {
         ProxyProvider<AppDatabase, VendorRepository>(
           update: (_, db, __) => VendorRepository(db),
         ),
-        ProxyProvider<AppDatabase, IntrusionRepository>(
-          update: (_, db, __) => IntrusionRepository(db),
-        ),
-        ProxyProvider<AppDatabase, FireRepository>(
-          update: (_, db, __) => FireRepository(db),
-        ),
-        ProxyProvider<AppDatabase, TimerRepository>(
-          update: (_, db, __) => TimerRepository(db),
-        ),
-        ProxyProvider<AppDatabase, AutomationRepository>(
-          update: (_, db, __) => AutomationRepository(db),
-        ),
         ProxyProvider<AppDatabase, ComplaintRepository>(
           update: (_, db, __) => ComplaintRepository(db),
         ),
@@ -73,18 +53,6 @@ void main() async {
         ),
         ProxyProvider<VendorRepository, VendorViewModel>(
           update: (_, repo, __) => VendorViewModel(repo),
-        ),
-        ProxyProvider<IntrusionRepository, IntrusionViewModel>(
-          update: (_, repo, __) => IntrusionViewModel(repo),
-        ),
-        ProxyProvider<FireRepository, FireNumberViewModel>(
-          update: (_, repo, __) => FireNumberViewModel(repo),
-        ),
-        ProxyProvider<TimerRepository, TimerViewModel>(
-          update: (_, repo, __) => TimerViewModel(repo),
-        ),
-        ProxyProvider<AutomationRepository, AutomationViewModel>(
-          update: (_, repo, __) => AutomationViewModel(repo),
         ),
         ProxyProvider<ComplaintRepository, ComplaintViewModel>(
           update: (_, repo, __) => ComplaintViewModel(repo),
@@ -116,17 +84,17 @@ class MyApp extends StatelessWidget {
         textTheme: baseTheme.textTheme.copyWith(
           bodyLarge: const TextStyle(
             fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w400, // Regular
+            fontWeight: FontWeight.w400,
             fontSize: 16,
           ),
           bodyMedium: const TextStyle(
             fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w400, // Regular
+            fontWeight: FontWeight.w400,
             fontSize: 14,
           ),
           bodySmall: const TextStyle(
             fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w400, // Regular
+            fontWeight: FontWeight.w400,
             fontSize: 12,
           ),
         ),
@@ -135,9 +103,8 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
             fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w600, // SemiBold
+            fontWeight: FontWeight.w600,
             fontSize: 20,
-            color: Colors.white,
           ),
         ),
 
@@ -145,7 +112,7 @@ class MyApp extends StatelessWidget {
         dropdownMenuTheme: DropdownMenuThemeData(
           textStyle: const TextStyle(
             fontFamily: 'Montserrat',
-            fontWeight: FontWeight.w400, // Regular
+            fontWeight: FontWeight.w400,
             fontSize: 14,
             color: Colors.black,
           ),
@@ -156,7 +123,7 @@ class MyApp extends StatelessWidget {
           style: TextButton.styleFrom(
             textStyle: const TextStyle(
               fontFamily: 'Montserrat',
-              fontWeight: FontWeight.w500, // Medium
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -164,7 +131,7 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             textStyle: const TextStyle(
               fontFamily: 'Montserrat',
-              fontWeight: FontWeight.w500, // Medium
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -172,7 +139,7 @@ class MyApp extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             textStyle: const TextStyle(
               fontFamily: 'Montserrat',
-              fontWeight: FontWeight.w500, // Medium
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),

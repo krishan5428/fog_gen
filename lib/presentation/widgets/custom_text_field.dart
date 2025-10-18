@@ -42,7 +42,7 @@ class CustomTextField extends StatelessWidget {
       style: TextStyle(fontSize: fontSize),
       keyboardType:
           isNumber
-              ? TextInputType.phone
+              ? TextInputType.numberWithOptions(decimal: true)
               : isEmail
               ? TextInputType.emailAddress
               : TextInputType.text,

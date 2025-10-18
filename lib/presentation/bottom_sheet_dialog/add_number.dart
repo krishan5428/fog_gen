@@ -1,11 +1,15 @@
+import 'package:fire_nex/utils/auth_helper.dart';
+import 'package:fire_nex/utils/navigation.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/strings.dart';
 import '../../data/database/app_database.dart';
+import '../dialog/progress_with_message.dart';
 import '../widgets/form_section.dart';
 
 Future<bool?> showAddNumberBottomSheet(
@@ -21,7 +25,7 @@ Future<bool?> showAddNumberBottomSheet(
   return showModalBottomSheet<bool>(
     context: parent,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.lightGrey,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -32,7 +36,7 @@ Future<bool?> showAddNumberBottomSheet(
             padding: EdgeInsets.only(
               left: 16,
               right: 16,
-              top: 16,
+              top: 0,
               bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
             ),
             child: SingleChildScrollView(
@@ -133,10 +137,14 @@ Future<bool?> showAddNumberBottomSheet(
                               )) {
                             setState(() {
                               errorText =
-                                  'This number is already used, please use a DIFFERENT NUMBER!';
+                                  'This number is already used, please use a different number!';
                             });
                             return;
                           }
+
+                          String device =
+                              await SharedPreferenceHelper.getDeviceType();
+                          final smsPermission = await Permission.sms.status;
 
                           // ✅ Await confirmation dialog
                           final confirm = await showConfirmationDialog(
@@ -145,44 +153,65 @@ Future<bool?> showAddNumberBottomSheet(
                           );
 
                           if (confirm == true) {
-                            final success = await viewModel.updateMobileNumber(
-                              panel.panelSimNumber,
-                              newNumber,
-                              index,
+                            final message = getMobileNumberMessages(
+                              newNumber: newNumber,
+                              panel: panel,
+                              index: index,
                             );
+                            debugPrint("message to be sent: $message");
+                            debugPrint("smsPermission: $smsPermission");
+                            debugPrint("device: $device");
 
-                            if (success) {
-                              final message = getMobileNumberMessages(
-                                newNumber: newNumber,
-                                panel: panel,
-                                index: index,
-                              );
+                            var result = false;
 
-                              if (message.isNotEmpty &&
-                                  panel.panelSimNumber.trim().isNotEmpty) {
-                                debugPrint('sms executed');
-                                await sendSms(
-                                  panel.panelSimNumber,
-                                  message,
-                                );
-                              }
-
-                              ScaffoldMessenger.of(parent).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Number added successfully!'),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-
-                              Navigator.pop(sheetContext, true);
-                            } else {
-                              setState(() {
-                                errorText =
-                                    'Failed to update Mobile Number in database';
-                              });
+                            if (message.isNotEmpty &&
+                                panel.panelSimNumber.trim().isNotEmpty &&
+                                device.isNotEmpty) {
+                              debugPrint('sms executed');
+                              result =
+                                  (await _trySendSms(
+                                    context,
+                                    device,
+                                    smsPermission,
+                                    panel.panelSimNumber,
+                                    [message],
+                                  ))!;
                             }
+
+                            if (result) {
+                              await viewModel.updateMobileNumber(
+                                panel.panelSimNumber,
+                                newNumber,
+                                index,
+                              );
+                              SnackBarHelper.showSnackBar(
+                                context,
+                                'Number added successfully!',
+                              );
+                              CustomNavigation.instance.popWithResult(
+                                context: sheetContext,
+                                result: true,
+                              );
+                            } else {
+                              CustomNavigation.instance.popWithResult(
+                                context: sheetContext,
+                                result: false,
+                              );
+                              SnackBarHelper.showSnackBar(context, 'Revoked');
+                            }
+                            // Navigator.pop(sheetContext, true);
+                          } else {
+                            // setState(() {
+                            //   errorText =
+                            //       'Failed to update Mobile Number in database';
+                            // });
+                            CustomNavigation.instance.popWithResult(
+                              context: sheetContext,
+                              result: false,
+                            );
                           }
                         },
+
                         child: const Text("Submit"),
                       ),
                     ],
@@ -195,6 +224,21 @@ Future<bool?> showAddNumberBottomSheet(
       );
     },
   );
+}
+
+Future<bool?> _trySendSms(
+  BuildContext context,
+  String device,
+  PermissionStatus smsPermission,
+  String simNumber,
+  List<String> messages,
+) async {
+  final result = ProgressDialogWithMessage.show(
+    context,
+    messages: messages,
+    panelSimNumber: simNumber,
+  );
+  return result;
 }
 
 String getMobileNumberMessages({

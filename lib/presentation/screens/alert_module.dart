@@ -2,7 +2,6 @@ import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
 import 'package:fire_nex/presentation/screens/add_number_solitare.dart';
 import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,10 +49,10 @@ class AlertModulePage extends StatelessWidget {
                 );
 
                 if (confirm == true) {
-                  await sendSms(
-                    panel.panelSimNumber,
-                    'SECURICO 1234 VIEW USERS END',
-                  );
+                  // await sendSms(
+                  //   panel.panelSimNumber,
+                  //   'SECURICO 1234 VIEW USERS END',
+                  // );
 
                   await showInfoDialog(
                     context: context,

@@ -1,12 +1,13 @@
 import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
 import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
+import 'package:fire_nex/utils/navigation.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class VendorUpdateBottomSheetDialog extends StatefulWidget {
   final int userId;
-  final String formKey; // "name", "mobile", "password", "email"
+  final String formKey;
   final String? currentValue;
 
   const VendorUpdateBottomSheetDialog({
@@ -55,14 +56,8 @@ class _VendorUpdateBottomSheetDialogState
       }
 
       if (mounted) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "${widget.formKey.toUpperCase()} updated successfully",
-            ),
-          ),
-        );
+        CustomNavigation.instance.popWithResult(context: context,result: true);
+        SnackBarHelper.showSnackBar(context, '${widget.formKey.toUpperCase()} updated successfully');
       }
     } catch (e) {
       if (mounted) {

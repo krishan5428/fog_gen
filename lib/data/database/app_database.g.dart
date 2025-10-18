@@ -588,6 +588,87 @@ class $PanelTable extends Panel with TableInfo<$PanelTable, PanelData> {
     requiredDuringInsert: false,
     defaultValue: const Constant("0000000000"),
   );
+  static const VerificationMeta _isIPPanelMeta = const VerificationMeta(
+    'isIPPanel',
+  );
+  @override
+  late final GeneratedColumn<bool> isIPPanel = GeneratedColumn<bool>(
+    'is_i_p_panel',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_i_p_panel" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _isIPGPRSPanelMeta = const VerificationMeta(
+    'isIPGPRSPanel',
+  );
+  @override
+  late final GeneratedColumn<bool> isIPGPRSPanel = GeneratedColumn<bool>(
+    'is_i_p_g_p_r_s_panel',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_i_p_g_p_r_s_panel" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _ipAddressMeta = const VerificationMeta(
+    'ipAddress',
+  );
+  @override
+  late final GeneratedColumn<String> ipAddress = GeneratedColumn<String>(
+    'ip_address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _portMeta = const VerificationMeta('port');
+  @override
+  late final GeneratedColumn<String> port = GeneratedColumn<String>(
+    'port',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _staticIPAddressMeta = const VerificationMeta(
+    'staticIPAddress',
+  );
+  @override
+  late final GeneratedColumn<String> staticIPAddress = GeneratedColumn<String>(
+    'static_i_p_address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _staticPortMeta = const VerificationMeta(
+    'staticPort',
+  );
+  @override
+  late final GeneratedColumn<String> staticPort = GeneratedColumn<String>(
+    'static_port',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ipPasswordMeta = const VerificationMeta(
+    'ipPassword',
+  );
+  @override
+  late final GeneratedColumn<String> ipPassword = GeneratedColumn<String>(
+    'ip_password',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -609,6 +690,13 @@ class $PanelTable extends Panel with TableInfo<$PanelTable, PanelData> {
     mobileNumber8,
     mobileNumber9,
     mobileNumber10,
+    isIPPanel,
+    isIPGPRSPanel,
+    ipAddress,
+    port,
+    staticIPAddress,
+    staticPort,
+    ipPassword,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -785,6 +873,68 @@ class $PanelTable extends Panel with TableInfo<$PanelTable, PanelData> {
         ),
       );
     }
+    if (data.containsKey('is_i_p_panel')) {
+      context.handle(
+        _isIPPanelMeta,
+        isIPPanel.isAcceptableOrUnknown(data['is_i_p_panel']!, _isIPPanelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_isIPPanelMeta);
+    }
+    if (data.containsKey('is_i_p_g_p_r_s_panel')) {
+      context.handle(
+        _isIPGPRSPanelMeta,
+        isIPGPRSPanel.isAcceptableOrUnknown(
+          data['is_i_p_g_p_r_s_panel']!,
+          _isIPGPRSPanelMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_isIPGPRSPanelMeta);
+    }
+    if (data.containsKey('ip_address')) {
+      context.handle(
+        _ipAddressMeta,
+        ipAddress.isAcceptableOrUnknown(data['ip_address']!, _ipAddressMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ipAddressMeta);
+    }
+    if (data.containsKey('port')) {
+      context.handle(
+        _portMeta,
+        port.isAcceptableOrUnknown(data['port']!, _portMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_portMeta);
+    }
+    if (data.containsKey('static_i_p_address')) {
+      context.handle(
+        _staticIPAddressMeta,
+        staticIPAddress.isAcceptableOrUnknown(
+          data['static_i_p_address']!,
+          _staticIPAddressMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_staticIPAddressMeta);
+    }
+    if (data.containsKey('static_port')) {
+      context.handle(
+        _staticPortMeta,
+        staticPort.isAcceptableOrUnknown(data['static_port']!, _staticPortMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_staticPortMeta);
+    }
+    if (data.containsKey('ip_password')) {
+      context.handle(
+        _ipPasswordMeta,
+        ipPassword.isAcceptableOrUnknown(data['ip_password']!, _ipPasswordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ipPasswordMeta);
+    }
     return context;
   }
 
@@ -889,6 +1039,41 @@ class $PanelTable extends Panel with TableInfo<$PanelTable, PanelData> {
             DriftSqlType.string,
             data['${effectivePrefix}mobile_number10'],
           )!,
+      isIPPanel:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_i_p_panel'],
+          )!,
+      isIPGPRSPanel:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_i_p_g_p_r_s_panel'],
+          )!,
+      ipAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}ip_address'],
+          )!,
+      port:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}port'],
+          )!,
+      staticIPAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}static_i_p_address'],
+          )!,
+      staticPort:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}static_port'],
+          )!,
+      ipPassword:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}ip_password'],
+          )!,
     );
   }
 
@@ -918,6 +1103,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
   final String mobileNumber8;
   final String mobileNumber9;
   final String mobileNumber10;
+  final bool isIPPanel;
+  final bool isIPGPRSPanel;
+  final String ipAddress;
+  final String port;
+  final String staticIPAddress;
+  final String staticPort;
+  final String ipPassword;
   const PanelData({
     required this.id,
     required this.panelSimNumber,
@@ -938,6 +1130,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
     required this.mobileNumber8,
     required this.mobileNumber9,
     required this.mobileNumber10,
+    required this.isIPPanel,
+    required this.isIPGPRSPanel,
+    required this.ipAddress,
+    required this.port,
+    required this.staticIPAddress,
+    required this.staticPort,
+    required this.ipPassword,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -961,6 +1160,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
     map['mobile_number8'] = Variable<String>(mobileNumber8);
     map['mobile_number9'] = Variable<String>(mobileNumber9);
     map['mobile_number10'] = Variable<String>(mobileNumber10);
+    map['is_i_p_panel'] = Variable<bool>(isIPPanel);
+    map['is_i_p_g_p_r_s_panel'] = Variable<bool>(isIPGPRSPanel);
+    map['ip_address'] = Variable<String>(ipAddress);
+    map['port'] = Variable<String>(port);
+    map['static_i_p_address'] = Variable<String>(staticIPAddress);
+    map['static_port'] = Variable<String>(staticPort);
+    map['ip_password'] = Variable<String>(ipPassword);
     return map;
   }
 
@@ -985,6 +1191,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
       mobileNumber8: Value(mobileNumber8),
       mobileNumber9: Value(mobileNumber9),
       mobileNumber10: Value(mobileNumber10),
+      isIPPanel: Value(isIPPanel),
+      isIPGPRSPanel: Value(isIPGPRSPanel),
+      ipAddress: Value(ipAddress),
+      port: Value(port),
+      staticIPAddress: Value(staticIPAddress),
+      staticPort: Value(staticPort),
+      ipPassword: Value(ipPassword),
     );
   }
 
@@ -1013,6 +1226,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
       mobileNumber8: serializer.fromJson<String>(json['mobileNumber8']),
       mobileNumber9: serializer.fromJson<String>(json['mobileNumber9']),
       mobileNumber10: serializer.fromJson<String>(json['mobileNumber10']),
+      isIPPanel: serializer.fromJson<bool>(json['isIPPanel']),
+      isIPGPRSPanel: serializer.fromJson<bool>(json['isIPGPRSPanel']),
+      ipAddress: serializer.fromJson<String>(json['ipAddress']),
+      port: serializer.fromJson<String>(json['port']),
+      staticIPAddress: serializer.fromJson<String>(json['staticIPAddress']),
+      staticPort: serializer.fromJson<String>(json['staticPort']),
+      ipPassword: serializer.fromJson<String>(json['ipPassword']),
     );
   }
   @override
@@ -1038,6 +1258,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
       'mobileNumber8': serializer.toJson<String>(mobileNumber8),
       'mobileNumber9': serializer.toJson<String>(mobileNumber9),
       'mobileNumber10': serializer.toJson<String>(mobileNumber10),
+      'isIPPanel': serializer.toJson<bool>(isIPPanel),
+      'isIPGPRSPanel': serializer.toJson<bool>(isIPGPRSPanel),
+      'ipAddress': serializer.toJson<String>(ipAddress),
+      'port': serializer.toJson<String>(port),
+      'staticIPAddress': serializer.toJson<String>(staticIPAddress),
+      'staticPort': serializer.toJson<String>(staticPort),
+      'ipPassword': serializer.toJson<String>(ipPassword),
     };
   }
 
@@ -1061,6 +1288,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
     String? mobileNumber8,
     String? mobileNumber9,
     String? mobileNumber10,
+    bool? isIPPanel,
+    bool? isIPGPRSPanel,
+    String? ipAddress,
+    String? port,
+    String? staticIPAddress,
+    String? staticPort,
+    String? ipPassword,
   }) => PanelData(
     id: id ?? this.id,
     panelSimNumber: panelSimNumber ?? this.panelSimNumber,
@@ -1081,6 +1315,13 @@ class PanelData extends DataClass implements Insertable<PanelData> {
     mobileNumber8: mobileNumber8 ?? this.mobileNumber8,
     mobileNumber9: mobileNumber9 ?? this.mobileNumber9,
     mobileNumber10: mobileNumber10 ?? this.mobileNumber10,
+    isIPPanel: isIPPanel ?? this.isIPPanel,
+    isIPGPRSPanel: isIPGPRSPanel ?? this.isIPGPRSPanel,
+    ipAddress: ipAddress ?? this.ipAddress,
+    port: port ?? this.port,
+    staticIPAddress: staticIPAddress ?? this.staticIPAddress,
+    staticPort: staticPort ?? this.staticPort,
+    ipPassword: ipPassword ?? this.ipPassword,
   );
   PanelData copyWithCompanion(PanelCompanion data) {
     return PanelData(
@@ -1139,6 +1380,21 @@ class PanelData extends DataClass implements Insertable<PanelData> {
           data.mobileNumber10.present
               ? data.mobileNumber10.value
               : this.mobileNumber10,
+      isIPPanel: data.isIPPanel.present ? data.isIPPanel.value : this.isIPPanel,
+      isIPGPRSPanel:
+          data.isIPGPRSPanel.present
+              ? data.isIPGPRSPanel.value
+              : this.isIPGPRSPanel,
+      ipAddress: data.ipAddress.present ? data.ipAddress.value : this.ipAddress,
+      port: data.port.present ? data.port.value : this.port,
+      staticIPAddress:
+          data.staticIPAddress.present
+              ? data.staticIPAddress.value
+              : this.staticIPAddress,
+      staticPort:
+          data.staticPort.present ? data.staticPort.value : this.staticPort,
+      ipPassword:
+          data.ipPassword.present ? data.ipPassword.value : this.ipPassword,
     );
   }
 
@@ -1163,13 +1419,20 @@ class PanelData extends DataClass implements Insertable<PanelData> {
           ..write('mobileNumber7: $mobileNumber7, ')
           ..write('mobileNumber8: $mobileNumber8, ')
           ..write('mobileNumber9: $mobileNumber9, ')
-          ..write('mobileNumber10: $mobileNumber10')
+          ..write('mobileNumber10: $mobileNumber10, ')
+          ..write('isIPPanel: $isIPPanel, ')
+          ..write('isIPGPRSPanel: $isIPGPRSPanel, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('port: $port, ')
+          ..write('staticIPAddress: $staticIPAddress, ')
+          ..write('staticPort: $staticPort, ')
+          ..write('ipPassword: $ipPassword')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     panelSimNumber,
     userId,
@@ -1189,7 +1452,14 @@ class PanelData extends DataClass implements Insertable<PanelData> {
     mobileNumber8,
     mobileNumber9,
     mobileNumber10,
-  );
+    isIPPanel,
+    isIPGPRSPanel,
+    ipAddress,
+    port,
+    staticIPAddress,
+    staticPort,
+    ipPassword,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1212,7 +1482,14 @@ class PanelData extends DataClass implements Insertable<PanelData> {
           other.mobileNumber7 == this.mobileNumber7 &&
           other.mobileNumber8 == this.mobileNumber8 &&
           other.mobileNumber9 == this.mobileNumber9 &&
-          other.mobileNumber10 == this.mobileNumber10);
+          other.mobileNumber10 == this.mobileNumber10 &&
+          other.isIPPanel == this.isIPPanel &&
+          other.isIPGPRSPanel == this.isIPGPRSPanel &&
+          other.ipAddress == this.ipAddress &&
+          other.port == this.port &&
+          other.staticIPAddress == this.staticIPAddress &&
+          other.staticPort == this.staticPort &&
+          other.ipPassword == this.ipPassword);
 }
 
 class PanelCompanion extends UpdateCompanion<PanelData> {
@@ -1235,6 +1512,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
   final Value<String> mobileNumber8;
   final Value<String> mobileNumber9;
   final Value<String> mobileNumber10;
+  final Value<bool> isIPPanel;
+  final Value<bool> isIPGPRSPanel;
+  final Value<String> ipAddress;
+  final Value<String> port;
+  final Value<String> staticIPAddress;
+  final Value<String> staticPort;
+  final Value<String> ipPassword;
   const PanelCompanion({
     this.id = const Value.absent(),
     this.panelSimNumber = const Value.absent(),
@@ -1255,6 +1539,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
     this.mobileNumber8 = const Value.absent(),
     this.mobileNumber9 = const Value.absent(),
     this.mobileNumber10 = const Value.absent(),
+    this.isIPPanel = const Value.absent(),
+    this.isIPGPRSPanel = const Value.absent(),
+    this.ipAddress = const Value.absent(),
+    this.port = const Value.absent(),
+    this.staticIPAddress = const Value.absent(),
+    this.staticPort = const Value.absent(),
+    this.ipPassword = const Value.absent(),
   });
   PanelCompanion.insert({
     this.id = const Value.absent(),
@@ -1276,6 +1567,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
     this.mobileNumber8 = const Value.absent(),
     this.mobileNumber9 = const Value.absent(),
     this.mobileNumber10 = const Value.absent(),
+    required bool isIPPanel,
+    required bool isIPGPRSPanel,
+    required String ipAddress,
+    required String port,
+    required String staticIPAddress,
+    required String staticPort,
+    required String ipPassword,
   }) : panelSimNumber = Value(panelSimNumber),
        userId = Value(userId),
        siteName = Value(siteName),
@@ -1283,7 +1581,14 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
        adminCode = Value(adminCode),
        adminMobileNumber = Value(adminMobileNumber),
        panelType = Value(panelType),
-       address = Value(address);
+       address = Value(address),
+       isIPPanel = Value(isIPPanel),
+       isIPGPRSPanel = Value(isIPGPRSPanel),
+       ipAddress = Value(ipAddress),
+       port = Value(port),
+       staticIPAddress = Value(staticIPAddress),
+       staticPort = Value(staticPort),
+       ipPassword = Value(ipPassword);
   static Insertable<PanelData> custom({
     Expression<int>? id,
     Expression<String>? panelSimNumber,
@@ -1304,6 +1609,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
     Expression<String>? mobileNumber8,
     Expression<String>? mobileNumber9,
     Expression<String>? mobileNumber10,
+    Expression<bool>? isIPPanel,
+    Expression<bool>? isIPGPRSPanel,
+    Expression<String>? ipAddress,
+    Expression<String>? port,
+    Expression<String>? staticIPAddress,
+    Expression<String>? staticPort,
+    Expression<String>? ipPassword,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1325,6 +1637,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
       if (mobileNumber8 != null) 'mobile_number8': mobileNumber8,
       if (mobileNumber9 != null) 'mobile_number9': mobileNumber9,
       if (mobileNumber10 != null) 'mobile_number10': mobileNumber10,
+      if (isIPPanel != null) 'is_i_p_panel': isIPPanel,
+      if (isIPGPRSPanel != null) 'is_i_p_g_p_r_s_panel': isIPGPRSPanel,
+      if (ipAddress != null) 'ip_address': ipAddress,
+      if (port != null) 'port': port,
+      if (staticIPAddress != null) 'static_i_p_address': staticIPAddress,
+      if (staticPort != null) 'static_port': staticPort,
+      if (ipPassword != null) 'ip_password': ipPassword,
     });
   }
 
@@ -1348,6 +1667,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
     Value<String>? mobileNumber8,
     Value<String>? mobileNumber9,
     Value<String>? mobileNumber10,
+    Value<bool>? isIPPanel,
+    Value<bool>? isIPGPRSPanel,
+    Value<String>? ipAddress,
+    Value<String>? port,
+    Value<String>? staticIPAddress,
+    Value<String>? staticPort,
+    Value<String>? ipPassword,
   }) {
     return PanelCompanion(
       id: id ?? this.id,
@@ -1369,6 +1695,13 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
       mobileNumber8: mobileNumber8 ?? this.mobileNumber8,
       mobileNumber9: mobileNumber9 ?? this.mobileNumber9,
       mobileNumber10: mobileNumber10 ?? this.mobileNumber10,
+      isIPPanel: isIPPanel ?? this.isIPPanel,
+      isIPGPRSPanel: isIPGPRSPanel ?? this.isIPGPRSPanel,
+      ipAddress: ipAddress ?? this.ipAddress,
+      port: port ?? this.port,
+      staticIPAddress: staticIPAddress ?? this.staticIPAddress,
+      staticPort: staticPort ?? this.staticPort,
+      ipPassword: ipPassword ?? this.ipPassword,
     );
   }
 
@@ -1432,6 +1765,27 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
     if (mobileNumber10.present) {
       map['mobile_number10'] = Variable<String>(mobileNumber10.value);
     }
+    if (isIPPanel.present) {
+      map['is_i_p_panel'] = Variable<bool>(isIPPanel.value);
+    }
+    if (isIPGPRSPanel.present) {
+      map['is_i_p_g_p_r_s_panel'] = Variable<bool>(isIPGPRSPanel.value);
+    }
+    if (ipAddress.present) {
+      map['ip_address'] = Variable<String>(ipAddress.value);
+    }
+    if (port.present) {
+      map['port'] = Variable<String>(port.value);
+    }
+    if (staticIPAddress.present) {
+      map['static_i_p_address'] = Variable<String>(staticIPAddress.value);
+    }
+    if (staticPort.present) {
+      map['static_port'] = Variable<String>(staticPort.value);
+    }
+    if (ipPassword.present) {
+      map['ip_password'] = Variable<String>(ipPassword.value);
+    }
     return map;
   }
 
@@ -1456,7 +1810,14 @@ class PanelCompanion extends UpdateCompanion<PanelData> {
           ..write('mobileNumber7: $mobileNumber7, ')
           ..write('mobileNumber8: $mobileNumber8, ')
           ..write('mobileNumber9: $mobileNumber9, ')
-          ..write('mobileNumber10: $mobileNumber10')
+          ..write('mobileNumber10: $mobileNumber10, ')
+          ..write('isIPPanel: $isIPPanel, ')
+          ..write('isIPGPRSPanel: $isIPGPRSPanel, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('port: $port, ')
+          ..write('staticIPAddress: $staticIPAddress, ')
+          ..write('staticPort: $staticPort, ')
+          ..write('ipPassword: $ipPassword')
           ..write(')'))
         .toString();
   }
@@ -4141,6 +4502,13 @@ typedef $$PanelTableCreateCompanionBuilder =
       Value<String> mobileNumber8,
       Value<String> mobileNumber9,
       Value<String> mobileNumber10,
+      required bool isIPPanel,
+      required bool isIPGPRSPanel,
+      required String ipAddress,
+      required String port,
+      required String staticIPAddress,
+      required String staticPort,
+      required String ipPassword,
     });
 typedef $$PanelTableUpdateCompanionBuilder =
     PanelCompanion Function({
@@ -4163,6 +4531,13 @@ typedef $$PanelTableUpdateCompanionBuilder =
       Value<String> mobileNumber8,
       Value<String> mobileNumber9,
       Value<String> mobileNumber10,
+      Value<bool> isIPPanel,
+      Value<bool> isIPGPRSPanel,
+      Value<String> ipAddress,
+      Value<String> port,
+      Value<String> staticIPAddress,
+      Value<String> staticPort,
+      Value<String> ipPassword,
     });
 
 class $$PanelTableFilterComposer extends Composer<_$AppDatabase, $PanelTable> {
@@ -4265,6 +4640,41 @@ class $$PanelTableFilterComposer extends Composer<_$AppDatabase, $PanelTable> {
 
   ColumnFilters<String> get mobileNumber10 => $composableBuilder(
     column: $table.mobileNumber10,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isIPPanel => $composableBuilder(
+    column: $table.isIPPanel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isIPGPRSPanel => $composableBuilder(
+    column: $table.isIPGPRSPanel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ipAddress => $composableBuilder(
+    column: $table.ipAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get port => $composableBuilder(
+    column: $table.port,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get staticIPAddress => $composableBuilder(
+    column: $table.staticIPAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get staticPort => $composableBuilder(
+    column: $table.staticPort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ipPassword => $composableBuilder(
+    column: $table.ipPassword,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4372,6 +4782,41 @@ class $$PanelTableOrderingComposer
     column: $table.mobileNumber10,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isIPPanel => $composableBuilder(
+    column: $table.isIPPanel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isIPGPRSPanel => $composableBuilder(
+    column: $table.isIPGPRSPanel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ipAddress => $composableBuilder(
+    column: $table.ipAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get port => $composableBuilder(
+    column: $table.port,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get staticIPAddress => $composableBuilder(
+    column: $table.staticIPAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get staticPort => $composableBuilder(
+    column: $table.staticPort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ipPassword => $composableBuilder(
+    column: $table.ipPassword,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PanelTableAnnotationComposer
@@ -4463,6 +4908,35 @@ class $$PanelTableAnnotationComposer
     column: $table.mobileNumber10,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isIPPanel =>
+      $composableBuilder(column: $table.isIPPanel, builder: (column) => column);
+
+  GeneratedColumn<bool> get isIPGPRSPanel => $composableBuilder(
+    column: $table.isIPGPRSPanel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ipAddress =>
+      $composableBuilder(column: $table.ipAddress, builder: (column) => column);
+
+  GeneratedColumn<String> get port =>
+      $composableBuilder(column: $table.port, builder: (column) => column);
+
+  GeneratedColumn<String> get staticIPAddress => $composableBuilder(
+    column: $table.staticIPAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get staticPort => $composableBuilder(
+    column: $table.staticPort,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ipPassword => $composableBuilder(
+    column: $table.ipPassword,
+    builder: (column) => column,
+  );
 }
 
 class $$PanelTableTableManager
@@ -4512,6 +4986,13 @@ class $$PanelTableTableManager
                 Value<String> mobileNumber8 = const Value.absent(),
                 Value<String> mobileNumber9 = const Value.absent(),
                 Value<String> mobileNumber10 = const Value.absent(),
+                Value<bool> isIPPanel = const Value.absent(),
+                Value<bool> isIPGPRSPanel = const Value.absent(),
+                Value<String> ipAddress = const Value.absent(),
+                Value<String> port = const Value.absent(),
+                Value<String> staticIPAddress = const Value.absent(),
+                Value<String> staticPort = const Value.absent(),
+                Value<String> ipPassword = const Value.absent(),
               }) => PanelCompanion(
                 id: id,
                 panelSimNumber: panelSimNumber,
@@ -4532,6 +5013,13 @@ class $$PanelTableTableManager
                 mobileNumber8: mobileNumber8,
                 mobileNumber9: mobileNumber9,
                 mobileNumber10: mobileNumber10,
+                isIPPanel: isIPPanel,
+                isIPGPRSPanel: isIPGPRSPanel,
+                ipAddress: ipAddress,
+                port: port,
+                staticIPAddress: staticIPAddress,
+                staticPort: staticPort,
+                ipPassword: ipPassword,
               ),
           createCompanionCallback:
               ({
@@ -4554,6 +5042,13 @@ class $$PanelTableTableManager
                 Value<String> mobileNumber8 = const Value.absent(),
                 Value<String> mobileNumber9 = const Value.absent(),
                 Value<String> mobileNumber10 = const Value.absent(),
+                required bool isIPPanel,
+                required bool isIPGPRSPanel,
+                required String ipAddress,
+                required String port,
+                required String staticIPAddress,
+                required String staticPort,
+                required String ipPassword,
               }) => PanelCompanion.insert(
                 id: id,
                 panelSimNumber: panelSimNumber,
@@ -4574,6 +5069,13 @@ class $$PanelTableTableManager
                 mobileNumber8: mobileNumber8,
                 mobileNumber9: mobileNumber9,
                 mobileNumber10: mobileNumber10,
+                isIPPanel: isIPPanel,
+                isIPGPRSPanel: isIPGPRSPanel,
+                ipAddress: ipAddress,
+                port: port,
+                staticIPAddress: staticIPAddress,
+                staticPort: staticPort,
+                ipPassword: ipPassword,
               ),
           withReferenceMapper:
               (p0) =>

@@ -1,11 +1,17 @@
+import 'package:fire_nex/core/responses/socket_repository.dart';
+import 'package:fire_nex/core/utils/packets.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
+import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
+import 'package:fire_nex/presentation/dialog/progress.dart';
+import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
+import '../../core/utils/application_class.dart';
 import '../../data/database/app_database.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
-import '../../utils/silent_sms.dart';
 import '../screens/panel_details.dart';
 import 'custom_button.dart';
 
@@ -18,7 +24,6 @@ class PanelCard extends StatelessWidget {
     final fontSize = Responsive.fontSize(context);
     final spacingBwtView = Responsive.spacingBwtView(context);
     final smallTextSize = Responsive.smallTextSize(context);
-
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
@@ -59,9 +64,7 @@ class PanelCard extends StatelessWidget {
                     onPressed: () async {
                       CustomNavigation.instance.push(
                         context: context,
-                        screen: PanelDetailsScreen(
-                          panelData: panelData,
-                        ),
+                        screen: PanelDetailsScreen(panelData: panelData),
                       );
                     },
                     style: TextButton.styleFrom(
@@ -173,24 +176,126 @@ class PanelCard extends StatelessWidget {
     required int outputNumber,
     required String title,
     required String confirmationMessage,
-    int delaySeconds = 10,
   }) async {
+    final socketRepository = SocketRepository();
     final confirm = await showConfirmationDialog(
       context: context,
       title: title,
       message: confirmationMessage,
     );
 
-    if (confirm == true) {
-      final simNumber = panelData.panelSimNumber;
-      final onMessage = "< 1234 OUTPUT $outputNumber ON >";
-      final offMessage = "< 1234 OUTPUT $outputNumber OFF >";
+    if (confirm != true) {
+      SnackBarHelper.showSnackBar(context, 'Execution revoked!');
+      return;
+    }
 
-      sendSms(simNumber, onMessage);
+    if (panelData.isIPPanel || panelData.isIPGPRSPanel) {
+      ProgressDialog.show(context);
 
-      Future.delayed(Duration(seconds: delaySeconds), () {
-        sendSms(simNumber, offMessage);
-      });
+      final _ =
+          Application()
+            ..mIPAddress = panelData.ipAddress
+            ..mPortNumber = int.tryParse(panelData.port)
+            ..mPassword = panelData.ipPassword;
+
+      final lastOutput = outputNumber - 1;
+
+      try {
+        final response = await socketRepository.sendPacketSR1(
+          Packets.getPacket(
+            isReadPacket: false,
+            args: ["007", lastOutput.toString().padLeft(3, '0'), "3"],
+          ),
+        );
+
+        debugPrint('response from panel: $response');
+
+        ProgressDialog.dismiss(context);
+
+        if (response == "S*007#0*E") {
+          SnackBarHelper.showSnackBar(context, 'Successful');
+        } else {
+          await _handleFailedIPCommand(context, outputNumber);
+        }
+      }
+      catch (e) {
+        ProgressDialog.dismiss(context);
+        debugPrint("Error sending packet: $e");
+
+        final errorText = e.toString().toLowerCase();
+        final isConnectionFailed =
+            errorText.contains('socketexception') ||
+            errorText.contains('connection refused') ||
+            errorText.contains('timed out') ||
+            errorText.contains('did not respond') ||
+            errorText.contains('failed');
+
+        if (isConnectionFailed) {
+          if (panelData.isIPGPRSPanel) {
+            final confirm = await showConfirmationDialog(
+              context: context,
+              title: 'Network Unavailable❗️',
+              message:
+                  'We couldn’t reach the device through IP.\n Would you like to try sending the command by SMS?',
+            );
+            if (confirm == true) {
+              _sendCommandSMS(outputNumber, context);
+            } else {
+              SnackBarHelper.showSnackBar(context, 'Execution revoked');
+            }
+          } else if (panelData.isIPPanel) {
+            showInfoDialog(
+              context: context,
+              message:
+                  'Unable to connect to the panel.\nPlease check the network connection and try again.',
+            );
+          }
+        } else {
+          SnackBarHelper.showSnackBar(context, 'Unexpected error: $e');
+        }
+      }
+    } else {
+      _sendCommandSMS(outputNumber, context);
+    }
+  }
+
+  Future<void> _handleFailedIPCommand(
+    BuildContext context,
+    int outputNumber,
+  ) async {
+    if (panelData.isIPGPRSPanel) {
+      final confirm = await showConfirmationDialog(
+        context: context,
+        message:
+            'Unable to send IP Command!\nDo you want to send the SMS command instead?',
+      );
+      if (confirm == true) {
+        _sendCommandSMS(outputNumber, context);
+      }
+    } else if (panelData.isIPPanel) {
+      showInfoDialog(
+        context: context,
+        message:
+            'Panel seems to be offline.\nPlease check the connection and try again.',
+      );
+    }
+  }
+
+  void _sendCommandSMS(int outputNumber, BuildContext context) async {
+    final simNumber = panelData.panelSimNumber;
+    final onMessage = "< 1234 OUTPUT $outputNumber ON >";
+    final offMessage = "< 1234 OUTPUT $outputNumber OFF >";
+
+    final messages = [onMessage, offMessage];
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: messages,
+      panelSimNumber: simNumber,
+    );
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Done');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked!');
     }
   }
 }

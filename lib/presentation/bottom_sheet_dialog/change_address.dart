@@ -1,11 +1,17 @@
 import 'package:fire_nex/data/database/app_database.dart';
+import 'package:fire_nex/presentation/screens/panel_list.dart';
+import 'package:fire_nex/utils/navigation.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/strings.dart';
+import '../../core/responses/socket_repository.dart';
+import '../../core/utils/application_class.dart';
+import '../../core/utils/packets.dart';
 import '../dialog/confirmation_dialog.dart';
-import '../screens/panel_details.dart';
+import '../dialog/ok_dialog.dart';
+import '../dialog/progress_with_message.dart';
 import '../viewModel/panel_view_model.dart';
 import '../widgets/form_section.dart';
 import '../widgets/vertical_gap.dart';
@@ -15,11 +21,12 @@ void showChangeAddressBottomSheet(
   PanelData panelData,
   PanelViewModel viewModel,
 ) {
-  final TextEditingController newAddressController = TextEditingController();
+  final newAddressController = TextEditingController();
   String? errorText;
 
   showModalBottomSheet(
     context: context,
+    backgroundColor: AppColors.lightGrey,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -31,7 +38,6 @@ void showChangeAddressBottomSheet(
             padding: EdgeInsets.only(
               left: 16,
               right: 16,
-              top: 16,
               bottom: MediaQuery.of(context).viewInsets.bottom + 16,
             ),
             child: SingleChildScrollView(
@@ -54,12 +60,14 @@ void showChangeAddressBottomSheet(
                   const Text(
                     "Update Address",
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: AppColors.colorPrimary,
                     ),
                   ),
-                  VerticalSpace(height: 20),
+                  const VerticalSpace(height: 20),
+
+                  /// Address Input
                   FormSection(
                     label: 'New Address',
                     controller: newAddressController,
@@ -67,13 +75,14 @@ void showChangeAddressBottomSheet(
                     maxLength: 40,
                     validator:
                         (value) =>
-                            value == null || value.isEmpty
-                                ? 'Enter valid address'
+                            value == null || value.trim().isEmpty
+                                ? 'Enter a valid address'
                                 : null,
                   ),
+
                   if (errorText != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                      padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         errorText!,
                         textAlign: TextAlign.center,
@@ -84,7 +93,10 @@ void showChangeAddressBottomSheet(
                         ),
                       ),
                     ),
+
                   const SizedBox(height: 20),
+
+                  /// Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -105,64 +117,98 @@ void showChangeAddressBottomSheet(
 
                           if (newAddress.isEmpty) {
                             setState(() {
-                              errorText = 'Address Field must be filled!';
+                              errorText = 'Address field must be filled!';
                             });
                             return;
                           }
 
-                          final result = await showConfirmationDialog(
+                          final confirm = await showConfirmationDialog(
                             context: context,
-                            message: 'Do you want to update Address?',
+                            message: 'Do you want to update this address?',
                             cancelText: 'No',
                             confirmText: 'Yes',
                           );
 
-                          if (result == true) {
-                            final message = getAddressMessage(
-                              newAddress: newAddress,
-                              panelName: panelData.panelName,
-                            );
+                          if (confirm != true) {
+                            SnackBarHelper.showSnackBar(context, 'Cancelled');
+                            return;
+                          }
 
-                            sendSms(panelData.panelSimNumber, message);
+                          try {
+                            /// Handle IP or IP+GPRS panels
+                            if (panelData.isIPPanel ||
+                                panelData.isIPGPRSPanel) {
+                              final socketRepository = SocketRepository();
+                              final app = Application();
+                              app.mIPAddress = panelData.ipAddress;
+                              app.mPortNumber = int.tryParse(panelData.port);
+                              app.mPassword = panelData.ipPassword;
 
-                            print("Generated Panel Command: $message");
+                              final response = await socketRepository
+                                  .sendPacketSR1(
+                                    Packets.getPacket(
+                                      isReadPacket: false,
+                                      args: ["021", newAddress],
+                                    ),
+                                  );
 
-                            final success = await viewModel.updateAddress(
-                              panelData.panelSimNumber,
-                              newAddress,
-                            );
-
-                            if (success) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => PanelDetailsScreen(
-                                        panelData: panelData,
-                                      ),
-                                ),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Address updated successfully',
-                                  ),
-                                ),
-                              );
+                              if (response == "S*007#0*E") {
+                                await viewModel.updateAddress(
+                                  panelData.panelSimNumber,
+                                  newAddress,
+                                );
+                                SnackBarHelper.showSnackBar(
+                                  context,
+                                  'Address updated successfully.',
+                                );
+                                CustomNavigation.instance.pushReplace(
+                                  context: context,
+                                  screen: const PanelListPage(),
+                                );
+                              } else {
+                                if (panelData.isIPGPRSPanel) {
+                                  final confirm = await showConfirmationDialog(
+                                    context: context,
+                                    message:
+                                        'Unable to send IP Command!\nDo you want to send SMS command?',
+                                  );
+                                  if (confirm == true) {
+                                    _sendSMSCommand(
+                                      newAddress,
+                                      panelData,
+                                      context,
+                                      viewModel,
+                                    );
+                                  }
+                                }
+                                if (panelData.isIPPanel) {
+                                  showInfoDialog(
+                                    context: context,
+                                    message:
+                                        'Seems like Panel is not connected!\nPlease check the Panel and try again!',
+                                  );
+                                }
+                              }
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Failed to update admin code'),
-                                ),
+                              _sendSMSCommand(
+                                newAddress,
+                                panelData,
+                                context,
+                                viewModel,
                               );
                             }
+                          } catch (e) {
+                            SnackBarHelper.showSnackBar(
+                              context,
+                              'Operation failed: $e',
+                            );
                           }
                         },
                         child: const Text("Submit"),
                       ),
                     ],
                   ),
-                  VerticalSpace(height: 10),
+                  const VerticalSpace(height: 10),
                 ],
               ),
             ),
@@ -173,7 +219,43 @@ void showChangeAddressBottomSheet(
   );
 }
 
-/// Panel code message builder
+void _sendSMSCommand(
+  String newAddress,
+  PanelData panelData,
+  BuildContext context,
+  PanelViewModel viewModel,
+) async {
+  final message = getAddressMessage(
+    newAddress: newAddress,
+    panelName: panelData.panelName,
+  );
+
+  final simNumber = panelData.panelSimNumber.trim();
+
+  if (message.isEmpty || simNumber.isEmpty) {
+    SnackBarHelper.showSnackBar(
+      context,
+      'Invalid address message or SIM number.',
+    );
+    return;
+  }
+
+  final isSent = await ProgressDialogWithMessage.show(
+    context,
+    messages: [message],
+    panelSimNumber: simNumber,
+  );
+
+  if (isSent == true) {
+    await viewModel.updateAddress(simNumber, newAddress);
+    SnackBarHelper.showSnackBar(context, 'Address updated successfully.');
+    CustomNavigation.instance.pushReplace(
+      context: context,
+      screen: const PanelListPage(),
+    );
+  }
+}
+
 String getAddressMessage({
   required String panelName,
   required String newAddress,
@@ -182,7 +264,6 @@ String getAddressMessage({
     return "< 1234 SIGNATURE #$newAddress* >";
   } else if (fourGComPanels.contains(panelName)) {
     return "SECURICO 1234 ADD SIGNATURE $newAddress* END";
-  } else {
-    return "";
   }
+  return "";
 }

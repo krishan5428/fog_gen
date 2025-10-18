@@ -1,9 +1,12 @@
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/utils/navigation.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../constants/urls.dart';
+import '../dialog/url_dialog.dart';
 import '../viewModel/user_view_model.dart';
 import '../widgets/custom_button.dart';
 import 'login.dart';
@@ -76,7 +79,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 70),
-              Image.asset('assets/images/logo.png', width: 200),
+              Image.asset('assets/images/sec_logo.png', width: 200),
               SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -129,11 +132,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     "By continuing, you accept our ",
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                  Text(
-                    "Terms & Privacy Policy",
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: AppColors.colorPrimary,
+                  RichText(
+                    text: TextSpan(
+                      text: ' Terms & Privacy Policy',
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: AppColors.colorPrimary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer:
+                          TapGestureRecognizer()
+                            ..onTap = () {
+                              showUrlDialog(
+                                context,
+                                policyUrl,
+                                'Terms & Privacy Policy',
+                              );
+                            },
                     ),
                   ),
                 ],

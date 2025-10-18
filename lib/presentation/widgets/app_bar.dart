@@ -8,7 +8,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
   final VoidCallback? onFilterTap;
   final VoidCallback? onMoreTaps;
-  final bool isProfile; // ✅ only one definition, non-nullable
+  final bool isProfile;
 
   const CustomAppBar({
     super.key,
@@ -18,7 +18,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBack,
     this.onFilterTap,
     this.onMoreTaps,
-    this.isProfile = false, // ✅ safe default
+    this.isProfile = false,
   });
 
   @override
@@ -31,7 +31,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           isDash
               ? null
               : IconButton(
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back_ios_new),
                 color: AppColors.black,
                 onPressed: onBack,
               ),

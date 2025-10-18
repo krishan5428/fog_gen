@@ -51,7 +51,7 @@ class AppDatabase extends _$AppDatabase {
 
   // Drift asks the schema version for migrations
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3; // updated schema for Panel Table: added IP Panel flow
 
   // You can now access: userDao.insertUser(), etc.
 
@@ -60,23 +60,32 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (m) async {
       await m.createAll();
     },
-    onUpgrade: (m, from, to) async {
-      if (from == 1) {
-        await m.createTable(timerTable);
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          // Boolean column with default 0 (false)
+          await customStatement(
+              'ALTER TABLE panel ADD COLUMN is_i_p_panel INTEGER NOT NULL DEFAULT 0;'
+          );
+
+          // Text columns with default empty string
+          await customStatement('UPDATE panel SET is_i_p_panel = 0 WHERE is_i_p_panel IS NULL;');
+          await customStatement('UPDATE panel SET ip_address = "" WHERE ip_address IS NULL;');
+          await customStatement('UPDATE panel SET port = "" WHERE port IS NULL;');
+          await customStatement('UPDATE panel SET static_ip_address = "" WHERE static_ip_address IS NULL;');
+          await customStatement('UPDATE panel SET static_port = "" WHERE static_port IS NULL;');
+          await customStatement('UPDATE panel SET ip_password = "" WHERE ip_password IS NULL;');
+        }
+        if(from < 3){
+          await customStatement('UPDATE panel SET is_ip_gprs_panel = 0 WHERE is_ip_gprs_panel IS NULL;');
+        }
       }
-      // handle the upgrades here
-    },
   );
 }
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'db11.sqlite'));
+    final file = File(p.join(dbFolder.path, 'db12.sqlite'));
     return SqfliteQueryExecutor(path: file.path, logStatements: true);
   });
 }
-
-// flutter clean
-// flutter pub get
-// flutter run

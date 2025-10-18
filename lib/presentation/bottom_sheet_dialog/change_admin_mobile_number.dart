@@ -1,12 +1,14 @@
 import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/data/database/app_database.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/strings.dart';
+import '../../utils/auth_helper.dart';
+import '../../utils/navigation.dart';
 import '../dialog/confirmation_dialog.dart';
+import '../dialog/progress_with_message.dart';
 import '../screens/panel_details.dart';
 import '../viewModel/panel_view_model.dart';
 import '../widgets/form_section.dart';
@@ -28,6 +30,7 @@ void showAdminMobileNumberChangeBottomSheet(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    backgroundColor: AppColors.lightGrey,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -38,7 +41,7 @@ void showAdminMobileNumberChangeBottomSheet(
             padding: EdgeInsets.only(
               left: 16,
               right: 16,
-              top: 16,
+              top: 0,
               bottom: MediaQuery.of(context).viewInsets.bottom + 16,
             ),
             child: SingleChildScrollView(
@@ -171,47 +174,48 @@ void showAdminMobileNumberChangeBottomSheet(
                           );
 
                           if (result == true) {
+                            String device =
+                                await SharedPreferenceHelper.getDeviceType();
+                            final smsPermission = await Permission.sms.status;
+
                             final messages = getAdminMobileNumberMessages(
                               newAdminMobileNumber: newAdminMobileNumber,
                               panel: panel,
                             );
 
-                            debugPrint('message is $messages');
+                            var isSend = false;
 
-                            // Show progress dialog
-                            ProgressDialog.show(context);
+                            if (messages.isNotEmpty &&
+                                panel.panelSimNumber.trim().isNotEmpty &&
+                                device.isNotEmpty) {
+                              debugPrint('sms executed');
+                              isSend =
+                                  (await _trySendSms(
+                                    context,
+                                    device,
+                                    smsPermission,
+                                    panel.panelSimNumber,
+                                    [messages],
+                                  ))!;
+                            }
 
-                            // Send first SMS
-                            sendSms(panel.panelSimNumber, messages);
-
-                            // Dismiss progress dialog
-                            if (context.mounted)
-                              ProgressDialog.dismiss(context);
-
-                            final success = await viewModel
-                                .updateAdminMobileNumber(
-                                  panel.panelSimNumber,
-                                  newAdminMobileNumber,
-                                );
-
-                            if (success && context.mounted) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) =>
-                                          PanelDetailsScreen(panelData: panel),
-                                ),
+                            if (isSend) {
+                              await viewModel.updateAdminMobileNumber(
+                                panel.panelSimNumber,
+                                newAdminMobileNumber,
                               );
+
+                              CustomNavigation.instance.pushReplace(
+                                context: context,
+                                screen: PanelDetailsScreen(panelData: panel),
+                              );
+
                               SnackBarHelper.showSnackBar(
                                 context,
                                 'Admin number updated successfully',
                               );
                             } else {
-                              SnackBarHelper.showSnackBar(
-                                context,
-                                'Failed to update admin number',
-                              );
+                              SnackBarHelper.showSnackBar(context, 'Revoked');
                             }
                           }
                         },
@@ -228,6 +232,30 @@ void showAdminMobileNumberChangeBottomSheet(
       );
     },
   );
+}
+
+Future<bool?> _trySendSms(
+  BuildContext context,
+  String device,
+  PermissionStatus smsPermission,
+  String simNumber,
+  List<String> messages,
+) async {
+  // if (device.toUpperCase() == "ANDROID" && smsPermission.isGranted) {
+  // Show progress dialog
+  final result = ProgressDialogWithMessage.show(
+    context,
+    messages: messages,
+    panelSimNumber: simNumber,
+  );
+  return result;
+  // } else {
+  //   // Fallback: directly send SMS
+  //   for (final msg in messages) {
+  //     await sendSms(simNumber, msg);
+  //   }
+  //   return true;
+  // }
 }
 
 String getAdminMobileNumberMessages({

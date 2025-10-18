@@ -1,8 +1,11 @@
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/constants/strings.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/utils/silent_sms.dart';
+import 'package:fire_nex/utils/auth_helper.dart';
+import 'package:fire_nex/utils/common_classes.dart';
+import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/database/app_database.dart';
@@ -35,6 +38,11 @@ class AddNumberSolitarePage extends StatelessWidget {
     }
   }
 
+  Future<String> getDevice() async {
+    final device = await SharedPreferenceHelper.getDeviceType();
+    return device;
+  }
+
   List<String> getExistingNumbers(PanelData panel) {
     return getNumbers(
       panel,
@@ -47,28 +55,25 @@ class AddNumberSolitarePage extends StatelessWidget {
     PanelData panel,
     int index,
   ) async {
-    final message =
+    final title =
         neuronPanels.contains(panel.panelName)
             ? "Do you want to DELETE MOBILE NUMBER ${index + 1}?"
             : "Do you want to DELETE USER0$index number?";
     final confirm = await showConfirmationDialog(
       context: context,
-      message: message,
+      message: title,
     );
 
-    if (confirm == true) {
-      final success = await viewModel.updateMobileNumber(
-        panel.panelSimNumber,
-        "0000000000",
-        index,
-      );
+    String device = await getDevice();
+    final smsPermission = await Permission.sms.status;
+    bool? isSend = false;
 
-      if (success) {
-        if (neuronPanels.contains(panel.panelName)) {
-          String message = '';
-          index += 1;
-          if (index == 2) {
-            message = '''
+    if (confirm == true) {
+      if (neuronPanels.contains(panel.panelName)) {
+        var message = '';
+        index += 1;
+        if (index == 2) {
+          message = '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+910000000000*
@@ -77,8 +82,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-          } else if (index == 3) {
-            message = '''
+        } else if (index == 3) {
+          message = '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -87,8 +92,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-          } else if (index == 4) {
-            message = '''
+        } else if (index == 4) {
+          message = '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -97,8 +102,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-          } else if (index == 5) {
-            message = '''
+        } else if (index == 5) {
+          message = '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -107,8 +112,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #05-+910000000000*
 >
 ''';
-          } else if (index == 6) {
-            message = '''
+        } else if (index == 6) {
+          message = '''
 < 1234 TEL NO
 #06-+910000000000*
 #07-+91${panel.mobileNumber6}*
@@ -117,8 +122,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-          } else if (index == 7) {
-            message = '''
+        } else if (index == 7) {
+          message = '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+910000000000*
@@ -127,8 +132,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-          } else if (index == 8) {
-            message = '''
+        } else if (index == 8) {
+          message = '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -137,8 +142,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-          } else if (index == 9) {
-            message = '''
+        } else if (index == 9) {
+          message = '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -147,8 +152,8 @@ class AddNumberSolitarePage extends StatelessWidget {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-          } else if (index == 10) {
-            message = '''
+        } else if (index == 10) {
+          message = '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -157,25 +162,39 @@ class AddNumberSolitarePage extends StatelessWidget {
 #10-+910000000000*
 >
 ''';
-          } else {
-            message = "";
-          }
-          await sendSms(panel.panelSimNumber, message);
         } else {
-          await sendSms(
-            panel.panelSimNumber,
-            'SECURICO 1234 REMOVE USER0$index END',
-          );
+          message = "";
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Number deleted successfully!')),
+        isSend = await trySendSms(
+          context,
+          device,
+          smsPermission,
+          panel.panelSimNumber,
+          [message],
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete number.')),
+        isSend = await trySendSms(
+          context,
+          device,
+          smsPermission,
+          panel.panelSimNumber,
+          ['SECURICO 1234 REMOVE USER0$index END'],
         );
       }
+
+      if (isSend!) {
+        await viewModel.updateMobileNumber(
+          panel.panelSimNumber,
+          "0000000000",
+          index,
+        );
+        SnackBarHelper.showSnackBar(context, 'Number deleted successfully!');
+      } else {
+        SnackBarHelper.showSnackBar(context, 'Revoked');
+      }
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Failed to delete number.');
     }
   }
 

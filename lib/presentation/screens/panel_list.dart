@@ -28,18 +28,27 @@ class _PanelListState extends State<PanelListPage> {
   String currentFilterType = 'ALL';
   int? userId;
   List<Map<String, String>> siteAndSiteList = [];
-  // List<SitePanelSimInfo> sitePanelInfoList = [];
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
       _isInitialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        fetchPanel();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          fetchPanel();
+        }
       });
     }
   }
+
+  // Future<void> _checkSMSPermissionDialog() async {
+  //   final shown = await SharedPreferenceHelper.getSmsDialogShown();
+  //   if (!shown) {
+  //     await SmsPermissionDialog.show(context);
+  //     await SharedPreferenceHelper.setSmsDialogShown(true);
+  //   }
+  // }
 
   void fetchPanel() async {
     if (mounted) ProgressDialog.show(context, message: "Fetching panels");
@@ -54,6 +63,13 @@ class _PanelListState extends State<PanelListPage> {
         panels.insert(
           0,
           PanelData(
+            isIPPanel: false,
+            isIPGPRSPanel: false,
+            ipAddress: "255.255.255.255",
+            ipPassword: '1234',
+            port: '5000',
+            staticIPAddress: '255.255.255.255',
+            staticPort: '5000',
             id: userId!,
             panelSimNumber: "9289102616",
             panelType: "ALARM PANEL",
@@ -79,16 +95,18 @@ class _PanelListState extends State<PanelListPage> {
 
       if (!mounted) return;
 
-      setState(() {
-        panelList = panels;
-        filteredPanelList = panels;
+      if (mounted) {
+        setState(() {
+          panelList = panels;
+          filteredPanelList = panels;
+        });
+      }
+
+      // defer view model update
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        panelVM.updatePanelList(panels);
       });
 
-      // 🔹 Update ViewModel here
-      panelVM.updatePanelList(panels);
-
-      // 🔹 Log for verification
-      debugPrint("SITE AND PANEL SIM LIST UPDATED IN VIEWMODEL:");
       for (var info in panelVM.sitePanelInfoList) {
         debugPrint("- Site: ${info.siteName}, SIM: ${info.panelSimNumber}");
       }
@@ -121,11 +139,18 @@ class _PanelListState extends State<PanelListPage> {
         panels = await panelViewModel.getFilteredPanels(userId!, panelType);
       }
 
-      // ✅ Only inject dummy panel after fetching the real ones
+      // dummy injection
       if (userId == 999999) {
         panels.insert(
           0,
           PanelData(
+            isIPPanel: false,
+            isIPGPRSPanel: false,
+            ipAddress: "255.255.255.255",
+            ipPassword: '1234',
+            port: '5000',
+            staticIPAddress: '255.255.255.255',
+            staticPort: '5000',
             id: userId!,
             panelSimNumber: "9598641084",
             panelType: "ALARM PANEL",
@@ -196,13 +221,15 @@ class _PanelListState extends State<PanelListPage> {
                 padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
                 children: [
                   ...filteredPanelList.map(
-                        (panel) => Consumer<PanelViewModel>(
+                    (panel) => Consumer<PanelViewModel>(
                       builder: (context, viewModel, child) {
                         // check if currentPanel has the same sim number and use updated data
-                        final updatedPanel = (viewModel.currentPanel != null &&
-                            viewModel.currentPanel!.panelSimNumber == panel.panelSimNumber)
-                            ? viewModel.currentPanel!
-                            : panel;
+                        final updatedPanel =
+                            (viewModel.currentPanel != null &&
+                                    viewModel.currentPanel!.panelSimNumber ==
+                                        panel.panelSimNumber)
+                                ? viewModel.currentPanel!
+                                : panel;
 
                         return PanelCard(panelData: updatedPanel);
                       },

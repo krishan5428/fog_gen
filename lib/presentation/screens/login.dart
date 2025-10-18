@@ -1,4 +1,5 @@
 import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fire_nex/presentation/dialog/url_dialog.dart';
 import 'package:fire_nex/presentation/screens/add_vendor.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
 import 'package:fire_nex/presentation/screens/signup.dart';
@@ -7,9 +8,12 @@ import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
 import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:fire_nex/utils/navigation.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../constants/urls.dart';
+import '../../utils/get_device_type.dart';
 import '../dialog/forgot_password_dialog.dart';
 import '../widgets/custom_button.dart';
 
@@ -39,12 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // final device = getDeviceType();
+      final device = getDeviceType();
 
       if (mobile == "9899446573" && password == "123456") {
         final dummyUserId = 999999;
 
-        await SharedPreferenceHelper.setLoginState(true, dummyUserId);
+        await SharedPreferenceHelper.setLoginState(true, dummyUserId, device);
 
         SnackBarHelper.showSnackBar(context, 'Login Successful');
         CustomNavigation.instance.pushReplace(
@@ -67,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final vendorViewModel = context.read<VendorViewModel>();
         final vendor = await vendorViewModel.getVendorByUserId(user.id);
 
-        await SharedPreferenceHelper.setLoginState(true, user.id);
+        await SharedPreferenceHelper.setLoginState(true, user.id, device);
 
         SnackBarHelper.showSnackBar(context, 'Login Successful');
 
@@ -100,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 150),
-              Image.asset('assets/images/logo.png', width: 200),
+              Image.asset('assets/images/sec_logo.png', width: 200),
 
               const SizedBox(height: 30),
 
@@ -157,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscureText = !_obscureText; // 👈 toggle
+                        _obscureText = !_obscureText;
                       });
                     },
                   ),
@@ -180,11 +184,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     "By continuing, you accept our ",
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                  Text(
-                    "Terms & Privacy Policy",
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: AppColors.colorPrimary,
+                  RichText(
+                    text: TextSpan(
+                      text: ' Terms & Privacy Policy',
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: AppColors.colorPrimary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer:
+                          TapGestureRecognizer()
+                            ..onTap = () {
+                              showUrlDialog(
+                                context,
+                                policyUrl,
+                                'Terms & Privacy Policy',
+                              );
+                            },
                     ),
                   ),
                 ],

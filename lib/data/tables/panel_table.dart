@@ -30,4 +30,11 @@ class Panel extends Table {
       text().withDefault(const Constant("0000000000"))();
   TextColumn get mobileNumber10 =>
       text().withDefault(const Constant("0000000000"))();
+  BoolColumn get isIPPanel => boolean()();
+  BoolColumn get isIPGPRSPanel => boolean()();
+  TextColumn get ipAddress => text()();
+  TextColumn get port => text()();
+  TextColumn get staticIPAddress => text()();
+  TextColumn get staticPort => text()();
+  TextColumn get ipPassword => text()();
 }
