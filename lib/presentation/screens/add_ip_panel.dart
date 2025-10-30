@@ -132,13 +132,14 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
     } else {
       showInfoDialog(
         context: context,
-        message: 'Failed to connect panel!',
-        onOk: () {
-          CustomNavigation.instance.pushReplace(
-            context: context,
-            screen: const PanelListPage(),
-          );
-        },
+        message:
+            'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
+        // onOk: () {
+        //   CustomNavigation.instance.pushReplace(
+        //     context: context,
+        //     screen: const PanelListPage(),
+        //   );
+        // },
       );
     }
   }
@@ -203,8 +204,7 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
 
       final response = await socketRepo.sendPacketSR1(Packets.connectPacket());
       return _handleSR1Response(response, socketRepo);
-    }
-    catch (e) {
+    } catch (e) {
       debugPrint("Error sending packet: $e");
 
       final errorText = e.toString().toLowerCase();
@@ -277,8 +277,9 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
                   ProgressDialog.show(context);
                   await Future.delayed(const Duration(milliseconds: 200));
 
-                  final reconnectResponse =
-                  await socketRepo.sendPacketSR1(Packets.connectPacket());
+                  final reconnectResponse = await socketRepo.sendPacketSR1(
+                    Packets.connectPacket(),
+                  );
 
                   if (!context.mounted) return;
 
@@ -291,15 +292,11 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
                   } else if (reconnectResponse == "S*000#3#*E") {
                     await showInfoDialog(
                       context: context,
-                      message:
-                      'Please restart the panel and reconnect again.',
+                      message: 'Please restart the panel and reconnect again.',
                     );
                     navigator.pop(false);
                   } else {
-                    SnackBarHelper.showSnackBar(
-                      context,
-                      "Failed to reconnect",
-                    );
+                    SnackBarHelper.showSnackBar(context, "Failed to reconnect");
                     navigator.pop(false);
                   }
                 } catch (e, stackTrace) {
@@ -311,17 +308,17 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
                   final errorText = e.toString().toLowerCase();
                   final isConnectionFailed =
                       errorText.contains('socketexception') ||
-                          errorText.contains('connection refused') ||
-                          errorText.contains('timed out') ||
-                          errorText.contains('did not respond') ||
-                          errorText.contains('failed');
+                      errorText.contains('connection refused') ||
+                      errorText.contains('timed out') ||
+                      errorText.contains('did not respond') ||
+                      errorText.contains('failed');
 
                   if (isConnectionFailed) {
                     if (context.mounted) {
                       await showInfoDialog(
                         context: context,
                         message:
-                        'An error occurred while reconnecting.\nPlease check your network and try again.',
+                            'An error occurred while reconnecting.\nPlease check your network and try again.',
                       );
                     }
                   } else {

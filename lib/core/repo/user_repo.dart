@@ -1,10 +1,28 @@
-import 'package:fire_nex/core/api/api_service.dart';
-import 'package:fire_nex/core/responses/user_response.dart';
+import '../responses/del_user_response.dart';
+import '../responses/forgot_pass_response.dart';
+import '../responses/login_response.dart';
+import '../responses/signup_response.dart';
+import '../responses/update_user_response.dart';
 
-class UserRepo {
-  final ApiService _apiService = ApiService();
+abstract class UserRepo {
+  Future<LoginResponse> login(String mobile, String password);
 
-  Future<LoginResponse> loginUser(String mobile, String pass) async {
-    return await _apiService.loginUser(mobile: mobile, pass: pass);
-  }
+  Future<SignupResponse> signUp(
+    String name,
+    String email,
+    String mobile,
+    String pass,
+    String dev_info,
+    String device_id,
+  );
+
+  Future<ForgotPassResponse> forgotPass(String mobile);
+
+  Future<UpdateUserResponse> updateValue(
+    String userId,
+    String value,
+    String key,
+  );
+
+  Future<DeleteUserResponse> deleteUser(String mobile, String password);
 }

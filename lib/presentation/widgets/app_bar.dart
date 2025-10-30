@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../constants/app_colors.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -32,21 +33,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ? null
               : IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new),
-                color: AppColors.black,
+                color: AppColors.white,
                 onPressed: onBack,
               ),
-      elevation: 6,
-      backgroundColor: Colors.grey.shade100,
+      iconTheme: const IconThemeData(
+        color: AppColors.white,
+      ),
+      backgroundColor: Colors.grey,
       automaticallyImplyLeading: true,
+      elevation: 0,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.grey,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
       title: Row(
         children: [
-          Image.asset('assets/images/sec_logo.png', width: 80),
+          Image.asset('assets/images/sec_logo.png', width: 120),
           const SizedBox(width: 10),
           Container(width: 1, height: 30, color: AppColors.colorAccent),
           const SizedBox(width: 10),
           Text(
             pageName,
-            style: const TextStyle(fontSize: 14, color: AppColors.colorAccent),
+            style: const TextStyle(fontSize: 14, color: AppColors.white),
           ),
         ],
       ),

@@ -165,7 +165,7 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   Widget _buildGprsSettings(double fontSize, double spacing) {
     return ExpansionTile(
       title: _buildSectionTitle('GSM Dialer Settings', fontSize),
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: [
         SizedBox(height: spacing),
         CustomTextField(
@@ -188,8 +188,8 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
 
   Widget _buildIpSettings(double fontSize, double spacing) {
     return ExpansionTile(
-      title: _buildSectionTitle('IP Comm Settings', fontSize),
-      initiallyExpanded: false,
+      title: _buildSectionTitle('IP Comm. Settings', fontSize),
+      initiallyExpanded: true,
       children: [
         SizedBox(height: spacing),
         CustomTextField(
@@ -399,13 +399,13 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     }
     showInfoDialog(
       context: context,
-      message: 'Failed to connect panel!',
-      onOk: () {
-        CustomNavigation.instance.pushReplace(
-          context: context,
-          screen: const PanelListPage(),
-        );
-      },
+      message: 'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
+      // onOk: () {
+      //   CustomNavigation.instance.pushReplace(
+      //     context: context,
+      //     screen: const PanelListPage(),
+      //   );
+      // },
     );
   }
 

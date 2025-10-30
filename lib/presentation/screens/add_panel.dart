@@ -7,11 +7,13 @@ import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
 import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants/strings.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
+import '../cubit/panel/panel_cubit.dart';
 import '../dialog/progress_with_message.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -302,159 +304,93 @@ class _AddPanelPageState extends State<AddPanelPage> {
     }
   }
 
-  void _performAddPanel() {
-    if (fourGComPanels.contains(selectedPanelName)) {
-      _handle4GComPanels();
-    } else if (neuronPanels.contains(selectedPanelName)) {
-      _handleNeuronPanels();
-    } else {
-      _handleOtherPanels();
-    }
-  }
-
-  Future<void> _handle4GComPanels() async {
-    final adminNumber = formControllers.adminNumberController.text.trim();
-    final panelSimNumber = formControllers.panelSimNumberController.text.trim();
-    final address = formControllers.addressController.text.trim();
-
-    String message1 = 'SECURICO 1234 ADD ADMIN +91-$adminNumber END';
-    String message2 = 'SECURICO 1234 ADD SIGNATURE $address* END';
-
-    final messages = [message1, message2];
-
-    try {
-      final result = await ProgressDialogWithMessage.show(
-        context,
-        messages: messages,
-        panelSimNumber: panelSimNumber,
-      );
-
-      debugPrint("result :  $result");
-
-      if (result == true) {
-        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-        CustomNavigation.instance.pushReplace(
-          context: context,
-          screen: PanelListPage(),
-        );
-      }
-    } catch (e) {
-      CustomNavigation.instance.pop(context);
-      SnackBarHelper.showSnackBar(context, 'Error');
-    }
-  }
-
-  Future<void> _handleNeuronPanels() async {
-    final adminNumber = formControllers.adminNumberController.text.trim();
-    final panelSimNumber = formControllers.panelSimNumberController.text.trim();
-    final address = formControllers.addressController.text.trim();
-
-    String message1 = '''
-< 1234 TEL NO
-#01-+91$adminNumber*
-#02-+910000000000*
-#03-+910000000000*
-#04-+910000000000*
-#05-+910000000000*
->
-''';
-    String message2 = '< 1234 SIGNATURE $address* >';
-
-    final messages = [message1, message2];
-
-    try {
-      final result = await ProgressDialogWithMessage.show(
-        context,
-        messages: messages,
-        panelSimNumber: panelSimNumber,
-      );
-
-      debugPrint("result :  $result");
-
-      if (result == true) {
-        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-        CustomNavigation.instance.pushReplace(
-          context: context,
-          screen: PanelListPage(),
-        );
-      }
-    } catch (e) {
-      CustomNavigation.instance.pop(context);
-      SnackBarHelper.showSnackBar(context, 'Error');
-    }
-  }
-
-  Future<void> _handleOtherPanels() async {
-    final adminNumber = formControllers.adminNumberController.text.trim();
-    final address = formControllers.addressController.text.trim();
-    final panelSimNumber = formControllers.panelSimNumberController.text.trim();
-
-    final String message1 = '1234 NAME ADDRESS #$address* END';
-    final String message2 = '1234 TEL NO INTRUSION #01-$adminNumber* END';
-    final String message3 = '1234 TEL NO FIRE #01-$adminNumber* END';
-
-    final messages = [message1, message2, message3];
-
-    try {
-      final result = await ProgressDialogWithMessage.show(
-        context,
-        messages: messages,
-        panelSimNumber: panelSimNumber,
-      );
-
-      if (result == true) {
-        SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-        CustomNavigation.instance.pushReplace(
-          context: context,
-          screen: PanelListPage(),
-        );
-      } else {
-        CustomNavigation.instance.pop(context);
-        SnackBarHelper.showSnackBar(context, 'Error');
-      }
-    } catch (e) {
-      CustomNavigation.instance.pop(context);
-      SnackBarHelper.showSnackBar(context, 'Error sending SMS: $e');
-    }
-  }
-
   Future<void> _addPanelToDB() async {
-    final panelViewModel = context.read<PanelViewModel>();
-
     final siteName = formControllers.siteNameController.text.trim();
     final panelSimNumber = formControllers.panelSimNumberController.text.trim();
     final adminNumber = formControllers.adminNumberController.text.trim();
     final address = formControllers.addressController.text.trim();
     final userId = await SharedPreferenceHelper.getUserId();
+    final String currentTime = DateFormat(
+      'yyyy-MM-dd HH:mm:ss',
+    ).format(DateTime.now());
+    debugPrint('Inserting Panel with the following values:');
+    debugPrint('Panel Type: ${widget.panelType}');
+    debugPrint('Panel Name: $selectedPanelName');
+    debugPrint('Site Name: $siteName');
+    debugPrint('Panel SIM Number: $panelSimNumber');
+    debugPrint('Admin SIM Number: $adminNumber');
+    debugPrint('Address: $address');
+    debugPrint('User ID: $userId');
 
-    await panelViewModel.insertPanel(
+    if (!mounted) return;
+
+    context.read<PanelCubit>().addPanel(
+      userId: userId.toString(),
       panelType: widget.panelType,
-      panelCategory: selectedPanelName!,
+      panelName: selectedPanelName!,
+      site: siteName,
       panelSimNumber: panelSimNumber,
-      mobileNumber: adminNumber,
+      adminCode: "1234",
+      adminMobileNumber: adminNumber,
+      mobileNumberSubId: '0',
+      mobileNumber2: "0000000000",
+      mobileNumber3: "0000000000",
+      mobileNumber4: "0000000000",
+      mobileNumber5: "0000000000",
+      mobileNumber6: "0000000000",
+      mobileNumber7: "0000000000",
+      mobileNumber8: "0000000000",
+      mobileNumber9: "0000000000",
+      mobileNumber10: "0000000000",
       address: address,
-      siteName: siteName,
-      adminCode: '1234',
-      userId: userId!,
-      isIPPanel: false,
-      isIPGPRSPanel: false,
-      ipAddress: '',
-      port: '',
-      staticPort: '',
-      pass: '',
-      staticIP: '',
+      cOn: currentTime,
+      password: "",
+      ip_address: "",
+      is_ip_gsm_panel: false,
+      is_ip_panel: false,
+      port_no: "",
+      static_ip_address: "",
+      static_port_no: "",
     );
-
-    if (device == 'ANDROID') {
-      _performAddPanel();
-    } else {
-      SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: PanelListPage(),
-      );
-    }
   }
+
+  // Future<void> _addPanelToDB() async {
+  //   final panelViewModel = context.read<PanelViewModel>();
+  //
+  //   final siteName = formControllers.siteNameController.text.trim();
+  //   final panelSimNumber = formControllers.panelSimNumberController.text.trim();
+  //   final adminNumber = formControllers.adminNumberController.text.trim();
+  //   final address = formControllers.addressController.text.trim();
+  //   final userId = await SharedPreferenceHelper.getUserId();
+  //
+  //   await panelViewModel.insertPanel(
+  //     panelType: widget.panelType,
+  //     panelCategory: selectedPanelName!,
+  //     panelSimNumber: panelSimNumber,
+  //     mobileNumber: adminNumber,
+  //     address: address,
+  //     siteName: siteName,
+  //     adminCode: '1234',
+  //     userId: userId!,
+  //     isIPPanel: false,
+  //     isIPGPRSPanel: false,
+  //     ipAddress: '',
+  //     port: '',
+  //     staticPort: '',
+  //     pass: '',
+  //     staticIP: '',
+  //   );
+  //
+  //   if (device == 'ANDROID') {
+  //     _performAddPanel();
+  //   } else {
+  //     SnackBarHelper.showSnackBar(context, 'Panel Added Successfully!');
+  //     CustomNavigation.instance.pushReplace(
+  //       context: context,
+  //       screen: PanelListPage(),
+  //     );
+  //   }
+  // }
 
   @override
   void dispose() {

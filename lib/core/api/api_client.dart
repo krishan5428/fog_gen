@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
-
+import 'package:fire_nex/core/api/web_url_constants.dart';
 class ApiClient {
   static final Dio dio = Dio(
     BaseOptions(
-      baseUrl: "https://pc27.in/apps/Securico/app_services/",
-      connectTimeout: Duration(seconds: 10),
-      receiveTimeout: Duration(seconds: 10),
+      baseUrl: WebUrlConstants.baseUrl,
+      connectTimeout: WebUrlConstants.connectTimeout,
+      receiveTimeout: WebUrlConstants.receiveTimeout,
+      sendTimeout: WebUrlConstants.sendTimeout,
       headers: {'Usr': '', 'Usr_type': 'USER'},
     ),
   );

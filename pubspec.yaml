@@ -2,7 +2,7 @@ name: fire_nex
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.4+8
+version: 1.0.5+9
 
 environment:
   sdk: ^3.7.0
@@ -28,6 +28,7 @@ dependencies:
   bloc: ^8.1.2
   permission_handler: ^12.0.1
   logger: ^2.6.2
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

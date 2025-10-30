@@ -8,7 +8,6 @@ import 'package:fire_nex/presentation/screens/vendor_profile.dart';
 import 'package:fire_nex/utils/app_info.dart';
 import 'package:fire_nex/utils/navigation.dart';
 
-import '../../constants/app_colors.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/responsive.dart';
 import '../dialog/panel_type.dart';
@@ -41,7 +40,7 @@ class _AddDrawerState extends State<AppDrawer> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: AppColors.colorPrimaryDark.withOpacity(0.5),
+              color: Colors.grey,
             ),
             child: Center(
               child: Column(
