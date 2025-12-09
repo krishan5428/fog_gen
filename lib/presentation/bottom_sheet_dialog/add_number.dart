@@ -1,231 +1,224 @@
+import 'package:fire_nex/presentation/dialog/progress.dart';
 import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:fire_nex/utils/navigation.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
 import '../../constants/strings.dart';
-import '../../data/database/app_database.dart';
+import '../../core/data/pojo/panel_data.dart';
+import '../cubit/panel/panel_cubit.dart';
 import '../dialog/progress_with_message.dart';
 import '../widgets/form_section.dart';
 
-Future<bool?> showAddNumberBottomSheet(
-  BuildContext parent,
-  PanelData panel,
-  int index,
-  PanelViewModel viewModel, {
-  required List<String> existingNumbers,
-}) async {
-  final TextEditingController newIntNumber = TextEditingController();
-  String? errorText;
+class AddNumberBottomSheet extends StatefulWidget {
+  final PanelData panel;
+  final int index;
+  final List<String> existingNumbers;
 
-  return showModalBottomSheet<bool>(
-    context: parent,
-    isScrollControlled: true,
-    backgroundColor: AppColors.lightGrey,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (BuildContext sheetContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 0,
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Container(
-                      height: 4,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+  const AddNumberBottomSheet({
+    super.key,
+    required this.panel,
+    required this.index,
+    required this.existingNumbers,
+  });
+
+  @override
+  State<AddNumberBottomSheet> createState() => _AddNumberBottomSheetState();
+}
+
+class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+  String? _errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = widget.panel;
+    final index = widget.index;
+
+    return BlocListener<PanelCubit, PanelState>(
+      listener: (context, state) {
+        if(state is PanelLoading){
+          ProgressDialog.show(context);
+        }
+        if (state is UpdatePanelsSuccess) {
+          ProgressDialog.dismiss(context);
+          debugPrint('add number success');
+          CustomNavigation.instance.popWithResult(
+            context: context,
+            result: state.panelData,
+          );
+        } else if (state is UpdatePanelsFailure) {
+          ProgressDialog.dismiss(context);
+          debugPrint('add number failure');
+          SnackBarHelper.showSnackBar(context, state.message);
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 0,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  height: 4,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    neuronPanels.contains(panel.panelName)
-                        ? "Add Number for MOBILE NUMBER ${(index + 1).toString().padLeft(2, '0')}" // increment index for NEURON
-                        : "Add Number for USER${index.toString().padLeft(2, '0')}",
-                    // keep index as-is
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                neuronPanels.contains(panel.panelName)
+                    ? "Add Number for MOBILE NUMBER ${(index + 1).toString().padLeft(2, '0')}"
+                    : "Add Number for USER${index.toString().padLeft(2, '0')}",
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.colorPrimary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FormSection(
+                label: 'Add new Number',
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                maxLength: 10,
+              ),
+              if (_errorText != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    _errorText!,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 15,
+                      color: Colors.red,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.colorPrimary,
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  FormSection(
-                    label: 'Add new Number',
-                    controller: newIntNumber,
-                    keyboardType: TextInputType.number,
-                    maxLength: 10,
-                  ),
-                  if (errorText != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        errorText!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
+                ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(color: AppColors.colorAccent),
                     ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(sheetContext, false),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: AppColors.colorAccent),
-                        ),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.colorPrimary,
-                          foregroundColor: AppColors.white,
-                        ),
-                        onPressed: () async {
-                          final newNumber = newIntNumber.text.trim();
-                          final normalizedNewNumber =
-                              newNumber.replaceAll(RegExp(r'\D'), '').trim();
-                          final normalizedExisting =
-                              existingNumbers
-                                  .map(
-                                    (e) =>
-                                        e.replaceAll(RegExp(r'\D'), '').trim(),
-                                  )
-                                  .toList();
-
-                          // Check length
-                          if (normalizedNewNumber.length != 10) {
-                            setState(() {
-                              errorText = 'Number must be exactly 10 digits';
-                            });
-                            return;
-                          }
-
-                          if (newNumber == "1234567890") {
-                            setState(() {
-                              errorText = 'This number is not allowed';
-                            });
-                            return;
-                          }
-
-                          if (normalizedNewNumber.isEmpty ||
-                              normalizedNewNumber == panel.adminMobileNumber ||
-                              normalizedNewNumber == panel.panelSimNumber ||
-                              normalizedExisting.contains(
-                                normalizedNewNumber,
-                              )) {
-                            setState(() {
-                              errorText =
-                                  'This number is already used, please use a different number!';
-                            });
-                            return;
-                          }
-
-                          String device =
-                              await SharedPreferenceHelper.getDeviceType();
-                          final smsPermission = await Permission.sms.status;
-
-                          // ✅ Await confirmation dialog
-                          final confirm = await showConfirmationDialog(
-                            context: sheetContext,
-                            message: 'Do you want to add/update this number?',
-                          );
-
-                          if (confirm == true) {
-                            final message = getMobileNumberMessages(
-                              newNumber: newNumber,
-                              panel: panel,
-                              index: index,
-                            );
-                            debugPrint("message to be sent: $message");
-                            debugPrint("smsPermission: $smsPermission");
-                            debugPrint("device: $device");
-
-                            var result = false;
-
-                            if (message.isNotEmpty &&
-                                panel.panelSimNumber.trim().isNotEmpty &&
-                                device.isNotEmpty) {
-                              debugPrint('sms executed');
-                              result =
-                                  (await _trySendSms(
-                                    context,
-                                    device,
-                                    smsPermission,
-                                    panel.panelSimNumber,
-                                    [message],
-                                  ))!;
-                            }
-
-                            if (result) {
-                              await viewModel.updateMobileNumber(
-                                panel.panelSimNumber,
-                                newNumber,
-                                index,
-                              );
-                              SnackBarHelper.showSnackBar(
-                                context,
-                                'Number added successfully!',
-                              );
-                              CustomNavigation.instance.popWithResult(
-                                context: sheetContext,
-                                result: true,
-                              );
-                            } else {
-                              CustomNavigation.instance.popWithResult(
-                                context: sheetContext,
-                                result: false,
-                              );
-                              SnackBarHelper.showSnackBar(context, 'Revoked');
-                            }
-                            // Navigator.pop(sheetContext, true);
-                          } else {
-                            // setState(() {
-                            //   errorText =
-                            //       'Failed to update Mobile Number in database';
-                            // });
-                            CustomNavigation.instance.popWithResult(
-                              context: sheetContext,
-                              result: false,
-                            );
-                          }
-                        },
-
-                        child: const Text("Submit"),
-                      ),
-                    ],
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.colorPrimary,
+                      foregroundColor: AppColors.white,
+                    ),
+                    onPressed: _handleSubmit,
+                    child: const Text("Submit"),
                   ),
                 ],
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSubmit() async {
+    final panel = widget.panel;
+    final newNumber = _controller.text.trim();
+    final normalizedNewNumber = newNumber.replaceAll(RegExp(r'\D'), '');
+    final normalizedExisting =
+        widget.existingNumbers
+            .map((e) => e.replaceAll(RegExp(r'\D'), '').trim())
+            .toList();
+
+    if (normalizedNewNumber.length != 10) {
+      setState(() => _errorText = 'Number must be exactly 10 digits');
+      return;
+    }
+
+    if (newNumber == "1234567890") {
+      setState(() => _errorText = 'This number is not allowed');
+      return;
+    }
+
+    if (normalizedNewNumber.isEmpty ||
+        normalizedNewNumber == panel.adminMobileNumber ||
+        normalizedNewNumber == panel.panelSimNumber ||
+        normalizedExisting.contains(normalizedNewNumber)) {
+      setState(() {
+        _errorText =
+            'This number is already used, please use a different number!';
+      });
+      return;
+    }
+
+    final device = await SharedPreferenceHelper.getDeviceType();
+    final smsPermission = await Permission.sms.status;
+
+    final confirm = await showConfirmationDialog(
+      context: context,
+      message: 'Do you want to add/update this number?',
+    );
+
+    if (confirm != true) {
+      CustomNavigation.instance.popWithResult(context: context, result: false);
+      return;
+    }
+
+    final message = getMobileNumberMessages(
+      panel: panel,
+      newNumber: newNumber,
+      index: widget.index,
+    );
+
+    if (message.isEmpty) {
+      setState(() => _errorText = 'Failed to generate message');
+      return;
+    }
+
+    bool result = false;
+    result =
+        (await _trySendSms(
+          context,
+          device,
+          smsPermission,
+          panel.panelSimNumber,
+          [message],
+        )) ??
+        false;
+
+    if (result) {
+      context.read<PanelCubit>().updatePanelData(
+        userId: panel.userId,
+        panelId: panel.pnlId,
+        key: 'mobile_number${widget.index.toString()}',
+        value: newNumber,
       );
-    },
-  );
+      SnackBarHelper.showSnackBar(context, 'Number added successfully!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
+      CustomNavigation.instance.popWithResult(context: context, result: false);
+    }
+  }
 }
 
+// 🔧 Helper methods (unchanged)
 Future<bool?> _trySendSms(
   BuildContext context,
   String device,

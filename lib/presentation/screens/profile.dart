@@ -1,15 +1,20 @@
-import 'package:fire_nex/data/database/app_database.dart';
-import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../constants/app_colors.dart';
+import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
-import '../bottom_sheet_dialog/user_update.dart';
+import '../bottom_sheet_dialog/change_email.dart';
+import '../bottom_sheet_dialog/change_user_mobile_number.dart';
+import '../bottom_sheet_dialog/change_user_name.dart';
+import '../bottom_sheet_dialog/change_user_passcode.dart';
+import '../cubit/user/user_cubit.dart';
+import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/contact_item.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/form_section.dart';
 import 'login.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -20,7 +25,33 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  void _showMoreOptions(UserData user) {
+  String? userId;
+  String? name;
+  String? phone;
+  String? email;
+  String? pass;
+
+  bool isLoading = true;
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = await SharedPreferenceHelper.getUserData();
+    pass = await SharedPreferenceHelper.getPass();
+
+    setState(() {
+      userId = user?.usrId.toString();
+      name = user?.name ?? 'N/A';
+      phone = user?.mobile ?? 'N/A';
+      email = user?.email ?? 'N/A';
+      isLoading = false;
+    });
+  }
+
+  void _showMoreOptions() {
     final fontSize = Responsive.fontSize(context);
 
     showDialog(
@@ -37,90 +68,38 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               _buildOption(
                 'Update Username',
-                () => _openBottomSheet(
-                  UpdateUserFieldBottomSheet(
-                    userId: user.id, // ✅ use from user directly
-                    formKey: "name",
-                    currentValue: user.name,
-                  ),
+                    () => _openBottomSheet(
+                  ChangeUserName(userId: userId!, formKey: 'name'),
                 ),
               ),
               _buildOption(
                 'Update Mobile Number',
-                () => _openBottomSheet(
-                  UpdateUserFieldBottomSheet(
-                    userId: user.id,
-                    formKey: "mobile",
-                    currentValue: user.mobileNumber,
+                    () => _openBottomSheet(
+                  ChangeUserMobileBottomSheet(
+                    userId: userId!,
+                    formKey: 'mobile',
                   ),
                 ),
               ),
-              _buildOption(
-                'Update Password',
-                () => _openBottomSheet(
-                  UpdateUserFieldBottomSheet(
-                    userId: user.id,
-                    formKey: "password",
+              _buildOption('Update Password', () {
+                if (pass == null) return;
+                _openBottomSheet(
+                  ChangeUserPasswordBottomSheet(
+                    userId: userId!,
+                    formKey: 'password',
+                    currentPassword: pass!,
                   ),
-                ),
-              ),
+                );
+              }),
               _buildOption(
                 'Update Email',
-                () => _openBottomSheet(
-                  UpdateUserFieldBottomSheet(
-                    userId: user.id,
-                    formKey: "email",
-                    currentValue: user.email,
+                    () => _openBottomSheet(
+                  ChangeEmailAddressBottomSheet(
+                    userId: userId!,
+                    formKey: 'email',
                   ),
                 ),
               ),
-              _buildOption('Delete User Data', () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Confirm Deletion'),
-                      content: const Text(
-                        'Are you sure you want to delete your user data? This cannot be undone.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirm == true) {
-                  // Delete using ViewModel
-                  final userViewModel = context.read<UserViewModel>();
-                  await userViewModel.deleteUser(user.id);
-
-                  // Clear saved userId
-                  await SharedPreferenceHelper.clearLoginState();
-
-                  // Navigate to login
-                  CustomNavigation.instance.pushReplace(
-                    context: context,
-                    screen: const LoginScreen(),
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('User data deleted successfully'),
-                    ),
-                  );
-                }
-              }),
             ],
           ),
           actions: [
@@ -137,81 +116,229 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _openBottomSheet(Widget sheet) async {
-    Navigator.pop(context); // close dialog first
-    final updated = await showModalBottomSheet<bool>(
+  void _openBottomSheet(Widget bottomSheet) {
+    CustomNavigation.instance.pop(context);
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => sheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => bottomSheet,
     );
-    if (updated == true) {
-      setState(() {}); // refresh user data
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userViewModel = context.read<UserViewModel>();
+    final spacingBwtView = Responsive.spacingBwtView(context);
 
-    return FutureBuilder<int?>(
-      future: SharedPreferenceHelper.getUserId(),
-      builder: (context, snapshot) {
-        final userId = snapshot.data;
-
-        if (userId == 999999) {
-          final testUser = UserData(
-            id: 100000,
-            name: 'Vevak Gossain',
-            email: 'appservice.securico@gmail.com',
-            password: "123456",
-            mobileNumber: "9899446573",
-          );
-
-          return _buildProfileScaffold(testUser);
-        }
-
-        return FutureBuilder<UserData?>(
-          future: userId != null ? userViewModel.getUserByUserId(userId) : null,
-          builder: (context, userSnapshot) {
-            final user = userSnapshot.data;
-
-            return userSnapshot.connectionState == ConnectionState.waiting
-                ? const Center(child: CircularProgressIndicator())
-                : user != null
-                ? _buildProfileScaffold(user)
-                : const Center(child: Text('User Data is not available!'));
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildProfileScaffold(UserData user) {
     return Scaffold(
       appBar: CustomAppBar(
         pageName: 'Profile',
         isFilter: false,
         isProfile: true,
-        onMoreTaps: () => _showMoreOptions(user),
+        onMoreTaps: _showMoreOptions,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              buildContactItem(context, icon: Icons.person, text: user.name),
-              const Divider(),
-              buildContactItem(
-                context,
-                icon: Icons.phone,
-                text: user.mobileNumber,
+      body:
+      isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  buildContactItem(
+                    context,
+                    icon: Icons.person,
+                    text: name ?? 'N/A',
+                  ),
+                  const Divider(),
+                  buildContactItem(
+                    context,
+                    icon: Icons.phone,
+                    text: phone ?? 'N/A',
+                  ),
+                  const Divider(),
+                  buildContactItem(
+                    context,
+                    icon: Icons.email,
+                    text: email ?? 'N/A',
+                  ),
+                ],
               ),
-              const Divider(),
-              buildContactItem(context, icon: Icons.email, text: user.email),
-            ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: spacingBwtView),
+        child: SafeArea(
+          minimum: EdgeInsets.fromLTRB(
+            spacingBwtView * 2,
+            0,
+            spacingBwtView * 2,
+            spacingBwtView,
+          ),
+          child: CustomButton(
+            buttonText: 'Delete Profile',
+            foregroundColor: AppColors.white,
+            backgroundColor: AppColors.colorPrimary,
+            onPressed: _confirmDelete,
           ),
         ),
       ),
+    );
+  }
+
+  void _confirmDelete() {
+    final TextEditingController passwordController = TextEditingController();
+    bool isProceedStep = false;
+    String actionButtonText = 'Proceed';
+    String? errorMessage;
+    final spacing = Responsive.spacingBwtView(context);
+    final fontSize = Responsive.fontSize(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return BlocListener<UserCubit, UserState>(
+              listener: (context, state) {
+                if (!mounted) return;
+                if (state is UserLoading) {
+                  ProgressDialog.show(context);
+                } else if (state is UserDeleteSuccess) {
+                  setState(() {
+                    errorMessage = 'User deleted successfully!';
+                  });
+                  ProgressDialog.dismiss(context);
+                  _handlingDelete(context);
+                } else if (state is UserDeleteFailure) {
+                  ProgressDialog.dismiss(context);
+                  setState(() {
+                    errorMessage = state.message;
+                  });
+                }
+              },
+              child: Dialog(
+                insetPadding: EdgeInsets.all(spacing * 3),
+                backgroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(spacing),
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: spacing * 2,
+                    vertical: spacing,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Confirmation',
+                        style: TextStyle(fontSize: fontSize * 1.3),
+                      ),
+                      SizedBox(height: spacing),
+                      Text(
+                        'Are you sure you want to delete your profile?\nThis action cannot be undone.',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: spacing),
+
+                      if (isProceedStep) ...[
+                        FormSection(
+                          label: 'Enter Password',
+                          controller: passwordController,
+                          validator:
+                              (value) =>
+                          value == null || value.isEmpty
+                              ? 'Invalid entry'
+                              : null,
+                        ),
+                        if (errorMessage != null && errorMessage!.isNotEmpty)
+                          Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: EdgeInsets.only(top: spacing / 2),
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+
+                      SizedBox(height: spacing * 1.5),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed:
+                                () => CustomNavigation.instance.pop(context),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: AppColors.colorAccent),
+                            ),
+                          ),
+                          SizedBox(width: spacing),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: AppColors.white,
+                              backgroundColor: AppColors.colorPrimary,
+                            ),
+                            child: Text(
+                              actionButtonText,
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                            onPressed: () {
+                              if (!isProceedStep) {
+                                setState(() {
+                                  isProceedStep = true;
+                                  actionButtonText = 'Delete';
+                                  errorMessage = null;
+                                });
+                              } else {
+                                final password = passwordController.text.trim();
+                                if (password.isEmpty) {
+                                  setState(() {
+                                    errorMessage =
+                                    'Please enter your password.';
+                                  });
+                                  return;
+                                }
+                                setState(() {
+                                  errorMessage = null;
+                                });
+                                context.read<UserCubit>().deleteUser(
+                                  mobile: phone!,
+                                  password: password,
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -236,4 +363,14 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+}
+
+void _handlingDelete(context) async {
+  await Future.delayed(const Duration(seconds: 1));
+  await SharedPreferenceHelper.clearLoginState();
+  CustomNavigation.instance.pop(context);
+  CustomNavigation.instance.pushAndRemove(
+    context: context,
+    screen: const LoginScreen(),
+  );
 }

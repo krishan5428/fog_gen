@@ -1,13 +1,56 @@
-import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:fire_nex/utils/send_sms.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:telephony/telephony.dart';
 
 import '../../constants/app_colors.dart';
 
 class ProgressDialogWithMessage {
   static bool _isShowing = false;
+
+  // Make this STATIC so it can be used inside static show()
+  static Widget _buildSmsRow(
+    int index,
+    String message,
+    bool sent,
+    bool isSending,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(
+              "SMS ${index + 1}",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(message, style: const TextStyle(fontSize: 14)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child:
+                sent
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : isSending
+                    ? const CircularProgressIndicator(strokeWidth: 2)
+                    : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
 
   static Future<bool?> show(
     BuildContext context, {
@@ -20,6 +63,7 @@ class ProgressDialogWithMessage {
     if (_isShowing) return false;
 
     _isShowing = true;
+
     List<bool> smsStatus = List.filled(messages.length, false);
     bool isSending = false;
 
@@ -27,59 +71,39 @@ class ProgressDialogWithMessage {
       context: context,
       barrierDismissible: true,
       builder:
-          (ctx) => WillPopScope(
-            onWillPop: () async => false,
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                Future<void> sendAll() async {
-                  setState(() => isSending = true);
+          (ctx) => StatefulBuilder(
+            builder: (context, setState) {
+              bool dialogMounted = true;
 
-                  final hasPermission = await Permission.sms.isGranted;
-                  final device = await SharedPreferenceHelper.getDeviceType();
-
-                  if (hasPermission && device == "ANDROID") {
-                    final telephony = Telephony.instance;
-                    for (int i = 0; i < messages.length; i++) {
-                      bool sent = false;
-                      try {
-                        await telephony.sendSms(
-                          to: panelSimNumber,
-                          message: messages[i],
-                        );
-                        sent = true;
-                      } catch (_) {
-                        sent = false;
-                      }
-
-                      setState(() => smsStatus[i] = sent);
-                      if (i < messages.length - 1) {
-                        await Future.delayed(const Duration(seconds: 3));
-                      }
-                    }
-                    // Auto dismiss after sending all
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (_isShowing) {
-                        Navigator.of(context, rootNavigator: true).pop(true);
-                      }
-                    });
-                  } else {
-                    SendSms(
-                      panelSimNumber,
-                      messages,
-                      setState,
-                      smsStatus,
-                      onComplete: () {
-                        if (_isShowing) {
-                          Navigator.of(context, rootNavigator: true).pop(true);
-                        }
-                      },
-                    ).start();
-                  }
+              // Safe setState
+              void safeSetState(VoidCallback fn) {
+                if (dialogMounted && context.mounted) {
+                  setState(fn);
                 }
+              }
 
-                return Dialog(
+              // Start sending
+              Future<void> sendAll() async {
+                safeSetState(() => isSending = true);
+
+                SendSms(
+                  panelSimNumber,
+                  messages,
+                  safeSetState,
+                  smsStatus,
+                  onComplete: () {
+                    if (_isShowing && context.mounted) {
+                      Navigator.of(context, rootNavigator: true).pop(true);
+                    }
+                  },
+                ).start();
+              }
+
+              return WillPopScope(
+                onWillPop: () async => false,
+                child: Dialog(
                   backgroundColor: Colors.grey[200],
-                  insetPadding: EdgeInsets.all(20),
+                  insetPadding: const EdgeInsets.all(20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -89,7 +113,6 @@ class ProgressDialogWithMessage {
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             message,
@@ -97,86 +120,35 @@ class ProgressDialogWithMessage {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
+
                           Flexible(
                             child: ListView.builder(
                               shrinkWrap: true,
                               itemCount: messages.length,
-                              itemBuilder: (ctx, index) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6,
+                              itemBuilder:
+                                  (ctx, index) => _buildSmsRow(
+                                    index,
+                                    messages[index],
+                                    smsStatus[index],
+                                    isSending,
                                   ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 40,
-                                        child: Text(
-                                          "SMS ${index + 1}",
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
-                                              0.1,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            messages[index],
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child:
-                                            smsStatus[index]
-                                                ? const Icon(
-                                                  Icons.check,
-                                                  color: Colors.green,
-                                                )
-                                                : isSending
-                                                ? const CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                )
-                                                : const SizedBox.shrink(),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
                             ),
                           ),
+
                           const SizedBox(height: 12),
+
                           if (!isSending)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 TextButton(
-                                  onPressed:
-                                      () => Navigator.of(
-                                        ctx,
-                                        rootNavigator: true,
-                                      ).pop(false),
+                                  onPressed: () {
+                                    dialogMounted = false;
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).pop(false);
+                                  },
                                   child: const Text(
                                     "Revoke",
                                     style: TextStyle(
@@ -190,7 +162,7 @@ class ProgressDialogWithMessage {
                                     backgroundColor: AppColors.colorPrimary,
                                     foregroundColor: AppColors.white,
                                   ),
-                                  onPressed: () async => await sendAll(),
+                                  onPressed: sendAll,
                                   child: const Text("Send SMS"),
                                 ),
                               ],
@@ -199,9 +171,9 @@ class ProgressDialogWithMessage {
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
     );
 

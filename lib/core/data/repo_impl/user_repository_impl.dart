@@ -14,20 +14,43 @@ class UserRepoImpl implements UserRepo {
 
   @override
   Future<LoginResponse> login(String mobile, String pass) async {
-    final response = await _dio.post(
-      WebUrlConstants.loginUser,
-      data: FormData.fromMap({
-        'mobile': mobile,
-        'pass': pass,
-        'lng': '',
-        'lat': '',
-        'tkn': '',
-        'l_add': '',
-        'os': '',
-        'dev_id': '',
-      }),
-    );
-    return LoginResponse.fromJson(response.data);
+    print("Hitting URL: ${WebUrlConstants.loginUser}");
+    try {
+      final response = await _dio.post(
+        WebUrlConstants.loginUser,
+        data: FormData.fromMap({
+          'mobile': mobile,
+          'pass': pass,
+          'lng': '',
+          'lat': '',
+          'tkn': '',
+          'l_add': '',
+          'os': '',
+          'dev_id': '',
+        }),
+      );
+
+      print("RAW Login Response: ${response.data}");
+
+      if (response.data is! Map<String, dynamic>) {
+        return LoginResponse(
+          status: false,
+          token: "",
+          msg: "Invalid server response format",
+        );
+      }
+
+      return LoginResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      print("Dio Error: ${e.message}");
+      print("Body: ${e.response?.data}");
+
+      return LoginResponse(
+        status: false,
+        token: "",
+        msg: e.response?.data?['msg'] ?? "Network error",
+      );
+    }
   }
 
   @override

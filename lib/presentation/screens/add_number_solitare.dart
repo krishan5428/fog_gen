@@ -5,17 +5,31 @@ import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:fire_nex/utils/common_classes.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
-import '../../data/database/app_database.dart';
+import '../../core/data/pojo/panel_data.dart';
 import '../bottom_sheet_dialog/add_number.dart';
-import '../viewModel/panel_view_model.dart';
+import '../cubit/panel/panel_cubit.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/vertical_gap.dart';
 
-class AddNumberSolitarePage extends StatelessWidget {
-  const AddNumberSolitarePage({super.key});
+class AddNumberSolitarePage extends StatefulWidget {
+  final PanelData panelData;
+  const AddNumberSolitarePage({super.key, required this.panelData});
+
+  @override
+  State<AddNumberSolitarePage> createState() => _AddNumberSolitarePageState();
+}
+
+class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
+  late PanelData panelData;
+
+  @override
+  void initState() {
+    super.initState();
+    panelData = widget.panelData; // initialize once
+  }
 
   List<String> getNumbers(PanelData panel) {
     final allNumbers = [
@@ -51,7 +65,6 @@ class AddNumberSolitarePage extends StatelessWidget {
 
   Future<void> _sendDeleteMsg(
     BuildContext context,
-    PanelViewModel viewModel,
     PanelData panel,
     int index,
   ) async {
@@ -184,10 +197,11 @@ class AddNumberSolitarePage extends StatelessWidget {
       }
 
       if (isSend!) {
-        await viewModel.updateMobileNumber(
-          panel.panelSimNumber,
-          "0000000000",
-          index,
+        context.read<PanelCubit>().updatePanelData(
+          userId: panel.userId,
+          panelId: panel.pnlId,
+          key: 'mobile_number$index',
+          value: "0000000000",
         );
         SnackBarHelper.showSnackBar(context, 'Number deleted successfully!');
       } else {
@@ -200,123 +214,138 @@ class AddNumberSolitarePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PanelViewModel>(
-      builder: (context, viewModel, child) {
-        final panel = viewModel.currentPanel;
+    final numbers = getNumbers(panelData);
+    final existingNumbers = getExistingNumbers(panelData);
 
-        if (panel == null) {
-          return const Scaffold(body: Center(child: Text("No panel selected")));
+    return
+      BlocListener<PanelCubit, PanelState>(
+      listener: (context, state) {
+        if (state is UpdatePanelsSuccess) {
+          debugPrint('delete number success');
+          // _handleUpdateNumberSuccess(context, state.msg);
+          setState(() {
+            panelData = state.panelData;
+          });
+        } else if (state is UpdatePanelsFailure) {
+          debugPrint('delete number failure');
+          SnackBarHelper.showSnackBar(context, state.message);
         }
-
-        final numbers = getNumbers(panel);
-        final existingNumbers = getExistingNumbers(panel);
-
-        return Scaffold(
-          appBar: const CustomAppBar(pageName: 'Add Number', isFilter: false),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              children: [
-                const VerticalSpace(),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      panel.adminMobileNumber,
-                      style: const TextStyle(
-                        color: AppColors.colorPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+      },
+      child: Scaffold(
+        appBar: const CustomAppBar(pageName: 'Add Number', isFilter: false),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              const VerticalSpace(),
+              Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    widget.panelData.adminMobileNumber,
+                    style: const TextStyle(
+                      color: AppColors.colorPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-                const VerticalSpace(),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: numbers.length,
-                  itemBuilder: (context, index) {
-                    final number = numbers[index];
-                    final isEmpty =
-                        number == "0000000000" || number.trim().isEmpty;
+              ),
+              const VerticalSpace(),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: numbers.length,
+                itemBuilder: (context, index) {
+                  final number = numbers[index];
+                  final isEmpty =
+                      number == "0000000000" || number.trim().isEmpty;
 
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 1,
-                        horizontal: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              number,
-                              style: const TextStyle(
-                                color: AppColors.colorPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 1,
+                      horizontal: 14,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            number,
+                            style: const TextStyle(
+                              color: AppColors.colorPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
-                          IconButton(
-                            onPressed:
-                                () => showAddNumberBottomSheet(
-                                  context,
-                                  panel,
-                                  index + 1,
-                                  viewModel,
-                                  existingNumbers: existingNumbers,
-                                ),
-                            icon: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.litePrimary,
-                                borderRadius: BorderRadius.circular(8),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            final updatedPanel = await showModalBottomSheet<PanelData>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: AppColors.lightGrey,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                               ),
-                              child: const Icon(
-                                Icons.edit,
-                                color: AppColors.colorPrimary,
-                                size: 18,
+                              builder: (_) => AddNumberBottomSheet(
+                                panel: widget.panelData,
+                                index: index + 1,
+                                existingNumbers: existingNumbers,
                               ),
+                            );
+
+                            if (updatedPanel != null) {
+                              setState(() {
+                                panelData = updatedPanel;
+                              });
+                            }
+                          },
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.litePrimary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              color: AppColors.colorPrimary,
+                              size: 18,
                             ),
                           ),
-                          IconButton(
-                            onPressed:
-                                isEmpty
-                                    ? null
-                                    : () => _sendDeleteMsg(
-                                      context,
-                                      viewModel,
-                                      panel,
-                                      index + 1,
-                                    ),
-                            icon: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    isEmpty
-                                        ? Colors.grey
-                                        : AppColors.litePrimary,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.delete,
-                                color: isEmpty ? Colors.white : AppColors.red,
-                                size: 18,
-                              ),
+                        ),
+                        IconButton(
+                          onPressed:
+                              isEmpty
+                                  ? null
+                                  : () => _sendDeleteMsg(
+                                    context,
+                                    widget.panelData,
+                                    index + 1,
+                                  ),
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color:
+                                  isEmpty ? Colors.grey : AppColors.litePrimary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.delete,
+                              color: isEmpty ? Colors.white : AppColors.red,
+                              size: 18,
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -1,244 +1,222 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../constants/app_colors.dart';
-import '../../data/database/app_database.dart';
-import '../bottom_sheet_dialog/vendor_update.dart';
+import '../../core/data/pojo/vendor_data.dart';
+import '../../utils/auth_helper.dart';
+import '../../utils/navigation.dart';
+import '../../utils/responsive.dart';
+import '../cubit/vendor/vendor_cubit.dart';
+import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/contact_item.dart';
-import '../../utils/navigation.dart';
+import '../widgets/custom_button.dart';
 import 'login.dart';
 
-class VendorProfilePage extends StatefulWidget {
+class VendorProfilePage extends StatelessWidget {
   const VendorProfilePage({super.key});
 
   @override
-  State<VendorProfilePage> createState() => _VendorProfilePageState();
-}
+  Widget build(BuildContext context) {
+    final spacingBwtView = Responsive.spacingBwtView(context);
 
-class _VendorProfilePageState extends State<VendorProfilePage> {
-  void _showMoreOptions(VendorData vendor) {
+    return Scaffold(
+      appBar: const CustomAppBar(
+        pageName: 'Vendor Profile',
+        isFilter: false,
+        isProfile: false,
+      ),
+      body: FutureBuilder<VendorData?>(
+        future: SharedPreferenceHelper.getVendorData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError || snapshot.data == null) {
+            return const Center(child: Text('Vendor data not available'));
+          }
+
+          final vendor = snapshot.data!;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                buildContactItem(
+                  context,
+                  icon: Icons.person,
+                  text: vendor.vendor_name,
+                ),
+                const Divider(),
+                buildContactItem(
+                  context,
+                  icon: Icons.phone,
+                  text: vendor.vendor_mobile,
+                ),
+                const Divider(),
+                buildContactItem(
+                  context,
+                  icon: Icons.email,
+                  text: vendor.vendor_email,
+                ),
+                const Divider(),
+                buildContactItem(
+                  context,
+                  icon: Icons.location_on,
+                  text: vendor.vendor_address,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: spacingBwtView),
+        child: SafeArea(
+          minimum: EdgeInsets.fromLTRB(
+            spacingBwtView * 2,
+            0,
+            spacingBwtView * 2,
+            spacingBwtView,
+          ),
+          child: CustomButton(
+            buttonText: 'Delete Vendor',
+            backgroundColor: AppColors.colorPrimary,
+            foregroundColor: AppColors.white,
+            onPressed: () async {
+              final vendor = await SharedPreferenceHelper.getVendorData();
+              if (vendor != null) {
+                _confirmDelete(context, vendor.vendor_mobile);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String vendorMobile) {
+    String? errorMessage;
+    final spacing = Responsive.spacingBwtView(context);
+    final fontSize = Responsive.fontSize(context);
+
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'More Options',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildOption(
-                'Update Vendor Name',
-                () => _openBottomSheet(
-                  VendorUpdateBottomSheetDialog(
-                    userId: vendor.id,
-                    formKey: "name",
-                    currentValue: vendor.name,
-                  ),
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setState) {
+            return BlocListener<VendorCubit, VendorState>(
+              listener: (context, state) {
+                if (state is VendorLoading) {
+                  ProgressDialog.show(context);
+                } else if (state is DeleteVendorSuccess) {
+                  ProgressDialog.dismiss(context);
+                  setState(() {
+                    errorMessage = 'Deleted successfully!';
+                  });
+                  _handlingDelete(context);
+                } else if (state is DeleteVendorFailure) {
+                  ProgressDialog.dismiss(context);
+                  setState(() => errorMessage = state.message);
+                }
+              },
+              child: Dialog(
+                insetPadding: EdgeInsets.all(spacing * 3),
+                backgroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(spacing),
                 ),
-              ),
-              _buildOption(
-                'Update Mobile Number',
-                () => _openBottomSheet(
-                  VendorUpdateBottomSheetDialog(
-                    userId: vendor.id,
-                    formKey: "mobile",
-                    currentValue: vendor.mobileNumber,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: spacing * 2,
+                    vertical: spacing,
                   ),
-                ),
-              ),
-              _buildOption(
-                'Update Email',
-                () => _openBottomSheet(
-                  VendorUpdateBottomSheetDialog(
-                    userId: vendor.id,
-                    formKey: "email",
-                    currentValue: vendor.email,
-                  ),
-                ),
-              ),
-              _buildOption(
-                'Update Address',
-                () => _openBottomSheet(
-                  VendorUpdateBottomSheetDialog(
-                    userId: vendor.id,
-                    formKey: "address",
-                    currentValue: vendor.address,
-                  ),
-                ),
-              ),
-              _buildOption('Delete Vendor Data', () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Confirm Deletion'),
-                      content: const Text(
-                        'Are you sure you want to delete this vendor data? This cannot be undone.',
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Confirmation',
+                        style: TextStyle(fontSize: fontSize * 1.3),
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
+                      SizedBox(height: spacing),
+                      Text(
+                        "Are you sure you want to delete Vendor's profile?\nThis action cannot be undone.",
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
+                      ),
+                      SizedBox(height: spacing),
+
+                      if (errorMessage != null && errorMessage!.isNotEmpty)
+                        Align(
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: spacing / 2),
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                    );
-                  },
-                );
 
-                if (confirm == true) {
-                  final vendorViewModel = context.read<VendorViewModel>();
-                  await vendorViewModel.deleteVendor(vendor.id);
+                      SizedBox(height: spacing * 1.5),
 
-                  await SharedPreferenceHelper.clearLoginState();
-
-                  CustomNavigation.instance.pushReplace(
-                    context: context,
-                    screen: const LoginScreen(),
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vendor data deleted successfully'),
-                    ),
-                  );
-                }
-              }),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.colorAccent),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: AppColors.colorAccent),
+                            ),
+                          ),
+                          SizedBox(width: spacing),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: AppColors.white,
+                              backgroundColor: AppColors.colorPrimary,
+                            ),
+                            onPressed: () {
+                              setState(() => errorMessage = null);
+                              context.read<VendorCubit>().deleteVendor(
+                                mobile: vendorMobile,
+                              );
+                            },
+                            child: Text(
+                              "DELETE",
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _openBottomSheet(Widget sheet) async {
-    Navigator.pop(context); // close dialog first
-    final updated = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => sheet,
-    );
-    if (updated == true) {
-      setState(() {}); // refresh vendor data
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<int?>(
-      future: SharedPreferenceHelper.getUserId(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final userId = snapshot.data;
-        final vendorViewModel = context.read<VendorViewModel>();
-
-        // Dummy vendor
-        if (userId == 999999) {
-          final dummyVendor = VendorData(
-            id: 999999,
-            userId: 100000,
-            name: "Dummy Vendor",
-            mobileNumber: "+91 9123456789",
-            email: "vendor@example.com",
-            address: "1234 Demo Street, City, Country",
-          );
-          return _buildVendorProfile(dummyVendor);
-        }
-
-        return FutureBuilder<VendorData?>(
-          future: vendorViewModel.getVendorByUserId(userId!),
-          builder: (context, vendorSnapshot) {
-            if (vendorSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (!vendorSnapshot.hasData || vendorSnapshot.data == null) {
-              return const Center(child: Text('Vendor data not found.'));
-            }
-
-            return _buildVendorProfile(vendorSnapshot.data!);
+            );
           },
         );
       },
     );
   }
+}
 
-  Widget _buildVendorProfile(VendorData vendor) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        pageName: 'Vendor Profile',
-        isFilter: false,
-        isProfile: true,
-        onMoreTaps: () => _showMoreOptions(vendor),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              buildContactItem(context, icon: Icons.person, text: vendor.name),
-              const Divider(),
-              buildContactItem(
-                context,
-                icon: Icons.phone,
-                text: vendor.mobileNumber,
-              ),
-              const Divider(),
-              buildContactItem(context, icon: Icons.email, text: vendor.email),
-              const Divider(),
-              buildContactItem(
-                context,
-                icon: Icons.location_on,
-                text: vendor.address,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption(String text, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1.0),
-      child: TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          alignment: Alignment.centerLeft,
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: AppColors.colorPrimary,
-          ),
-        ),
-      ),
-    );
-  }
+void _handlingDelete(context) async {
+  await Future.delayed(const Duration(seconds: 1));
+  await SharedPreferenceHelper.clearLoginState();
+  await SharedPreferenceHelper.clearVendorData();
+  CustomNavigation.instance.pop(context);
+  CustomNavigation.instance.pushAndRemove(
+    context: context,
+    screen: const LoginScreen(),
+  );
 }

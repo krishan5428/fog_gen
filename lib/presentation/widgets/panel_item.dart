@@ -8,22 +8,31 @@ import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
+import '../../core/data/pojo/panel_data.dart';
 import '../../core/utils/application_class.dart';
-import '../../data/database/app_database.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
 import '../screens/panel_details.dart';
+import '../screens/panel_list.dart';
 import 'custom_button.dart';
 
 class PanelCard extends StatelessWidget {
   final PanelData panelData;
   const PanelCard({super.key, required this.panelData});
 
+  bool get isGsmDialerPanel {
+    final name = panelData.panelName.trim().toUpperCase();
+    return name == 'GALAXY GX GSMD DIALER' ||
+        name == 'SEC GSMD 4G' ||
+        name == 'SEC GSMD 4GC';
+  }
+
   @override
   Widget build(BuildContext context) {
     final fontSize = Responsive.fontSize(context);
-    final spacingBwtView = Responsive.spacingBwtView(context);
+    final spacing = Responsive.spacingBwtView(context);
     final smallTextSize = Responsive.smallTextSize(context);
+    debugPrint("PanelCard → Loaded panel: ${panelData.panelName}");
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
@@ -32,116 +41,216 @@ class PanelCard extends StatelessWidget {
       elevation: 2,
       color: AppColors.white,
       child: Padding(
-        padding: EdgeInsets.all(spacingBwtView),
+        padding: EdgeInsets.all(spacing),
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        panelData.siteName.toUpperCase(),
-                        style: TextStyle(
-                          color: AppColors.colorAccent,
-                          fontSize: fontSize * 1.2,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        panelData.panelName,
-                        style: TextStyle(
-                          color: AppColors.colorPrimary,
-                          fontSize: smallTextSize * 0.9,
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      CustomNavigation.instance.push(
-                        context: context,
-                        screen: PanelDetailsScreen(panelData: panelData),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.colorPrimary,
-                      side: const BorderSide(
-                        width: 0.5,
-                        color: AppColors.colorPrimary,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'DETAILS',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: smallTextSize * 0.9,
-                            color: AppColors.colorPrimary,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_right,
-                          size: fontSize,
-                          color: AppColors.colorPrimary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: CustomButton(
-                        buttonText: 'ALARM RESET',
-                        onPressed: () => onAlarmResetButtonPressed(context),
-                        buttonTextSize: smallTextSize,
-                        backgroundColor: AppColors.litePrimary,
-                        foregroundColor: AppColors.colorPrimary,
+                    Text(
+                      panelData.site.toUpperCase(),
+                      style: TextStyle(
+                        color: AppColors.colorAccent,
+                        fontSize: fontSize * 1.2,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: spacingBwtView),
-                    Expanded(
-                      child: CustomButton(
-                        buttonText: 'EVACUATE',
-                        onPressed: () => onEvacuateButtonPressed(context),
-                        buttonTextSize: smallTextSize,
-                        backgroundColor: AppColors.litePrimary,
-                        foregroundColor: AppColors.colorPrimary,
+                    Text(
+                      panelData.panelName,
+                      style: TextStyle(
+                        color: AppColors.colorPrimary,
+                        fontSize: smallTextSize * 0.9,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: spacingBwtView / 2),
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomButton(
-                    buttonText: 'SOUNDER OFF',
-                    onPressed: () => onSounderButtonPressed(context),
-                    buttonTextSize: smallTextSize,
-                    backgroundColor: AppColors.litePrimary,
+                TextButton(
+                  onPressed: () async {
+                    final updatedPanel = await CustomNavigation.instance.push(
+                      context: context,
+                      screen: PanelDetailsScreen(panelData: panelData),
+                    );
+                    if (updatedPanel != null) {
+                      final parentState =
+                          context.findAncestorStateOfType<PanelListState>();
+                      parentState?.updatePanelInList(updatedPanel);
+                    }
+                  },
+                  style: TextButton.styleFrom(
                     foregroundColor: AppColors.colorPrimary,
+                    side: const BorderSide(
+                      width: 0.5,
+                      color: AppColors.colorPrimary,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'DETAILS',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: smallTextSize * 0.9,
+                          color: AppColors.colorPrimary,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_right,
+                        size: fontSize,
+                        color: AppColors.colorPrimary,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+
+            SizedBox(height: spacing),
+
+            if (isGsmDialerPanel)
+              _buildGsmDialerButtons(context, smallTextSize, spacing)
+            else
+              _buildNormalPanelButtons(context, smallTextSize, spacing),
           ],
         ),
       ),
     );
   }
 
-  void onAlarmResetButtonPressed(BuildContext context) {
+  // ---------------------------------------------------------------------------
+  // NORMAL PANELS → Alarm Reset, Evacuate, Sounder Off
+  // ---------------------------------------------------------------------------
+
+  Widget _buildNormalPanelButtons(
+    BuildContext context,
+    double textSize,
+    double spacing,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                buttonText: 'ALARM RESET',
+                onPressed: () => onAlarmReset(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+            SizedBox(width: spacing),
+            Expanded(
+              child: CustomButton(
+                buttonText: 'EVACUATE',
+                onPressed: () => onEvacuate(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: spacing / 2),
+        SizedBox(
+          width: double.infinity,
+          child: CustomButton(
+            buttonText: 'SOUNDER OFF',
+            onPressed: () => onSounderOff(context),
+            buttonTextSize: textSize,
+            backgroundColor: AppColors.litePrimary,
+            foregroundColor: AppColors.colorPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // GSM DIALER PANELS → Arm, Disarm, Sounder Off, Alarm Alert
+  // ---------------------------------------------------------------------------
+
+  Widget _buildGsmDialerButtons(
+    BuildContext context,
+    double textSize,
+    double spacing,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                buttonText: 'ARM',
+                onPressed: () => onArmButtonPressed(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+            SizedBox(width: spacing),
+            Expanded(
+              child: CustomButton(
+                buttonText: 'DISARM',
+                onPressed: () => onDisarmButtonPressed(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: spacing / 2),
+        Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                buttonText: 'ALARM ALERT',
+                onPressed: () => onAlarmResetButtonPressed(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+            SizedBox(width: spacing),
+
+            Expanded(
+              child: CustomButton(
+                buttonText: 'PANIC',
+                onPressed: () => onPanicButtonPressed(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: spacing / 2),
+        Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                buttonText: 'SOUNDER OFF',
+                onPressed: () => onSounderButtonPressed(context),
+                buttonTextSize: textSize,
+                backgroundColor: AppColors.litePrimary,
+                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // EXISTING COMMAND FLOWS (unchanged)
+  // ---------------------------------------------------------------------------
+
+  void onAlarmReset(BuildContext context) {
     _sendOutputCommand(
       context: context,
       outputNumber: 3,
@@ -151,23 +260,23 @@ class PanelCard extends StatelessWidget {
     );
   }
 
-  void onSounderButtonPressed(BuildContext context) {
-    _sendOutputCommand(
-      context: context,
-      outputNumber: 4,
-      title: "Confirm Sounder Off",
-      confirmationMessage:
-          "Do you really want to SEND SMS to turn off the sounder?",
-    );
-  }
-
-  void onEvacuateButtonPressed(BuildContext context) {
+  void onEvacuate(BuildContext context) {
     _sendOutputCommand(
       context: context,
       outputNumber: 2,
       title: "Confirm Evacuation",
       confirmationMessage:
           "Are you sure you want to SEND SMS to trigger evacuation?",
+    );
+  }
+
+  void onSounderOff(BuildContext context) {
+    _sendOutputCommand(
+      context: context,
+      outputNumber: 4,
+      title: "Confirm Sounder Off",
+      confirmationMessage:
+          "Do you really want to SEND SMS to turn off the sounder?",
     );
   }
 
@@ -189,14 +298,14 @@ class PanelCard extends StatelessWidget {
       return;
     }
 
-    if (panelData.isIPPanel || panelData.isIPGPRSPanel) {
+    if (panelData.is_ip_panel || panelData.is_ip_gsm_panel) {
       ProgressDialog.show(context);
 
       final _ =
           Application()
-            ..mIPAddress = panelData.ipAddress
-            ..mPortNumber = int.tryParse(panelData.port)
-            ..mPassword = panelData.ipPassword;
+            ..mIPAddress = panelData.ip_address
+            ..mPortNumber = int.tryParse(panelData.port_no)
+            ..mPassword = panelData.ip_address;
 
       final lastOutput = outputNumber - 1;
 
@@ -208,8 +317,6 @@ class PanelCard extends StatelessWidget {
           ),
         );
 
-        debugPrint('response from panel: $response');
-
         ProgressDialog.dismiss(context);
 
         if (response == "S*007#0*E") {
@@ -217,11 +324,8 @@ class PanelCard extends StatelessWidget {
         } else {
           await _handleFailedIPCommand(context, outputNumber);
         }
-      }
-      catch (e) {
+      } catch (e) {
         ProgressDialog.dismiss(context);
-        debugPrint("Error sending packet: $e");
-
         final errorText = e.toString().toLowerCase();
         final isConnectionFailed =
             errorText.contains('socketexception') ||
@@ -231,7 +335,7 @@ class PanelCard extends StatelessWidget {
             errorText.contains('failed');
 
         if (isConnectionFailed) {
-          if (panelData.isIPGPRSPanel) {
+          if (panelData.is_ip_gsm_panel) {
             final confirm = await showConfirmationDialog(
               context: context,
               title: 'Network Unavailable❗️',
@@ -240,10 +344,8 @@ class PanelCard extends StatelessWidget {
             );
             if (confirm == true) {
               _sendCommandSMS(outputNumber, context);
-            } else {
-              SnackBarHelper.showSnackBar(context, 'Execution revoked');
             }
-          } else if (panelData.isIPPanel) {
+          } else {
             showInfoDialog(
               context: context,
               message:
@@ -263,7 +365,7 @@ class PanelCard extends StatelessWidget {
     BuildContext context,
     int outputNumber,
   ) async {
-    if (panelData.isIPGPRSPanel) {
+    if (panelData.is_ip_gsm_panel) {
       final confirm = await showConfirmationDialog(
         context: context,
         message:
@@ -272,7 +374,7 @@ class PanelCard extends StatelessWidget {
       if (confirm == true) {
         _sendCommandSMS(outputNumber, context);
       }
-    } else if (panelData.isIPPanel) {
+    } else {
       showInfoDialog(
         context: context,
         message:
@@ -282,20 +384,127 @@ class PanelCard extends StatelessWidget {
   }
 
   void _sendCommandSMS(int outputNumber, BuildContext context) async {
-    final simNumber = panelData.panelSimNumber;
+    final sim = panelData.panelSimNumber;
     final onMessage = "< 1234 OUTPUT $outputNumber ON >";
     final offMessage = "< 1234 OUTPUT $outputNumber OFF >";
 
     final messages = [onMessage, offMessage];
+
     final isSend = await ProgressDialogWithMessage.show(
       context,
       messages: messages,
-      panelSimNumber: simNumber,
+      panelSimNumber: sim,
     );
+
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Done');
     } else {
       SnackBarHelper.showSnackBar(context, 'Revoked!');
+    }
+  }
+
+  void onArmButtonPressed(BuildContext context) async {
+    final String simNumber = panelData.panelSimNumber;
+    final String adminCode = panelData.adminCode;
+    final String panelName = panelData.panelName.trim().toUpperCase();
+
+    String message =
+        panelName == "MULTICOM 4G DIALER"
+            ? "< $adminCode ARM >"
+            : "$adminCode FULL ARM END";
+
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: [message],
+      panelSimNumber: simNumber,
+    );
+
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Send!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
+    }
+  }
+
+  void onDisarmButtonPressed(BuildContext context) async {
+    final String simNumber = panelData.panelSimNumber;
+    final String adminCode = panelData.adminCode;
+    final String panelName = panelData.panelName.trim().toUpperCase();
+
+    String message =
+        panelName == "MULTICOM 4G DIALER"
+            ? "< $adminCode DISARM >"
+            : "$adminCode DISARM END";
+
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: [message],
+      panelSimNumber: simNumber,
+    );
+
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Send!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
+    }
+  }
+
+  void onAlarmResetButtonPressed(BuildContext context) async {
+    final String simNumber = panelData.panelSimNumber;
+    final String adminCode = panelData.adminCode;
+    final String panelName = panelData.panelName.trim().toUpperCase();
+
+    String message =
+        panelName == "MULTICOM 4G DIALER"
+            ? "< $adminCode ALARM RESET >"
+            : "$adminCode ALARM RESET END";
+
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: [message],
+      panelSimNumber: simNumber,
+    );
+
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Send!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
+    }
+  }
+
+  void onPanicButtonPressed(BuildContext context) async {
+    final String simNumber = panelData.panelSimNumber;
+    final String adminCode = panelData.adminCode;
+    final String message = "$adminCode PANIC 1 END";
+
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: [message],
+      panelSimNumber: simNumber,
+    );
+
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Send!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
+    }
+  }
+
+  void onSounderButtonPressed(BuildContext context) async {
+    final String simNumber = panelData.panelSimNumber;
+    final String adminCode = panelData.adminCode;
+    final String message = "$adminCode SOUNDER OFF END";
+
+    final isSend = await ProgressDialogWithMessage.show(
+      context,
+      messages: [message],
+      panelSimNumber: simNumber,
+    );
+
+    if (isSend == true) {
+      SnackBarHelper.showSnackBar(context, 'Send!');
+    } else {
+      SnackBarHelper.showSnackBar(context, 'Revoked');
     }
   }
 }

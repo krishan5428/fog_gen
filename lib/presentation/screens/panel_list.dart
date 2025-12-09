@@ -1,254 +1,218 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/data/database/app_database.dart';
-import 'package:fire_nex/presentation/dialog/panel_filter.dart';
-import 'package:fire_nex/presentation/dialog/panel_type.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
-import 'package:fire_nex/presentation/widgets/custom_button.dart';
-import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../constants/app_colors.dart';
+import '../../core/data/pojo/panel_data.dart';
+import '../../core/data/repo_impl/panel_repository_impl.dart';
+import '../../utils/auth_helper.dart';
+import '../../utils/responsive.dart';
+import '../../utils/snackbar_helper.dart';
+import '../cubit/mappings/panel_sim_number_cubit.dart';
+import '../cubit/mappings/site_cubit.dart';
+import '../cubit/panel/panel_cubit.dart';
+import '../dialog/panel_filter.dart';
+import '../dialog/panel_type.dart';
+import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/custom_button.dart';
 import '../widgets/panel_item.dart';
+import '../widgets/vertical_gap.dart';
 
-class PanelListPage extends StatefulWidget {
+class PanelListPage extends StatelessWidget {
   const PanelListPage({super.key});
 
   @override
-  State<PanelListPage> createState() => _PanelListState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PanelCubit(PanelRepositoryImpl()),
+      child: const PanelListUI(),
+    );
+  }
 }
 
-class _PanelListState extends State<PanelListPage> {
-  List<PanelData> panelList = [];
-  List<PanelData> filteredPanelList = [];
-  bool _isInitialized = false;
-  String currentFilterType = 'ALL';
-  int? userId;
-  List<Map<String, String>> siteAndSiteList = [];
+class PanelListUI extends StatefulWidget {
+  const PanelListUI({super.key});
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      _isInitialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (mounted) {
-          fetchPanel();
-        }
-      });
-    }
-  }
+  State<PanelListUI> createState() => PanelListState();
+}
 
-  // Future<void> _checkSMSPermissionDialog() async {
-  //   final shown = await SharedPreferenceHelper.getSmsDialogShown();
-  //   if (!shown) {
-  //     await SmsPermissionDialog.show(context);
-  //     await SharedPreferenceHelper.setSmsDialogShown(true);
-  //   }
-  // }
+class PanelListState extends State<PanelListUI> {
+  String currentFilterType = 'ALL';
+  int? userId;
+  List<PanelData> panelList = [];
+  List<PanelData> filteredPanelList = [];
+  List<String> siteNames = [];
+  List<String> panelSimNumbers = [];
+  bool loadFailed = false;
 
-  void fetchPanel() async {
-    if (mounted) ProgressDialog.show(context, message: "Fetching panels");
-
-    try {
-      final panelVM = context.read<PanelViewModel>();
-      userId = await SharedPreferenceHelper.getUserId();
-
-      List<PanelData> panels = await panelVM.getAllPanelWithUserId(userId!);
-
-      if (userId == 999999) {
-        panels.insert(
-          0,
-          PanelData(
-            isIPPanel: false,
-            isIPGPRSPanel: false,
-            ipAddress: "255.255.255.255",
-            ipPassword: '1234',
-            port: '5000',
-            staticIPAddress: '255.255.255.255',
-            staticPort: '5000',
-            id: userId!,
-            panelSimNumber: "9289102616",
-            panelType: "ALARM PANEL",
-            panelName: "Demo Panel",
-            siteName: "Demo Site",
-            address: "Panel Address",
-            adminCode: "1234",
-            adminMobileNumber: "9899446573",
-            userId: 999999,
-            mobileNumber1: "8888888888",
-            mobileNumber2: "0000000000",
-            mobileNumber3: "0000000000",
-            mobileNumber4: "0000000000",
-            mobileNumber5: "0000000000",
-            mobileNumber6: "0000000000",
-            mobileNumber7: "0000000000",
-            mobileNumber8: "0000000000",
-            mobileNumber9: "0000000000",
-            mobileNumber10: "0000000000",
-          ),
-        );
-      }
-
-      if (!mounted) return;
-
-      if (mounted) {
-        setState(() {
-          panelList = panels;
-          filteredPanelList = panels;
-        });
-      }
-
-      // defer view model update
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        panelVM.updatePanelList(panels);
-      });
-
-      for (var info in panelVM.sitePanelInfoList) {
-        debugPrint("- Site: ${info.siteName}, SIM: ${info.panelSimNumber}");
-      }
-    } catch (e) {
-      debugPrint("Error fetching panels: $e");
-    }
-    if (mounted) {
-      Future.delayed(Duration(milliseconds: 300), () {
-        if (mounted) {
-          ProgressDialog.dismiss(context);
-        }
-      });
-    }
-  }
-
-  void fetchPanelWithFilter(String panelType) async {
-    if (mounted) {
-      ProgressDialog.show(context, message: "Fetching panels");
-    }
-
-    try {
-      final panelViewModel = context.read<PanelViewModel>();
-      userId = await SharedPreferenceHelper.getUserId();
-      debugPrint("Fetched userId: $userId");
-
-      List<PanelData> panels;
-      if (panelType == 'ALL') {
-        panels = await panelViewModel.getAllPanelWithUserId(userId!);
-      } else {
-        panels = await panelViewModel.getFilteredPanels(userId!, panelType);
-      }
-
-      // dummy injection
-      if (userId == 999999) {
-        panels.insert(
-          0,
-          PanelData(
-            isIPPanel: false,
-            isIPGPRSPanel: false,
-            ipAddress: "255.255.255.255",
-            ipPassword: '1234',
-            port: '5000',
-            staticIPAddress: '255.255.255.255',
-            staticPort: '5000',
-            id: userId!,
-            panelSimNumber: "9598641084",
-            panelType: "ALARM PANEL",
-            panelName: "Demo Panel",
-            siteName: "Demo Site",
-            address: "123 Demo Street",
-            adminCode: "1234",
-            adminMobileNumber: "9899446573",
-            userId: 999999,
-            mobileNumber1: "8888888888",
-            mobileNumber2: "0000000000",
-            mobileNumber3: "0000000000",
-            mobileNumber4: "0000000000",
-            mobileNumber5: "0000000000",
-            mobileNumber6: "0000000000",
-            mobileNumber7: "0000000000",
-            mobileNumber8: "0000000000",
-            mobileNumber9: "0000000000",
-            mobileNumber10: "0000000000",
-          ),
-        );
-      }
-
-      if (!mounted) return;
-
+  void updatePanelInList(PanelData updatedPanel) {
+    final index = panelList.indexWhere(
+      (p) => p.panelSimNumber == updatedPanel.panelSimNumber,
+    );
+    if (index != -1) {
       setState(() {
-        panelList = panels;
-        filteredPanelList = panels;
+        panelList[index] = updatedPanel;
+        filteredPanelList = _filterPanels(currentFilterType);
       });
-    } catch (e) {
-      debugPrint("Error fetching the panels: $e");
-    } finally {
-      if (mounted) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            ProgressDialog.dismiss(context);
-          }
-        });
-      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUserid();
+  }
+
+  List<String> _extractSiteNames(List<PanelData> panels) {
+    return panels
+        .map((panel) => panel.site.toString().trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<String> _extractPanelSimNumbers(List<PanelData> panels) {
+    return panels
+        .map((panel) => panel.panelSimNumber.toString().trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  Future<void> getUserid() async {
+    userId = await SharedPreferenceHelper.getUserId();
+    debugPrint('Got userId in panel list page: $userId');
+    if (userId != null) {
+      context.read<PanelCubit>().getPanel(userId: userId.toString());
+    }
+  }
+
+  void _retryLoadingPanels() {
+    if (userId != null) {
+      context.read<PanelCubit>().getPanel(userId: userId.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      drawer: const AppDrawer(),
-      appBar: CustomAppBar(
-        pageName: 'Panel List',
-        isFilter: true,
-        isDash: true,
-        onFilterTap: _showPanelFilterDialog,
-      ),
-      body:
-          panelList.isEmpty
-              ? Center(
+    final spacingBwtView = Responsive.spacingBwtView(context);
+
+    return BlocListener<PanelCubit, PanelState>(
+      listener: (context, state) {
+        if (state is PanelLoading) {
+          loadFailed = false;
+          ProgressDialog.show(context, message: 'Getting updated Panel Data');
+        } else {
+          ProgressDialog.dismiss(context);
+        }
+
+        if (state is GetPanelsSuccess) {
+          setState(() {
+            panelList = state.panelsData;
+            filteredPanelList = _filterPanels(currentFilterType);
+            siteNames = _extractSiteNames(panelList);
+            panelSimNumbers = _extractPanelSimNumbers(panelList);
+            loadFailed = false;
+          });
+
+          context.read<SiteCubit>().setSites(siteNames);
+          context.read<PanelSimNumberCubit>().setPanelSimNumbers(
+            panelSimNumbers,
+          );
+        } else if (state is GetPanelsFailure) {
+          setState(() {
+            loadFailed = true;
+          });
+          SnackBarHelper.showSnackBar(
+            context,
+            'Something went wrong! Please try again.',
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        drawer: AppDrawer(),
+        appBar: CustomAppBar(
+          pageName: 'Home',
+          isFilter: true,
+          isDash: true,
+          isProfile: false,
+          onFilterTap: _showPanelFilterDialog,
+        ),
+        body: Builder(
+          builder: (_) {
+            if (loadFailed) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Failed to load panel data.',
+                      style: TextStyle(fontSize: 16, color: Colors.red),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: spacingBwtView * 30,
+                      child: CustomButton(
+                        buttonText: 'RETRY LOADING',
+                        icon: Icons.refresh,
+                        onPressed: _retryLoadingPanels,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (filteredPanelList.isEmpty) {
+              return Center(
                 child: SizedBox(
-                  width: 300,
+                  width: spacingBwtView * 25,
                   child: CustomButton(
                     buttonText: 'ADD NEW PANEL',
                     icon: Icons.add,
                     onPressed: _showPanelTypeDialog,
+                    foregroundColor: AppColors.white,
+                    backgroundColor: AppColors.colorPrimary,
                   ),
                 ),
-              )
-              : ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
+              );
+            }
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                vertical: spacingBwtView * 0.7,
+                horizontal: spacingBwtView,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ...filteredPanelList.map(
-                    (panel) => Consumer<PanelViewModel>(
-                      builder: (context, viewModel, child) {
-                        // check if currentPanel has the same sim number and use updated data
-                        final updatedPanel =
-                            (viewModel.currentPanel != null &&
-                                    viewModel.currentPanel!.panelSimNumber ==
-                                        panel.panelSimNumber)
-                                ? viewModel.currentPanel!
-                                : panel;
-
-                        return PanelCard(panelData: updatedPanel);
-                      },
-                    ),
+                    (panel) => PanelCard(panelData: panel),
                   ),
-                  VerticalSpace(height: 20),
+                  VerticalSpace(height: spacingBwtView),
                   Center(
                     child: SizedBox(
-                      width: 300,
+                      width: spacingBwtView * 25,
                       child: CustomButton(
                         buttonText: 'ADD NEW PANEL',
                         icon: Icons.add,
+                        foregroundColor: AppColors.white,
+                        backgroundColor: AppColors.colorPrimary,
                         onPressed: _showPanelTypeDialog,
                       ),
                     ),
                   ),
-                  VerticalSpace(height: 50),
                 ],
               ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -270,8 +234,17 @@ class _PanelListState extends State<PanelListPage> {
     );
 
     if (selectedFilter != null) {
-      currentFilterType = selectedFilter;
-      fetchPanelWithFilter(selectedFilter);
+      setState(() {
+        currentFilterType = selectedFilter;
+        filteredPanelList = _filterPanels(currentFilterType);
+      });
     }
+  }
+
+  List<PanelData> _filterPanels(String filterType) {
+    if (filterType == 'ALL') return panelList;
+    return panelList.where((panel) {
+      return (panel.panelType.toUpperCase()) == filterType.toUpperCase();
+    }).toList();
   }
 }

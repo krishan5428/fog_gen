@@ -1,4 +1,6 @@
 import 'package:fire_nex/core/responses/socket_repository.dart';
+import 'package:fire_nex/presentation/cubit/mappings/panel_sim_number_cubit.dart';
+import 'package:fire_nex/presentation/cubit/mappings/site_cubit.dart';
 import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
 import 'package:fire_nex/presentation/dialog/progress.dart';
 import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
@@ -7,6 +9,7 @@ import 'package:fire_nex/presentation/widgets/custom_button.dart';
 import 'package:fire_nex/presentation/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../constants/app_colors.dart';
 import '../../core/utils/application_class.dart';
@@ -15,7 +18,7 @@ import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
 import '../../utils/snackbar_helper.dart';
-import '../viewModel/panel_view_model.dart';
+import '../cubit/panel/panel_cubit.dart';
 import '../widgets/app_bar.dart';
 
 class AddPanelFormScreen extends StatefulWidget {
@@ -36,6 +39,8 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   final generalControllers = PanelFormControllers();
   final gprsControllers = PanelFormControllers();
   final ipControllers = PanelFormControllers();
+  List<String> siteNames = [];
+  List<String> panelSimNumbers = [];
 
   @override
   void dispose() {
@@ -50,59 +55,80 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     final fontSize = Responsive.fontSize(context);
     final smallTextSize = Responsive.smallTextSize(context);
     final spacingBwtView = Responsive.spacingBwtView(context);
+    siteNames = context.watch<SiteCubit>().state;
+    panelSimNumbers = context.watch<PanelSimNumberCubit>().state;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: CustomAppBar(
-        pageName: 'Add Panel Details',
-        isFilter: false,
-        isDash: false,
-        isProfile: false,
-        onBack: () {
-          CustomNavigation.instance.pushReplace(
-            context: context,
-            screen: const PanelListPage(),
-          );
-        },
-      ),
-      body: Column(
-        children: [
-          _buildInfoBar(fontSize, spacingBwtView),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(spacingBwtView * 1.2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGeneralDetails(fontSize, spacingBwtView),
-                  SizedBox(height: spacingBwtView),
-                  _buildGprsSettings(fontSize, spacingBwtView),
-                  _buildIpSettings(fontSize, spacingBwtView),
-                  SizedBox(height: spacingBwtView * 2.5),
-                  Padding(
-                    padding: EdgeInsets.only(right: spacingBwtView * 1.2),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Text(
-                        '* Indicating Mandatory Field',
-                        style: TextStyle(fontSize: smallTextSize * 0.8),
+    return BlocListener<PanelCubit, PanelState>(
+      listener: (context, state) {
+        if (state is AddPanelSuccess) {
+          ProgressDialog.dismiss(context);
+          _savingAndNavigating();
+        } else if (state is AddPanelFailure) {
+          ProgressDialog.dismiss(context);
+          SnackBarHelper.showSnackBar(context, "Error while adding Panel");
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        appBar: CustomAppBar(
+          pageName: 'Add Panel Details',
+          isFilter: false,
+          isDash: false,
+          isProfile: false,
+          onBack: () {
+            CustomNavigation.instance.pushReplace(
+              context: context,
+              screen: const PanelListPage(),
+            );
+          },
+        ),
+        body: Column(
+          children: [
+            _buildInfoBar(fontSize, spacingBwtView),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(spacingBwtView * 1.2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildGeneralDetails(fontSize, spacingBwtView),
+                    SizedBox(height: spacingBwtView),
+                    _buildGprsSettings(fontSize, spacingBwtView),
+                    _buildIpSettings(fontSize, spacingBwtView),
+                    SizedBox(height: spacingBwtView * 2.5),
+                    Padding(
+                      padding: EdgeInsets.only(right: spacingBwtView * 1.2),
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: Text(
+                          '* Indicating Mandatory Field',
+                          style: TextStyle(fontSize: smallTextSize * 0.8),
+                        ),
                       ),
                     ),
-                  ),
-                  Center(
-                    child: CustomButton(
-                      buttonText: 'Save Panel',
-                      backgroundColor: AppColors.colorPrimary,
-                      foregroundColor: AppColors.white,
-                      onPressed: _addPanelToDB,
+                    Center(
+                      child: CustomButton(
+                        buttonText: 'Save Panel',
+                        backgroundColor: AppColors.colorPrimary,
+                        foregroundColor: AppColors.white,
+                        onPressed: _addPanelToDB,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  void _savingAndNavigating() {
+    SnackBarHelper.showSnackBar(context, 'Panel saved successfully');
+    CustomNavigation.instance.pushReplace(
+      context: context,
+      screen: const PanelListPage(),
     );
   }
 
@@ -232,18 +258,17 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   }
 
   bool _validateForm(
-    BuildContext context,
-    String siteName,
-    String address,
-    String panelSimNumber,
-    String adminNumber,
-    String ipAddress,
-    String staticIPAddress,
-    String portStr,
-    String staticPortStr,
-    String pass,
-    List<dynamic> siteList,
-  ) {
+      BuildContext context,
+      String siteName,
+      String address,
+      String panelSimNumber,
+      String adminNumber,
+      String ipAddress,
+      String staticIPAddress,
+      String portStr,
+      String staticPortStr,
+      String pass,
+      ) {
     const ipPattern = r'^(\d{1,3}\.){3}\d{1,3}$';
     final ipRegex = RegExp(ipPattern);
     if (siteName.isEmpty) {
@@ -256,10 +281,16 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       return false;
     }
 
-    if (siteList.any(
-      (info) => info.siteName.toLowerCase() == siteName.toLowerCase(),
-    )) {
-      SnackBarHelper.showSnackBar(context, 'This Site Name already exists');
+    if (siteNames.contains(siteName)) {
+      SnackBarHelper.showSnackBar(
+        context,
+        'Site name "$siteName" already exists.',
+      );
+      return false;
+    }
+
+    if (panelSimNumbers.contains(panelSimNumber)) {
+      SnackBarHelper.showSnackBar(context, 'Panel sim number already exists.');
       return false;
     }
 
@@ -286,14 +317,6 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
         context,
         'Panel SIM Number must be 10 or 13 digits',
       );
-      return false;
-    }
-
-    if (siteList.any(
-      (info) =>
-          info.panelSimNumber.toLowerCase() == panelSimNumber.toLowerCase(),
-    )) {
-      SnackBarHelper.showSnackBar(context, 'This Panel SIM Number exists');
       return false;
     }
 
@@ -328,7 +351,6 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   }
 
   Future<void> _addPanelToDB() async {
-    final panelViewModel = context.read<PanelViewModel>();
     final socketRepo = SocketRepository();
 
     final siteName = generalControllers.siteNameController.text.trim();
@@ -353,7 +375,6 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       portStr,
       staticPortStr,
       pass,
-      panelViewModel.sitePanelInfoList,
     )) {
       return;
     }
@@ -364,6 +385,8 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       portNumber: int.parse(portStr),
       socketRepo: socketRepo,
     );
+
+    // final ipConnected = true;
 
     if (ipConnected) {
       final isSMSSend = await _handleNeuronPanels(
@@ -384,7 +407,6 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
             portStr: portStr,
             staticPortStr: staticPortStr,
             pass: pass,
-            panelViewModel: panelViewModel,
             panelType: widget.panelType,
             panelName: widget.panelName,
             userId: userId!,
@@ -399,7 +421,8 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     }
     showInfoDialog(
       context: context,
-      message: 'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
+      message:
+      'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
       // onOk: () {
       //   CustomNavigation.instance.pushReplace(
       //     context: context,
@@ -448,37 +471,44 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     required String portStr,
     required String staticPortStr,
     required String pass,
-    required PanelViewModel panelViewModel,
     required String panelType,
     required String panelName,
     required int userId,
   }) async {
+    final String currentTime = DateFormat(
+      'yyyy-MM-dd HH:mm:ss',
+    ).format(DateTime.now());
     try {
-      await panelViewModel.insertPanel(
-        panelType: panelType,
-        isIPGPRSPanel: true,
-        panelCategory: panelName,
+      context.read<PanelCubit>().addPanel(
+        userId: userId.toString(),
+        panelType: widget.panelType,
+        panelName: widget.panelName,
+        site: siteName,
         panelSimNumber: panelSimNumber,
-        mobileNumber: adminNumber,
+        adminCode: "1234",
+        adminMobileNumber: adminNumber,
+        mobileNumberSubId: '0',
+        mobileNumber1: "0000000000",
+        mobileNumber2: "0000000000",
+        mobileNumber3: "0000000000",
+        mobileNumber4: "0000000000",
+        mobileNumber5: "0000000000",
+        mobileNumber6: "0000000000",
+        mobileNumber7: "0000000000",
+        mobileNumber8: "0000000000",
+        mobileNumber9: "0000000000",
+        mobileNumber10: "0000000000",
         address: address,
-        siteName: siteName,
-        adminCode: '1234',
-        userId: userId,
-        isIPPanel: false,
-        ipAddress: ipAddress,
-        port: portStr,
-        staticPort: staticPortStr,
-        pass: pass,
-        staticIP: staticIPAddress,
+        cOn: currentTime,
+        password: pass,
+        ip_address: ipAddress,
+        is_ip_gsm_panel: true,
+        is_ip_panel: false,
+        port_no: portStr,
+        static_ip_address: staticIPAddress,
+        static_port_no: staticPortStr,
       );
-
-      SnackBarHelper.showSnackBar(context, 'Panel saved successfully');
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: const PanelListPage(),
-      );
+      ProgressDialog.show(context);
     } catch (e) {
       debugPrint('Failed to save panel: $e');
       SnackBarHelper.showSnackBar(context, 'Failed to save panel: $e');
@@ -492,13 +522,11 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     required SocketRepository socketRepo,
   }) async {
     try {
-      ProgressDialog.show(context);
-
       final _ =
-          Application()
-            ..mIPAddress = ipAddress
-            ..mPortNumber = portNumber
-            ..mPassword = password;
+      Application()
+        ..mIPAddress = ipAddress
+        ..mPortNumber = portNumber
+        ..mPassword = password;
 
       final response = await socketRepo.sendPacketSR1(Packets.connectPacket());
       return _handleSR1Response(response, socketRepo);
@@ -508,10 +536,10 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       final errorText = e.toString().toLowerCase();
       final isConnectionFailed =
           errorText.contains('socketexception') ||
-          errorText.contains('connection refused') ||
-          errorText.contains('timed out') ||
-          errorText.contains('did not respond') ||
-          errorText.contains('failed');
+              errorText.contains('connection refused') ||
+              errorText.contains('timed out') ||
+              errorText.contains('did not respond') ||
+              errorText.contains('failed');
 
       ProgressDialog.dismiss(context);
 
@@ -519,7 +547,7 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
         await showInfoDialog(
           context: context,
           message:
-              'Unable to connect to the panel.\nPlease check the network connection and try again.',
+          'Unable to connect to the panel.\nPlease check the network connection and try again.',
         );
       } else {
         SnackBarHelper.showSnackBar(context, 'Unexpected error: $e');
@@ -531,119 +559,63 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     }
   }
 
-  Future<bool> _handleSR1Response(
-    String result,
-    SocketRepository socketRepo,
-  ) async {
+  Future<bool> _handleSR1Response(String result, SocketRepository socketRepo) async {
+    result = result.trim();
+    debugPrint('Handling SR1 Response: $result');
+
+    // Panel already connected
     if (result.contains("S*000#3#*E")) {
-      ProgressDialog.dismiss(context);
       return await _showAlreadyConnectedDialog(socketRepo);
-    } else if (result.startsWith("S*000#1")) {
-      ProgressDialog.dismiss(context);
+    }
+
+    // Panel ready for data entry
+    if (result.startsWith("S*000#1")) {
       return true;
     }
+
+    // Unexpected response
+    debugPrint('Unexpected SR1 response: $result');
     return false;
   }
 
   Future<bool> _showAlreadyConnectedDialog(SocketRepository socketRepo) async {
-    final navigator = Navigator.of(context);
+    if (!context.mounted) return false;
 
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text(
-            "Connection Status",
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
+          title: const Text("Connection Status"),
           content: const Text("This panel appears to be already connected."),
           actions: [
             TextButton(
-              child: const Text(
-                "Force Disconnect",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: () async {
-                try {
-                  navigator.pop(); // Close dialog first
-                  await socketRepo.sendDisconnectPacket();
-
-                  ProgressDialog.show(context);
-                  await Future.delayed(const Duration(milliseconds: 200));
-
-                  final reconnectResponse =
-                  await socketRepo.sendPacketSR1(Packets.connectPacket());
-
-                  if (!context.mounted) return;
-
-                  ProgressDialog.dismiss(context);
-
-                  if (reconnectResponse.startsWith("S*000#1")) {
-                    await Future.delayed(const Duration(seconds: 1));
-                    await _addPanelToDB();
-                    navigator.pop(true);
-                  } else if (reconnectResponse == "S*000#3#*E") {
-                    await showInfoDialog(
-                      context: context,
-                      message:
-                      'Please restart the panel, and reconnect again!',
-                    );
-                    navigator.pop(false);
-                  } else {
-                    SnackBarHelper.showSnackBar(
-                      context,
-                      "Failed to reconnect",
-                    );
-                    navigator.pop(false);
-                  }
-                } catch (e, stackTrace) {
-                  debugPrint('Error in Force Disconnect: $e');
-                  debugPrint(stackTrace.toString());
-
-                  ProgressDialog.dismiss(context);
-
-                  final errorText = e.toString().toLowerCase();
-                  final isConnectionFailed =
-                      errorText.contains('socketexception') ||
-                          errorText.contains('connection refused') ||
-                          errorText.contains('timed out') ||
-                          errorText.contains('did not respond') ||
-                          errorText.contains('failed');
-
-                  if (context.mounted) {
-                    if (isConnectionFailed) {
-                      await showInfoDialog(
-                        context: context,
-                        message:
-                        'Unable to reconnect.\nPlease check your network and try again.',
-                      );
-                    } else {
-                      SnackBarHelper.showSnackBar(
-                        context,
-                        'Unexpected error: $e',
-                      );
-                    }
-                    navigator.pop(false);
-                  }
-                } finally {
-                  ProgressDialog.dismiss(context);
-                }
-              },
+              child: const Text("Force Disconnect", style: TextStyle(color: Colors.red)),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
             ),
             TextButton(
               child: const Text("Cancel"),
-              onPressed: () => navigator.pop(false),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
             ),
           ],
         );
       },
     );
 
-    return result ?? false;
+    if (result == true) {
+      try {
+        debugPrint('Sending disconnect packet...');
+        await socketRepo.sendDisconnectPacket();
+        debugPrint('Disconnect sent, proceeding...');
+        return true; // Continue after force disconnect
+      } catch (e) {
+        debugPrint('Error sending disconnect: $e');
+        SnackBarHelper.showSnackBar(context, 'Failed to disconnect panel: $e');
+        return false;
+      }
+    }
+
+    return false; // User cancelled
   }
 }
 
@@ -670,3 +642,5 @@ class PanelFormControllers {
     panelSimNumberController.dispose();
   }
 }
+
+// on the response from panel in case of checking already connected dialog 'S*000#1#096138016117116205#123456789123456#0#V0.0.55#100024*E' the code is not stopping on check

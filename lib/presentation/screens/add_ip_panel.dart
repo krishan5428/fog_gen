@@ -1,3 +1,4 @@
+import 'package:fire_nex/presentation/cubit/mappings/site_cubit.dart';
 import 'package:fire_nex/presentation/dialog/progress.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
 import 'package:fire_nex/presentation/widgets/custom_button.dart';
@@ -6,6 +7,7 @@ import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
 import 'package:fire_nex/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../constants/app_colors.dart';
 import '../../core/responses/socket_repository.dart';
 import '../../core/utils/application_class.dart';
@@ -13,8 +15,8 @@ import '../../core/utils/packets.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
+import '../cubit/panel/panel_cubit.dart';
 import '../dialog/ok_dialog.dart';
-import '../viewModel/panel_view_model.dart';
 import '../widgets/app_bar.dart';
 
 class AddIpPanelPage extends StatefulWidget {
@@ -33,6 +35,7 @@ class AddIpPanelPage extends StatefulWidget {
 
 class _AddIpPanelPageState extends State<AddIpPanelPage> {
   late final PanelFormControllers formControllers;
+  List<String> siteNames = [];
 
   @override
   void initState() {
@@ -47,8 +50,6 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
   }
 
   Future<void> _addPanelToDB() async {
-    final panelViewModel = context.read<PanelViewModel>();
-    final siteSimList = panelViewModel.sitePanelInfoList;
     final socketRepository = SocketRepository();
 
     final siteName = formControllers.siteNameController.text.trim();
@@ -68,13 +69,12 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
         'Site Address cannot be empty',
       );
     }
-    if (siteSimList.any(
-      (info) => info.siteName.toLowerCase() == siteName.toLowerCase(),
-    )) {
-      return SnackBarHelper.showSnackBar(
+    if (siteNames.contains(siteName)) {
+      SnackBarHelper.showSnackBar(
         context,
-        'This Site Name already exists',
+        'Site name "$siteName" already exists.',
       );
+      return;
     }
 
     final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
@@ -110,6 +110,16 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
     if (pass.length != 4 || int.tryParse(pass) == null) {
       return SnackBarHelper.showSnackBar(context, 'Password must be 4 digits');
     }
+
+    _savePanelToDatabase(
+      siteName: siteName,
+      ipAddress: ipAddress,
+      staticIPAddress: staticIPAddress,
+      port: portStr,
+      staticPort: staticPortStr,
+      password: pass,
+      address: address,
+    );
 
     final connected = await _handleIPOperations(
       ipAddress: ipAddress,
@@ -153,33 +163,41 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
     required String password,
     required String address,
   }) async {
-    final panelViewModel = context.read<PanelViewModel>();
     final userId = await SharedPreferenceHelper.getUserId();
-
+    final String currentTime = DateFormat(
+      'yyyy-MM-dd HH:mm:ss',
+    ).format(DateTime.now());
     try {
-      await panelViewModel.insertPanel(
+      context.read<PanelCubit>().addPanel(
+        userId: userId.toString(),
         panelType: widget.panelType,
-        panelCategory: widget.panelName,
+        panelName: widget.panelName,
+        site: siteName,
         panelSimNumber: '',
-        mobileNumber: '',
+        adminCode: "1234",
+        adminMobileNumber: '0000000000',
+        mobileNumberSubId: '0',
+        mobileNumber1: "0000000000",
+        mobileNumber2: "0000000000",
+        mobileNumber3: "0000000000",
+        mobileNumber4: "0000000000",
+        mobileNumber5: "0000000000",
+        mobileNumber6: "0000000000",
+        mobileNumber7: "0000000000",
+        mobileNumber8: "0000000000",
+        mobileNumber9: "0000000000",
+        mobileNumber10: "0000000000",
         address: address,
-        siteName: siteName,
-        adminCode: '',
-        userId: userId!,
-        isIPPanel: true,
-        isIPGPRSPanel: false,
-        ipAddress: ipAddress,
-        port: port,
-        staticPort: staticPort,
-        pass: password,
-        staticIP: staticIPAddress,
+        cOn: currentTime,
+        password: password,
+        ip_address: ipAddress,
+        is_ip_gsm_panel: false,
+        is_ip_panel: true,
+        port_no: port,
+        static_ip_address: staticIPAddress,
+        static_port_no: staticPort,
       );
-
-      SnackBarHelper.showSnackBar(context, 'Panel saved successfully');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: const PanelListPage(),
-      );
+      ProgressDialog.show(context, message: 'Adding panel');
     } catch (e, stackTrace) {
       debugPrint('Error inserting panel: $e');
       debugPrintStack(stackTrace: stackTrace);
@@ -349,98 +367,121 @@ class _AddIpPanelPageState extends State<AddIpPanelPage> {
   @override
   Widget build(BuildContext context) {
     final spacing = Responsive.spacingBwtView(context);
+    siteNames = context.watch<SiteCubit>().state;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: CustomAppBar(
-        pageName: 'Add Panel Details',
-        isFilter: false,
-        isDash: false,
-        isProfile: false,
-        onBack: () {
-          CustomNavigation.instance.pushReplace(
-            context: context,
-            screen: const PanelListPage(),
-          );
-        },
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: AppColors.litePrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: const Row(
-              children: [
-                Icon(Icons.info, size: 15, color: AppColors.colorPrimary),
-                SizedBox(width: 5),
-                Text(
-                  'Please add the panel with Specific Panel Details...',
-                  style: TextStyle(color: AppColors.colorPrimary, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(spacing * 2),
-              child: Column(
+    return BlocListener<PanelCubit, PanelState>(
+      listener: (context, state) {
+        if (state is AddPanelSuccess) {
+          ProgressDialog.dismiss(context);
+          _savingAndNavigating();
+        } else if (state is AddPanelFailure) {
+          ProgressDialog.dismiss(context);
+          SnackBarHelper.showSnackBar(context, "Error while adding Panel");
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        appBar: CustomAppBar(
+          pageName: 'Add Panel Details',
+          isFilter: false,
+          isDash: false,
+          isProfile: false,
+          onBack: () {
+            CustomNavigation.instance.pushReplace(
+              context: context,
+              screen: const PanelListPage(),
+            );
+          },
+        ),
+        body: Column(
+          children: [
+            Container(
+              color: AppColors.litePrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: const Row(
                 children: [
-                  CustomTextField(
-                    hintText: 'Site Name',
-                    controller: formControllers.siteNameController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'IP Address',
-                    maxLength: 15,
-                    controller: formControllers.ipAddressController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'Port Number',
-                    isNumber: true,
-                    maxLength: 5,
-                    controller: formControllers.portNumberController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'Static IP Address',
-                    maxLength: 15,
-                    controller: formControllers.staticIpController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'Static Port Number',
-                    isNumber: true,
-                    maxLength: 5,
-                    controller: formControllers.staticPortController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'Password',
-                    isNumber: true,
-                    maxLength: 4,
-                    controller: formControllers.passwordController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomTextField(
-                    hintText: 'Site Address',
-                    maxLength: 40,
-                    controller: formControllers.addressController,
-                  ),
-                  VerticalSpace(height: spacing * 1.2),
-                  CustomButton(
-                    buttonText: 'Save Panel',
-                    backgroundColor: AppColors.colorPrimary,
-                    foregroundColor: AppColors.white,
-                    onPressed: _addPanelToDB,
+                  Icon(Icons.info, size: 15, color: AppColors.colorPrimary),
+                  SizedBox(width: 5),
+                  Text(
+                    'Please add the panel with Specific Panel Details...',
+                    style: TextStyle(
+                      color: AppColors.colorPrimary,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(spacing * 2),
+                child: Column(
+                  children: [
+                    CustomTextField(
+                      hintText: 'Site Name',
+                      controller: formControllers.siteNameController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'IP Address',
+                      maxLength: 15,
+                      controller: formControllers.ipAddressController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'Port Number',
+                      isNumber: true,
+                      maxLength: 5,
+                      controller: formControllers.portNumberController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'Static IP Address',
+                      maxLength: 15,
+                      controller: formControllers.staticIpController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'Static Port Number',
+                      isNumber: true,
+                      maxLength: 5,
+                      controller: formControllers.staticPortController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'Password',
+                      isNumber: true,
+                      maxLength: 4,
+                      controller: formControllers.passwordController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomTextField(
+                      hintText: 'Site Address',
+                      maxLength: 40,
+                      controller: formControllers.addressController,
+                    ),
+                    VerticalSpace(height: spacing * 1.2),
+                    CustomButton(
+                      buttonText: 'Save Panel',
+                      backgroundColor: AppColors.colorPrimary,
+                      foregroundColor: AppColors.white,
+                      onPressed: _addPanelToDB,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _savingAndNavigating() {
+    SnackBarHelper.showSnackBar(context, 'Panel saved successfully');
+    CustomNavigation.instance.pushReplace(
+      context: context,
+      screen: const PanelListPage(),
     );
   }
 }

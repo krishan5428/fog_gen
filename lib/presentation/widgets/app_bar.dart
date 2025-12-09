@@ -32,13 +32,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           isDash
               ? null
               : IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new),
-                color: AppColors.white,
+                icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+                color: AppColors.colorPrimary,
                 onPressed: onBack,
               ),
-      iconTheme: const IconThemeData(
-        color: AppColors.white,
-      ),
+      iconTheme: const IconThemeData(color: AppColors.colorPrimary),
       backgroundColor: Colors.grey,
       automaticallyImplyLeading: true,
       elevation: 0,
@@ -49,13 +47,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Row(
         children: [
-          Image.asset('assets/images/sec_logo.png', width: 120),
+          Image.asset('assets/images/sec_logo.png', width: 105),
           const SizedBox(width: 10),
           Container(width: 1, height: 30, color: AppColors.colorAccent),
           const SizedBox(width: 10),
           Text(
             pageName,
-            style: const TextStyle(fontSize: 14, color: AppColors.white),
+            style: const TextStyle(fontSize: 14, color: AppColors.colorPrimary),
           ),
         ],
       ),

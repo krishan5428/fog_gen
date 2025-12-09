@@ -13,16 +13,23 @@ class PanelCubit extends Cubit<PanelState> {
   PanelCubit(this.panelRepo) : super(PanelInitial());
 
   void getPanel({required String userId}) async {
+    print('▶️ getPanel() called for userId: $userId');
     emit(PanelLoading());
     try {
+      print('📡 Calling panelRepo.getPanels...');
       final response = await panelRepo.getPanels(userId);
+      print('✅ Response received: ${response.toString()}');
 
       if (response.status) {
+        print('✅ Panels fetched successfully');
         emit(GetPanelsSuccess(panelsData: response.panelsData));
+      } else {
+        print('⚠️ API responded with failure: ${response.msg}');
+        emit(GetPanelsFailure(message: response.msg));
       }
     } catch (e) {
+      print('❌ Exception in getPanel(): $e');
       emit(GetPanelsFailure(message: e.toString()));
-      print('Get Panel error response catch : ${e.toString()}');
     }
   }
 
@@ -56,13 +63,76 @@ class PanelCubit extends Cubit<PanelState> {
       );
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(UpdatePanelsFailure(message: 'Error while updating Admin Code'));
       }
     } catch (e) {
       emit(UpdatePanelsFailure(message: e.toString()));
       print('updateAdminCode error response catch : ${e.toString()}');
+    }
+  }
+
+  void updatePanelData({
+    required String userId,
+    required int panelId,
+    required String key,
+    required String value,
+  }) async {
+    emit(PanelLoading());
+    try {
+      final response = await panelRepo.updatePanelData(
+        userId,
+        panelId,
+        key,
+        value,
+      );
+      if (response.status && response.panelData != null) {
+        emit(
+          UpdatePanelsSuccess(
+            msg: response.msg,
+            panelData: response.panelData!,
+          ),
+        );
+      } else {
+        emit(UpdatePanelsFailure(message: response.msg));
+      }
+    } catch (e) {
+      emit(UpdatePanelsFailure(message: e.toString()));
+      print('updatePanelData error response catch : ${e.toString()}');
+    }
+  }
+
+  void updatePanelDataList({
+    required String userId,
+    required int panelId,
+    required List<String> keys,
+    required List<dynamic> values,
+  }) async {
+    emit(PanelLoading());
+
+    try {
+      final response = await panelRepo.updatePanelDataInList(
+        userId,
+        panelId,
+        keys,
+        values,
+      );
+
+      if (response.status && response.panelData != null) {
+        emit(
+          UpdatePanelsSuccess(
+            msg: response.msg,
+            panelData: response.panelData!,
+          ),
+        );
+      } else {
+        emit(UpdatePanelsFailure(message: response.msg));
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ updatePanelDataList error: $e');
+      debugPrint(stackTrace.toString());
+      emit(UpdatePanelsFailure(message: e.toString()));
     }
   }
 
@@ -80,7 +150,7 @@ class PanelCubit extends Cubit<PanelState> {
       );
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(UpdatePanelsFailure(message: 'Error while updating Site Name'));
       }
@@ -104,7 +174,7 @@ class PanelCubit extends Cubit<PanelState> {
       );
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(
           UpdatePanelsFailure(message: 'Error while updating Panel Sim Number'),
@@ -126,7 +196,7 @@ class PanelCubit extends Cubit<PanelState> {
       final response = await panelRepo.updateAddress(userId, panelId, address);
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(UpdatePanelsFailure(message: 'Error while updating Address'));
       }
@@ -150,7 +220,7 @@ class PanelCubit extends Cubit<PanelState> {
       );
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(UpdatePanelsFailure(message: 'Error while updating Address'));
       }
@@ -178,7 +248,7 @@ class PanelCubit extends Cubit<PanelState> {
       debugPrint('updateSolitareMobileNumber status: ${response.status}');
 
       if (response.status) {
-        emit(UpdatePanelsSuccess(msg: response.msg));
+        // emit(UpdatePanelsSuccess(msg: response.msg));
       } else {
         emit(
           UpdatePanelsFailure(message: 'Error while updating Mobile Number'),
@@ -199,6 +269,7 @@ class PanelCubit extends Cubit<PanelState> {
     required String adminCode,
     required String adminMobileNumber,
     required String mobileNumberSubId,
+    required String mobileNumber1,
     required String mobileNumber2,
     required String mobileNumber3,
     required String mobileNumber4,
@@ -221,47 +292,49 @@ class PanelCubit extends Cubit<PanelState> {
     emit(PanelLoading());
     try {
       final response = await panelRepo.addPanel(
-        userId,
-        panelType,
-        panelName,
-        site,
-        panelSimNumber,
-        adminCode,
-        adminMobileNumber,
-        mobileNumberSubId,
-        mobileNumber2,
-        mobileNumber3,
-        mobileNumber4,
-        mobileNumber5,
-        mobileNumber6,
-        mobileNumber7,
-        mobileNumber8,
-        mobileNumber9,
-        mobileNumber10,
-        address,
-        cOn,
-        ip_address,
-        port_no,
-        static_ip_address,
-        static_port_no,
-        password,
-        is_ip_panel,
-        is_ip_gsm_panel,
+        userId: userId,
+        panelType: panelType,
+        panelName: panelName,
+        site: site,
+        panelSimNumber: panelSimNumber,
+        adminCode: adminCode,
+        adminMobileNumber: adminMobileNumber,
+        mobileNumberSubId: mobileNumberSubId,
+        mobileNumber1: mobileNumber1,
+        mobileNumber2: mobileNumber2,
+        mobileNumber3: mobileNumber3,
+        mobileNumber4: mobileNumber4,
+        mobileNumber5: mobileNumber5,
+        mobileNumber6: mobileNumber6,
+        mobileNumber7: mobileNumber7,
+        mobileNumber8: mobileNumber8,
+        mobileNumber9: mobileNumber9,
+        mobileNumber10: mobileNumber10,
+        address: address,
+        cOn: cOn,
+        ip_address: ip_address,
+        port_no: port_no,
+        static_ip_address: static_ip_address,
+        static_port_no: static_port_no,
+        password: password,
+        is_ip_panel: is_ip_panel,
+        is_ip_gsm_panel: is_ip_gsm_panel,
       );
 
-      if (response.isSuccess) {
+      if (response.status) {
         emit(AddPanelSuccess(message: response.msg));
         print(
-          'Add Panel response : status=${response.status}, msg =${response.msg}',
+          'Add Panel response : status=${response.status}, msg=${response.msg}',
         );
       } else {
         emit(
-          AddPanelSuccess(
-            message: response.msg.isNotEmpty ? response.msg : "Signup failed",
+          AddPanelFailure(
+            message:
+                response.msg.isNotEmpty ? response.msg : "Add Panel failed",
           ),
         );
         print(
-          'Add Panel error response : status=${response.status}, msg =${response.msg}',
+          'Add Panel FAILED: status=${response.status}, msg=${response.msg}',
         );
       }
     } catch (e) {

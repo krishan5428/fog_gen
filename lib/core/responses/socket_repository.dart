@@ -28,12 +28,12 @@ class SocketRepository {
       socket = await Socket.connect(
         ip,
         port,
-        timeout: const Duration(seconds: 10),
+        timeout: const Duration(seconds: 20),
       );
       _logger.d("Connected. Sending: $packet");
 
       socket.listen(
-        (data) {
+            (data) {
           final response = utf8.decode(data).trim();
           _logger.d("Received: $response");
           if (!completer.isCompleted) completer.complete(response);
@@ -54,31 +54,31 @@ class SocketRepository {
       socket.write(packet);
       await socket.flush();
 
-      // Wait for the completer to be finished by the listener
+      // Wait for the response
       final response = await completer.future;
       return response;
     } catch (e) {
       _logger.e("Socket transaction failed: $e");
       throw Exception("Panel connection failed: $e");
     } finally {
-      // Ensure the socket is always destroyed.
+      // Always close socket
       socket?.destroy();
     }
   }
 
-  /// Sends a packet for an SR1 panel and returns the response.
+  /// Send packet for SR1 panel
   Future<String> sendPacketSR1(String packet) {
     debugPrint('reconnectResponse');
     return _executeTransaction(packet);
   }
 
-  /// Sends the SR1 disconnect packet. This is a fire-and-forget operation.
+  /// Send disconnect packet (fire and forget)
   Future<void> sendDisconnectPacket() async {
     debugPrint("sendDisconnectPacket: send");
     try {
       final ip = _app.mIPAddress;
       final port = _app.mPortNumber ?? 0;
-      if (ip == null) return;
+      if (ip == null || port == 0) return;
       final socket = await Socket.connect(
         ip,
         port,
@@ -88,9 +88,7 @@ class SocketRepository {
       await socket.flush();
       socket.destroy();
     } catch (e) {
-      _logger.w(
-        'Could not send disconnect packet (panel might be offline): $e',
-      );
+      _logger.w('Could not send disconnect packet: $e');
     }
   }
 }

@@ -1,31 +1,48 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
 import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
-import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
+import '../../constants/app_colors.dart';
+import '../../core/data/pojo/vendor_data.dart';
+import '../../core/data/repo_impl/vendor_repo_impl.dart';
 import '../../utils/auth_helper.dart';
+import '../../utils/navigation.dart';
+import '../../utils/responsive.dart';
+import '../../utils/snackbar_helper.dart';
+import '../cubit/vendor/vendor_cubit.dart';
+import '../dialog/confirmation_dialog.dart';
+import '../dialog/progress.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/form_section.dart';
+import '../widgets/vertical_gap.dart';
 
-class AddVendorPage extends StatefulWidget {
+class AddVendorPage extends StatelessWidget {
   const AddVendorPage({super.key});
 
   @override
-  State<AddVendorPage> createState() => _AddVendorPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => VendorCubit(VendorRepoImpl()),
+      child: AddVendorUI(),
+    );
+  }
 }
 
-class _AddVendorPageState extends State<AddVendorPage> {
+class AddVendorUI extends StatefulWidget {
+  const AddVendorUI({super.key});
+
+  @override
+  State<AddVendorUI> createState() => _AddVendorPageState();
+}
+
+class _AddVendorPageState extends State<AddVendorUI> {
   final vendorNameController = TextEditingController();
   final vendorEmailIdController = TextEditingController();
   final vendorAddressController = TextEditingController();
   final vendorMobileNumberController = TextEditingController();
-
+  int? userId;
   @override
   void dispose() {
     vendorNameController.dispose();
@@ -78,7 +95,7 @@ class _AddVendorPageState extends State<AddVendorPage> {
       final value = controller.text.trim();
 
       if (value.isEmpty) {
-        SnackBarHelper.showSnackBar(context, "Please fill is $label");
+        SnackBarHelper.showSnackBar(context, 'Please fill is $label');
         return;
       }
 
@@ -86,7 +103,7 @@ class _AddVendorPageState extends State<AddVendorPage> {
         if (value.length != 10) {
           SnackBarHelper.showSnackBar(
             context,
-            "Vendor Mobile Number must be exactly 10 digits",
+            'Vendor Mobile Number must be exactly 10 digits',
           );
           return;
         }
@@ -101,7 +118,7 @@ class _AddVendorPageState extends State<AddVendorPage> {
       final confirmed = await showConfirmationDialog(
         context: context,
         message:
-            'Do you want to add vendor named ${vendorNameController.text.trim()}?',
+        'Do you want to add vendor named ${vendorNameController.text.trim()}?',
       );
 
       if (confirmed == true) {
@@ -111,33 +128,36 @@ class _AddVendorPageState extends State<AddVendorPage> {
   }
 
   Future<void> _addVendor() async {
-    final vendorViewModel = context.read<VendorViewModel>();
-
     final vendorName = vendorNameController.text.trim();
     final vendorMobileNumber = vendorMobileNumberController.text.trim();
     final vendorEmailAddress = vendorEmailIdController.text.trim();
     final vendorAddress = vendorAddressController.text.trim();
-    final userId = await SharedPreferenceHelper.getUserId();
-
-    final result = await vendorViewModel.insertVendor(
-      vendorName,
-      vendorEmailAddress,
-      vendorMobileNumber,
-      userId!,
-      vendorAddress,
-    );
+    userId = await SharedPreferenceHelper.getUserId();
+    final String currentTime = DateFormat(
+      'yyyy-MM-dd HH:mm:ss',
+    ).format(DateTime.now());
+    debugPrint("Add Vendor Params:");
+    debugPrint("userId: $userId");
+    debugPrint("vendorName: $vendorName");
+    debugPrint("vendorMobile: $vendorMobileNumber");
+    debugPrint("vendorEmail: $vendorEmailAddress");
+    debugPrint("vendorAddress: $vendorAddress");
+    debugPrint("createdAt: $currentTime");
 
     if (!mounted) return;
 
-    if (result == true) {
-      SnackBarHelper.showSnackBar(context, 'Vendor added successfully');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: PanelListPage(),
-      );
-    } else {
-      SnackBarHelper.showSnackBar(context, 'Failed to add vendor');
+    if (userId == null) {
+      SnackBarHelper.showSnackBar(context, 'User ID not found');
+      return;
     }
+    context.read<VendorCubit>().addVendor(
+      userId: userId.toString(),
+      vendorName: vendorName,
+      vendorEmail: vendorEmailAddress,
+      vendorMobile: vendorMobileNumber,
+      vendorAddress: vendorAddress,
+      createdAt: currentTime,
+    );
   }
 
   void _goToPreviousStep() {
@@ -152,78 +172,137 @@ class _AddVendorPageState extends State<AddVendorPage> {
   Widget build(BuildContext context) {
     final currentStepData = _steps[_currentStep];
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: CustomAppBar(
-        pageName: 'Add Panel',
-        isFilter: false,
-        isDash: false,
-        onBack: () {
-          CustomNavigation.instance.pushReplace(
-            context: context,
-            screen: PanelListPage(),
-          );
-        },
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: AppColors.litePrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: Row(
-              children: [
-                Icon(Icons.info, size: 15, color: AppColors.colorPrimary),
-                SizedBox(width: 5),
-                Text(
-                  'Please add the panel with Specific Panel Details...',
-                  style: TextStyle(color: AppColors.colorPrimary, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
+    final fontSize = Responsive.fontSize(context);
+    final spacingBwtView = Responsive.spacingBwtView(context);
+    final smallTextSize = Responsive.smallTextSize(context);
 
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(10),
-              margin: EdgeInsets.only(top: 100),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+    return BlocListener<VendorCubit, VendorState>(
+      listener: (context, state) {
+        if (state is VendorLoading) {
+          ProgressDialog.show(context);
+        } else if (state is AddVendorSuccess || state is AddVendorFailure) {
+          ProgressDialog.dismiss(context);
+          ProgressDialog.dismiss(context);
+          if (state is AddVendorSuccess) {
+            SnackBarHelper.showSnackBar(context, state.message);
+
+            final vendorData = VendorData(
+              // vendor_id: 'DateTime.now().millisecondsSinceEpoch.toString()',
+              user_id: userId.toString(),
+              vendor_name: vendorNameController.text.trim(),
+              vendor_email: vendorEmailIdController.text.trim(),
+              vendor_mobile: vendorMobileNumberController.text.trim(),
+              vendor_address: vendorAddressController.text.trim(),
+            );
+
+            // Save to shared prefs
+            SharedPreferenceHelper.saveVendorData(vendorData);
+            CustomNavigation.instance.pushReplace(
+              context: context,
+              screen: PanelListPage(),
+            );
+          } else {
+            SnackBarHelper.showSnackBar(context, 'Error while adding Vendor');
+          }
+        } else {
+          SnackBarHelper.showSnackBar(context, 'Something went wrong');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        appBar: CustomAppBar(
+          pageName: 'Add Vendor',
+          isFilter: false,
+          isDash: false,
+          isProfile: false,
+          onBack: () {
+            CustomNavigation.instance.pushReplace(
+              context: context,
+              screen: PanelListPage(),
+            );
+          },
+        ),
+        body: Column(
+          children: [
+            Container(
+              color: AppColors.litePrimary,
+              padding: EdgeInsets.symmetric(
+                horizontal: spacingBwtView,
+                vertical: spacingBwtView * 0.7,
+              ),
+              child: Row(
                 children: [
-                  FormSection(
-                    label: currentStepData['label'],
-                    keyboardType: currentStepData['keyboardType'],
-                    controller: currentStepData['controller'],
-                    maxLength: currentStepData['maxLength'],
+                  Icon(
+                    Icons.info,
+                    size: fontSize,
+                    color: AppColors.colorPrimary,
                   ),
-                  VerticalSpace(height: 20),
-                  Row(
-                    children: [
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: CustomButton(
-                            buttonText: "BACK",
-                            backgroundColor: AppColors.litePrimary,
-                            foregroundColor: AppColors.colorPrimary,
-                            onPressed: _goToPreviousStep,
-                          ),
-                        ),
-                      if (_currentStep > 0) const SizedBox(width: 10),
-                      Expanded(
-                        child: CustomButton(
-                          buttonText:
-                              _currentStep == _steps.length - 1
-                                  ? "SUBMIT"
-                                  : "NEXT",
-                          onPressed: _goToNext,
-                        ),
-                      ),
-                    ],
+                  SizedBox(width: spacingBwtView * 0.5),
+                  Text(
+                    'Please add the Vendor details...',
+                    style: TextStyle(
+                      color: AppColors.colorPrimary,
+                      fontSize: smallTextSize,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(spacingBwtView * 2.5),
+                margin: EdgeInsets.only(top: spacingBwtView * 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FormSection(
+                      label: currentStepData['label'],
+                      keyboardType: currentStepData['keyboardType'],
+                      controller: currentStepData['controller'],
+                      maxLength: currentStepData['maxLength'],
+                    ),
+                    VerticalSpace(height: spacingBwtView),
+                    Row(
+                      children: [
+                        if (_currentStep > 0)
+                          Expanded(
+                            child: CustomButton(
+                              buttonText: "BACK",
+                              buttonTextSize: fontSize,
+                              backgroundColor: AppColors.litePrimary,
+                              foregroundColor: AppColors.colorPrimary,
+                              onPressed: _goToPreviousStep,
+                            ),
+                          ),
+                        if (_currentStep > 0) const SizedBox(width: 10),
+                        Expanded(
+                          child: CustomButton(
+                            buttonText:
+                            _currentStep == _steps.length - 1
+                                ? "SUBMIT"
+                                : "NEXT",
+                            buttonTextSize: fontSize,
+                            backgroundColor: AppColors.colorPrimary,
+                            foregroundColor: AppColors.white,
+                            onPressed: _goToNext,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // const SizedBox(height: 10),
+                    // CustomButton(
+                    //   buttonText: 'SKIP',
+                    //   backgroundColor: AppColors.colorPrimary,
+                    //   foregroundColor: AppColors.litePrimary,
+                    //   onPressed: () {},
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

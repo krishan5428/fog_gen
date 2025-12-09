@@ -15,6 +15,9 @@ class SharedPreferenceHelper {
   static const _keyPass = 'user_pass';
   static const _keyVendor = "vendor_data";
 
+  static const _intruKeyPrefix = 'intruId_';
+  static const _fireKeyPrefix = 'fireId_';
+
   static Future<void> setLoginState(
     bool isLoggedIn,
     int userId,
@@ -139,5 +142,42 @@ class SharedPreferenceHelper {
     final prefs = await SharedPreferences.getInstance();
     final vendorJson = jsonEncode(vendorData.toJson());
     await prefs.setString(_keyVendor, vendorJson);
+  }
+
+  static Future<void> clearVendorData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyVendor);
+  }
+
+  static Future<void> setIntruIdForPanelSimNumber(
+    String simNumber,
+    String intruId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_intruKeyPrefix$simNumber', intruId);
+  }
+
+  static Future<void> setFireIdForPanelSimNumber(
+    String simNumber,
+    String fireId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_fireKeyPrefix$simNumber', fireId);
+  }
+
+  static Future<String?> getIntruIdForPanelSimNumber(String simNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('$_intruKeyPrefix$simNumber');
+  }
+
+  static Future<String?> getFireIdForPanelSimNumber(String simNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('$_fireKeyPrefix$simNumber');
+  }
+
+  static Future<void> clearIdsForPanelSimNumber(String simNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('$_intruKeyPrefix$simNumber');
+    await prefs.remove('$_fireKeyPrefix$simNumber');
   }
 }

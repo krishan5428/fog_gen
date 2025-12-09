@@ -1,5 +1,5 @@
 class AddPanelResponse {
-  final String status;
+  final bool status;
   final String msg;
 
   AddPanelResponse({required this.status, required this.msg});
@@ -10,6 +10,4 @@ class AddPanelResponse {
       msg: json['message'] ?? '',
     );
   }
-
-  bool get isSuccess => status.toLowerCase() == 'success';
 }

@@ -1,3 +1,4 @@
+import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/constants/urls.dart';
 import 'package:fire_nex/presentation/dialog/url_dialog.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class _AddDrawerState extends State<AppDrawer> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.grey,
+              color: AppColors.litePrimary,
             ),
             child: Center(
               child: Column(

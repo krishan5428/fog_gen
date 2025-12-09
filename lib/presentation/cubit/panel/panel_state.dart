@@ -59,7 +59,8 @@ class DeletePanelsFailure extends PanelState {
 
 class UpdatePanelsSuccess extends PanelState {
   final String msg;
-  UpdatePanelsSuccess({required this.msg});
+  final PanelData panelData;
+  UpdatePanelsSuccess({required this.msg, required this.panelData});
 
   @override
   List<Object?> get props => [msg];

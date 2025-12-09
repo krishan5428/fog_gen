@@ -12,7 +12,13 @@ class SendSms with WidgetsBindingObserver {
 
   int _currentIndex = 0;
 
-  SendSms(this.phone, this.messages, this.setState, this.smsStatus, {this.onComplete});
+  SendSms(
+    this.phone,
+    this.messages,
+    this.setState,
+    this.smsStatus, {
+    this.onComplete,
+  });
 
   void start() {
     WidgetsBinding.instance.addObserver(this);
@@ -26,19 +32,29 @@ class SendSms with WidgetsBindingObserver {
   void _sendNext() async {
     if (_currentIndex >= messages.length) {
       dispose();
-      if(onComplete != null) onComplete!();
+      onComplete?.call();
       return;
     }
 
     final encoded = Uri.encodeComponent(messages[_currentIndex]);
-    final smsUri = Uri.parse(Platform.isIOS ? "sms:$phone&body=$encoded" : "sms:$phone?body=$encoded");
+    final smsUri = Uri.parse(
+      Platform.isIOS ? "sms:$phone&body=$encoded" : "sms:$phone?body=$encoded",
+    );
 
-    final launched = await launchUrl(smsUri, mode: LaunchMode.externalApplication);
-    if (launched) {
-      debugPrint("Opened composer for SMS ${_currentIndex + 1}");
+    final launched = await launchUrl(
+      smsUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched) return;
+
+    try {
       setState(() {
         smsStatus[_currentIndex] = true;
       });
+    } catch (e) {
+      // dialog was closed, ignore update
+      return;
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:fire_nex/constants/app_colors.dart';
 import 'package:fire_nex/core/responses/socket_repository.dart';
-import 'package:fire_nex/data/database/app_database.dart';
 import 'package:fire_nex/presentation/bottom_sheet_dialog/update_destination_ip_data.dart';
 import 'package:fire_nex/presentation/dialog/progress.dart';
 import 'package:fire_nex/presentation/screens/alert_module.dart';
@@ -8,6 +7,7 @@ import 'package:fire_nex/presentation/screens/panel_list.dart';
 import 'package:fire_nex/utils/navigation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/data/pojo/panel_data.dart';
 import '../../core/utils/application_class.dart';
 import '../../core/utils/packets.dart';
 import '../../utils/responsive.dart';
@@ -28,7 +28,7 @@ class MoreSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<GridOption> options = [];
     final fontSize = Responsive.fontSize(context);
-    if (!panelData.isIPPanel && !panelData.isIPGPRSPanel) {
+    if (!panelData.is_ip_panel && !panelData.is_ip_gsm_panel) {
       options.add(
         GridOption(
           title: 'Add / Remove Numbers',
@@ -36,7 +36,7 @@ class MoreSettingsScreen extends StatelessWidget {
           onTap: () {
             CustomNavigation.instance.push(
               context: context,
-              screen: const AlertModulePage(),
+              screen: AlertModulePage(panelData: panelData,),
             );
           },
         ),
@@ -49,9 +49,9 @@ class MoreSettingsScreen extends StatelessWidget {
           icon: Icons.device_hub,
           onTap: () async {
             final app = Application();
-            app.mIPAddress = panelData.ipAddress;
-            app.mPortNumber = int.tryParse(panelData.port);
-            app.mPassword = panelData.ipPassword;
+            app.mIPAddress = panelData.ip_address;
+            app.mPortNumber = int.tryParse(panelData.port_no);
+            app.mPassword = panelData.password;
 
             try {
               ProgressDialog.show(context, message: 'Reading Panel ID data...');
@@ -63,7 +63,7 @@ class MoreSettingsScreen extends StatelessWidget {
               if (response.contains('001')) {
                 showPanelIdDialog(context, response, socketRepository);
               } else {
-                if (panelData.isIPGPRSPanel) {
+                if (panelData.is_ip_gsm_panel) {
                   final confirm = await showConfirmationDialog(
                     context: context,
                     message:
@@ -73,7 +73,7 @@ class MoreSettingsScreen extends StatelessWidget {
                     _sendSMSCommand("newAddress", panelData, context);
                   }
                 }
-                if (panelData.isIPPanel) {
+                if (panelData.is_ip_panel) {
                   showInfoDialog(
                     context: context,
                     message:
@@ -91,9 +91,9 @@ class MoreSettingsScreen extends StatelessWidget {
           icon: Icons.settings_ethernet,
           onTap: () async {
             final app = Application();
-            app.mIPAddress = panelData.ipAddress;
-            app.mPortNumber = int.tryParse(panelData.port);
-            app.mPassword = panelData.ipPassword;
+            app.mIPAddress = panelData.ip_address;
+            app.mPortNumber = int.tryParse(panelData.port_no);
+            app.mPassword = panelData.password;
 
             try {
               ProgressDialog.show(context, message: 'Reading Local IP data...');
@@ -139,9 +139,9 @@ class MoreSettingsScreen extends StatelessWidget {
                         title: 'CMS 1',
                         onTap: () async {
                           final app = Application();
-                          app.mIPAddress = panelData.ipAddress;
-                          app.mPortNumber = int.tryParse(panelData.port);
-                          app.mPassword = panelData.ipPassword;
+                          app.mIPAddress = panelData.ip_address;
+                          app.mPortNumber = int.tryParse(panelData.port_no);
+                          app.mPassword = panelData.password;
 
                           try {
                             ProgressDialog.show(
@@ -186,9 +186,9 @@ class MoreSettingsScreen extends StatelessWidget {
                         title: 'CMS 2',
                         onTap: () async {
                           final app = Application();
-                          app.mIPAddress = panelData.ipAddress;
-                          app.mPortNumber = int.tryParse(panelData.port);
-                          app.mPassword = panelData.ipPassword;
+                          app.mIPAddress = panelData.ip_address;
+                          app.mPortNumber = int.tryParse(panelData.port_no);
+                          app.mPassword = panelData.password;
 
                           try {
                             ProgressDialog.show(
@@ -232,9 +232,9 @@ class MoreSettingsScreen extends StatelessWidget {
                         title: 'PUSH SERVER',
                         onTap: () async {
                           final app = Application();
-                          app.mIPAddress = panelData.ipAddress;
-                          app.mPortNumber = int.tryParse(panelData.port);
-                          app.mPassword = panelData.ipPassword;
+                          app.mIPAddress = panelData.ip_address;
+                          app.mPortNumber = int.tryParse(panelData.port_no);
+                          app.mPassword = panelData.password;
 
                           try {
                             ProgressDialog.show(

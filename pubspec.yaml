@@ -2,7 +2,7 @@ name: fire_nex
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.5+9
+version: 1.0.7+11
 
 environment:
   sdk: ^3.7.0
@@ -21,7 +21,7 @@ dependencies:
   package_info_plus: ^8.3.0
   shared_preferences: ^2.0.15
   url_launcher: ^6.3.1
-  telephony: ^0.2.0
+#  telephony: ^0.2.0
   intl: ^0.19.0
   dio: ^5.4.0
   flutter_bloc: ^8.1.3
