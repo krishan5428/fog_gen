@@ -1,9 +1,5 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/viewModel/user_view_model.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class UpdateUserFieldBottomSheet extends StatefulWidget {
   final int userId;
@@ -39,34 +35,35 @@ class _UpdateUserFieldBottomSheetState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final userViewModel = context.read<UserViewModel>();
+    // final userViewModel = context.read<UserViewModel>();
     setState(() => _loading = true);
 
     try {
       switch (widget.formKey) {
-        case "name":
-          await userViewModel.updateUserName(widget.userId, _controller.text);
-          break;
-        case "mobile":
-          await userViewModel.updateUserMobile(widget.userId, _controller.text);
-          break;
-        case "password":
-          await userViewModel.updateUserPassword(
-            widget.userId,
-            _controller.text,
-          );
-          break;
-        case "email":
-          await userViewModel.updateUserEmail(widget.userId, _controller.text);
-          break;
-      }
+        //   case "name":
+        //     await userViewModel.updateUserName(widget.userId, _controller.text);
+        //     break;
+        //   case "mobile":
+        //     await userViewModel.updateUserMobile(widget.userId, _controller.text);
+        //     break;
+        //   case "password":
+        //     await userViewModel.updateUserPassword(
+        //       widget.userId,
+        //       _controller.text,
+        //     );
+        //     break;
+        //   case "email":
+        //     await userViewModel.updateUserEmail(widget.userId, _controller.text);
+        //     break;
+        // }
 
-      if (mounted) {
-        CustomNavigation.instance.popWithResult(context: context, result: true);
-        SnackBarHelper.showSnackBar(
-          context,
-          '${widget.formKey.toUpperCase()} updated successfully',
-        );
+        // if (mounted) {
+        //   CustomNavigation.instance.popWithResult(context: context, result: true);
+        //   SnackBarHelper.showSnackBar(
+        //     context,
+        //     '${widget.formKey.toUpperCase()} updated successfully',
+        //   );
+        // }
       }
     } catch (e) {
       if (mounted) {

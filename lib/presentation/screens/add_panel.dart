@@ -1,11 +1,11 @@
 import 'dart:developer' as developer;
 
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/widgets/vertical_gap.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

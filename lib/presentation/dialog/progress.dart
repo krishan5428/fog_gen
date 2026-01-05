@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
 
 class ProgressDialog {
   static bool _isShowing = false;
@@ -14,20 +14,19 @@ class ProgressDialog {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (_) => WillPopScope(
-            onWillPop: () async => false,
-            child: AlertDialog(
-              backgroundColor: AppColors.white,
-              content: Row(
-                children: [
-                  const CircularProgressIndicator(color: AppColors.colorPrimary,),
-                  const SizedBox(width: 20),
-                  Expanded(child: Text(message)),
-                ],
-              ),
-            ),
+      builder: (_) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          backgroundColor: AppColors.white,
+          content: Row(
+            children: [
+              const CircularProgressIndicator(color: AppColors.colorPrimary),
+              const SizedBox(width: 20),
+              Expanded(child: Text(message)),
+            ],
           ),
+        ),
+      ),
     );
   }
 

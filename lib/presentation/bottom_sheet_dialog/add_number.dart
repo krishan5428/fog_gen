@@ -1,9 +1,9 @@
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -41,7 +41,7 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
 
     return BlocListener<PanelCubit, PanelState>(
       listener: (context, state) {
-        if(state is PanelLoading){
+        if (state is PanelLoading) {
           ProgressDialog.show(context);
         }
         if (state is UpdatePanelsSuccess) {
@@ -142,10 +142,9 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
     final panel = widget.panel;
     final newNumber = _controller.text.trim();
     final normalizedNewNumber = newNumber.replaceAll(RegExp(r'\D'), '');
-    final normalizedExisting =
-        widget.existingNumbers
-            .map((e) => e.replaceAll(RegExp(r'\D'), '').trim())
-            .toList();
+    final normalizedExisting = widget.existingNumbers
+        .map((e) => e.replaceAll(RegExp(r'\D'), '').trim())
+        .toList();
 
     if (normalizedNewNumber.length != 10) {
       setState(() => _errorText = 'Number must be exactly 10 digits');
@@ -212,13 +211,12 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
       );
       SnackBarHelper.showSnackBar(context, 'Number added successfully!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
       CustomNavigation.instance.popWithResult(context: context, result: false);
     }
   }
 }
 
-// 🔧 Helper methods (unchanged)
 Future<bool?> _trySendSms(
   BuildContext context,
   String device,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fire_nex/constants/app_colors.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
 
 import '../widgets/vertical_gap.dart';
 

@@ -1,13 +1,13 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/constants/urls.dart';
-import 'package:fire_nex/presentation/dialog/url_dialog.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/constants/urls.dart';
+import 'package:fog_gen_new/presentation/dialog/url_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/screens/about_us.dart';
-import 'package:fire_nex/presentation/screens/profile.dart';
-import 'package:fire_nex/presentation/screens/vendor_profile.dart';
-import 'package:fire_nex/utils/app_info.dart';
-import 'package:fire_nex/utils/navigation.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/screens/about_us.dart';
+import 'package:fog_gen_new/presentation/screens/profile.dart';
+import 'package:fog_gen_new/presentation/screens/vendor_profile.dart';
+import 'package:fog_gen_new/utils/app_info.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
 
 import '../../utils/auth_helper.dart';
 import '../../utils/responsive.dart';
@@ -41,15 +41,15 @@ class _AddDrawerState extends State<AppDrawer> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: AppColors.litePrimary,
+              color: AppColors.greyDark,
             ),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
-                    'assets/images/sec_logo.png',
-                    width: spacingBwtView * 15,
+                    'assets/images/logo.png',
+                    width: spacingBwtView * 12,
                   ),
                 ],
               ),

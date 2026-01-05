@@ -1,6 +1,7 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:flutter/services.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -98,6 +99,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     return BlocListener<UserCubit, UserState>(
       listener: (context, state) {
         if (state is UserLoading) {
@@ -124,8 +133,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 70),
-                Image.asset('assets/images/sec_logo.png', width: 200),
+                const SizedBox(height: 50),
+                Image.asset('assets/images/logo.png', width: 120),
                 SizedBox(height: 30),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

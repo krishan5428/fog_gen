@@ -1,9 +1,9 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/constants/strings.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
-import 'package:fire_nex/utils/common_classes.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/constants/strings.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
+import 'package:fog_gen_new/utils/common_classes.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -205,7 +205,7 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
         );
         SnackBarHelper.showSnackBar(context, 'Number deleted successfully!');
       } else {
-        SnackBarHelper.showSnackBar(context, 'Revoked');
+        SnackBarHelper.showSnackBar(context, 'Cancelled');
       }
     } else {
       SnackBarHelper.showSnackBar(context, 'Failed to delete number.');
@@ -217,8 +217,7 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
     final numbers = getNumbers(panelData);
     final existingNumbers = getExistingNumbers(panelData);
 
-    return
-      BlocListener<PanelCubit, PanelState>(
+    return BlocListener<PanelCubit, PanelState>(
       listener: (context, state) {
         if (state is UpdatePanelsSuccess) {
           debugPrint('delete number success');
@@ -281,19 +280,23 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
                         ),
                         IconButton(
                           onPressed: () async {
-                            final updatedPanel = await showModalBottomSheet<PanelData>(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: AppColors.lightGrey,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                              ),
-                              builder: (_) => AddNumberBottomSheet(
-                                panel: widget.panelData,
-                                index: index + 1,
-                                existingNumbers: existingNumbers,
-                              ),
-                            );
+                            final updatedPanel =
+                                await showModalBottomSheet<PanelData>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: AppColors.lightGrey,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  builder:
+                                      (_) => AddNumberBottomSheet(
+                                        panel: widget.panelData,
+                                        index: index + 1,
+                                        existingNumbers: existingNumbers,
+                                      ),
+                                );
 
                             if (updatedPanel != null) {
                               setState(() {

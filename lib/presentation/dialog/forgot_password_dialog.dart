@@ -1,10 +1,7 @@
-import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../../constants/app_colors.dart';
-import '../../data/database/app_database.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
 import '../widgets/form_section.dart';
@@ -68,7 +65,7 @@ Future<void> forgotPasswordDialog(BuildContext context) async {
                             style: TextStyle(
                               fontSize: fontSize * 0.9,
                               color:
-                                  password == null ? Colors.red : Colors.green,
+                                  Colors.red,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -94,53 +91,53 @@ Future<void> forgotPasswordDialog(BuildContext context) async {
                           if (!formKey.currentState!.validate()) return;
 
                           final mobile = mobileNumberController.text.trim();
-                          final db = Provider.of<AppDatabase>(
-                            context,
-                            listen: false,
-                          );
-                          final user = await db.userDao.getUserByMobile(mobile);
+                          // final db = Provider.of<AppDatabase>(
+                          //   context,
+                          //   listen: false,
+                          // );
+                          // final user = await db.userDao.getUserByMobile(mobile);
 
-                          if (user == null) {
+                          // if (user == null) {
+                          //   setState(() {
+                          //     password = null;
+                          //     message =
+                          //         'No account found for this mobile number.';
+                          //   });
+                          // } else {
+                          // setState(() {
+                          //   password = user.password;
+                          //   message =
+                          //       'Account found for $mobile. Password will be sent via SMS.';
+                          // });
+
+                          try {
+                            // await ProgressDialogWithMessage.show(
+                            //   context,
+                            //   messages: [
+                            //     "Your fog_gen_new Account password is: ${user.password}",
+                            //   ],
+                            //   panelSimNumber: user.mobileNumber,
+                            // );
+                            // await SendSms(
+                            //   mobile,
+                            //   "Your FireNex Account password is: ${user.password}",
+                            // );
+
+                            // Close dialog after success
+                            Navigator.of(dialogContext).pop();
+                            CustomNavigation.instance.pop(context);
+
+                            // Optional: show a snackbar after closing
+                            SnackBarHelper.showSnackBar(
+                              context,
+                              "Password sent successfully to $mobile",
+                            );
+                          } catch (e) {
                             setState(() {
-                              password = null;
-                              message =
-                                  'No account found for this mobile number.';
+                              message = 'Failed to send SMS: $e';
                             });
-                          } else {
-                            setState(() {
-                              password = user.password;
-                              message =
-                                  'Account found for $mobile. Password will be sent via SMS.';
-                            });
-
-                            try {
-                              await ProgressDialogWithMessage.show(
-                                context,
-                                messages: [
-                                  "Your FireNex Account password is: ${user.password}",
-                                ],
-                                panelSimNumber: user.mobileNumber,
-                              );
-                              // await SendSms(
-                              //   mobile,
-                              //   "Your FireNex Account password is: ${user.password}",
-                              // );
-
-                              // Close dialog after success
-                              Navigator.of(dialogContext).pop();
-                              CustomNavigation.instance.pop(context);
-
-                              // Optional: show a snackbar after closing
-                              SnackBarHelper.showSnackBar(
-                                context,
-                                "Password sent successfully to $mobile",
-                              );
-                            } catch (e) {
-                              setState(() {
-                                message = 'Failed to send SMS: $e';
-                              });
-                            }
                           }
+                          // }
                         },
 
                         style: ElevatedButton.styleFrom(

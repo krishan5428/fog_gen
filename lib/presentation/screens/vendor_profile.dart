@@ -21,6 +21,7 @@ class VendorProfilePage extends StatelessWidget {
     final spacingBwtView = Responsive.spacingBwtView(context);
 
     return Scaffold(
+      backgroundColor: AppColors.white,
       appBar: const CustomAppBar(
         pageName: 'Vendor Profile',
         isFilter: false,

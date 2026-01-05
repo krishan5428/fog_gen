@@ -1,5 +1,5 @@
-import java.io.FileInputStream
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -15,7 +15,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.securicoelectronics.firenexv2"
+    namespace = "com.securico.fog_gen_new"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.securicoelectronics.firenexv2"
+        applicationId = "com.securico.fog_gen_new"
         minSdk = flutter.minSdkVersion // must be >= 23 for telephony and others
         targetSdk = 36
         versionCode = flutter.versionCode

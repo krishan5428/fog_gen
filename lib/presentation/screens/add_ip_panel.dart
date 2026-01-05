@@ -1,10 +1,10 @@
-import 'package:fire_nex/presentation/cubit/mappings/site_cubit.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/presentation/widgets/custom_button.dart';
-import 'package:fire_nex/presentation/widgets/custom_text_field.dart';
-import 'package:fire_nex/presentation/widgets/vertical_gap.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/presentation/cubit/mappings/site_cubit.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/widgets/custom_button.dart';
+import 'package:fog_gen_new/presentation/widgets/custom_text_field.dart';
+import 'package:fog_gen_new/presentation/widgets/vertical_gap.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';

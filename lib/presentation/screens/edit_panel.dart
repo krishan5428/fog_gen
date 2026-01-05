@@ -1,7 +1,7 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/core/data/pojo/panel_data.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

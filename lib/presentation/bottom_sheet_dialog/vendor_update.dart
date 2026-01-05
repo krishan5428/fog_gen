@@ -1,9 +1,7 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/viewModel/vendor_view_model.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class VendorUpdateBottomSheetDialog extends StatefulWidget {
   final int userId;
@@ -39,21 +37,21 @@ class _VendorUpdateBottomSheetDialogState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final vendorViewModel = context.read<VendorViewModel>();
+    // final vendorViewModel = context.read<VendorViewModel>();
     setState(() => _loading = true);
 
     try {
-      switch (widget.formKey) {
-        case "name":
-          await vendorViewModel.updateVendorName(widget.userId, _controller.text);
-          break;
-        case "mobile":
-          await vendorViewModel.updateVendorMobile(widget.userId, _controller.text);
-          break;
-        case "email":
-          await vendorViewModel.updateVendorEmailId(widget.userId, _controller.text);
-          break;
-      }
+      // switch (widget.formKey) {
+      //   case "name":
+      //     await vendorViewModel.updateVendorName(widget.userId, _controller.text);
+      //     break;
+      //   case "mobile":
+      //     await vendorViewModel.updateVendorMobile(widget.userId, _controller.text);
+      //     break;
+      //   case "email":
+      //     await vendorViewModel.updateVendorEmailId(widget.userId, _controller.text);
+      //     break;
+      // }
 
       if (mounted) {
         CustomNavigation.instance.popWithResult(context: context,result: true);

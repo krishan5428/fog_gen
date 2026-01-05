@@ -1,12 +1,7 @@
-import 'package:drift/drift.dart' as drift;
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/data/database/app_database.dart';
-import 'package:fire_nex/presentation/viewModel/complaint_view_model.dart';
-import 'package:fire_nex/presentation/viewModel/panel_view_model.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -48,18 +43,18 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
   }
 
   Future<void> _loadPanelSiteNames() async {
-    final panel = context.read<PanelViewModel>();
-    final panels = await panel.getAllPanelWithUserId(userId!);
-    setState(() {
-      siteNames = panels.map((panel) => panel.siteName).toList();
-    });
+    // final panel = context.read<PanelViewModel>();
+    // final panels = await panel.getAllPanelWithUserId(userId!);
+    // setState(() {
+    //   siteNames = panels.map((panel) => panel.siteName).toList();
+    // });
   }
 
   Future<void> _addComplaint() async {
     final formattedDateTime = DateFormat(
       'yyyy-MM-dd HH:mm:ss',
     ).format(DateTime.now());
-    final addComplaintVM = context.read<ComplaintViewModel>();
+    // final addComplaintVM = context.read<ComplaintViewModel>();
 
     final subject = subjectController.text.trim();
     final complaint = complaintController.text.trim();
@@ -82,15 +77,15 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
       'Images: ${uploadedImages.where((img) => img != null).length} uploaded',
     );
 
-    final complaintData = ComplaintTableCompanion(
-      userId: drift.Value(userId! as String),
-      siteName: drift.Value(selectedSite!),
-      subject: drift.Value(subject),
-      remark: drift.Value(complaint),
-      cOn: drift.Value(formattedDateTime),
-    );
+    // final complaintData = ComplaintTableCompanion(
+    //   userId: drift.Value(userId! as String),
+    //   siteName: drift.Value(selectedSite!),
+    //   subject: drift.Value(subject),
+    //   remark: drift.Value(complaint),
+    //   cOn: drift.Value(formattedDateTime),
+    // );
 
-    await addComplaintVM.insertComplaint(complaintData);
+    // await addComplaintVM.insertComplaint(complaintData);
 
     // ✅ Show success snackbar
     ScaffoldMessenger.of(context).showSnackBar(

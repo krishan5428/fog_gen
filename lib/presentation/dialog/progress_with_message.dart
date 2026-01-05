@@ -1,4 +1,4 @@
-import 'package:fire_nex/utils/send_sms.dart';
+import 'package:fog_gen_new/utils/send_sms.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';

@@ -1,13 +1,14 @@
 class WebUrlConstants {
-  static const String baseUrl = 'https://securicoconnect.com/cms/apps/Securico/app_services/';
+  static const String baseUrl =
+      'https://securicoconnect.com/cms/apps/Securico/app_services/';
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
   static const Duration sendTimeout = Duration(seconds: 10);
 
-  static const String addPanel = 'add_panel_firenex.php';
-  static const String getAllPanels = 'get_panel_firenex.php';
-  static const String deletePanel = 'delete_panel_firenex.php';
-  static const String updatePanel = 'update_panel_firenex.php';
+  static const String addPanel = 'add_panel_fog_gen.php';
+  static const String getAllPanels = 'get_panel_fog_gen.php';
+  static const String deletePanel = 'delete_panel_fog_gen.php';
+  static const String updatePanel = 'update_panel_fog_gen.php';
 
   static const String loginUser = 'login.php';
   static const String delUser = 'del_user.php';

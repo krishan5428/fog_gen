@@ -1,4 +1,4 @@
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -223,7 +223,7 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                                   value: newAdminMobileNumber,
                                 );
                               } else {
-                                SnackBarHelper.showSnackBar(context, 'Revoked');
+                                SnackBarHelper.showSnackBar(context, 'Cancelled');
                               }
                             }
                           },

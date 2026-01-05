@@ -1,12 +1,12 @@
-import 'package:fire_nex/core/responses/socket_repository.dart';
-import 'package:fire_nex/presentation/cubit/mappings/panel_sim_number_cubit.dart';
-import 'package:fire_nex/presentation/cubit/mappings/site_cubit.dart';
-import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/presentation/widgets/custom_button.dart';
-import 'package:fire_nex/presentation/widgets/custom_text_field.dart';
+import 'package:fog_gen_new/core/responses/socket_repository.dart';
+import 'package:fog_gen_new/presentation/cubit/mappings/panel_sim_number_cubit.dart';
+import 'package:fog_gen_new/presentation/cubit/mappings/site_cubit.dart';
+import 'package:fog_gen_new/presentation/dialog/ok_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/widgets/custom_button.dart';
+import 'package:fog_gen_new/presentation/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -258,17 +258,17 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   }
 
   bool _validateForm(
-      BuildContext context,
-      String siteName,
-      String address,
-      String panelSimNumber,
-      String adminNumber,
-      String ipAddress,
-      String staticIPAddress,
-      String portStr,
-      String staticPortStr,
-      String pass,
-      ) {
+    BuildContext context,
+    String siteName,
+    String address,
+    String panelSimNumber,
+    String adminNumber,
+    String ipAddress,
+    String staticIPAddress,
+    String portStr,
+    String staticPortStr,
+    String pass,
+  ) {
     const ipPattern = r'^(\d{1,3}\.){3}\d{1,3}$';
     final ipRegex = RegExp(ipPattern);
     if (siteName.isEmpty) {
@@ -384,6 +384,8 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       password: pass,
       portNumber: int.parse(portStr),
       socketRepo: socketRepo,
+      staticIpAddress: staticIPAddress,
+      staticPortNumber: int.parse(staticPortStr),
     );
 
     // final ipConnected = true;
@@ -416,20 +418,20 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
           SnackBarHelper.showSnackBar(context, 'Failed to save panel: $e');
         }
       } else {
-        showInfoDialog(context: context, message: 'SMS operation revoked');
+        showInfoDialog(context: context, message: 'SMS operation Cancelled');
       }
     }
-    showInfoDialog(
-      context: context,
-      message:
-      'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
-      // onOk: () {
-      //   CustomNavigation.instance.pushReplace(
-      //     context: context,
-      //     screen: const PanelListPage(),
-      //   );
-      // },
-    );
+    // showInfoDialog(
+    //   context: context,
+    //   message:
+    //       'Failed to connect panel, please check the Panel and the Panel details that you have shared!',
+    // onOk: () {
+    //   CustomNavigation.instance.pushReplace(
+    //     context: context,
+    //     screen: const PanelListPage(),
+    //   );
+    // },
+    // );
   }
 
   Future<bool> _handleNeuronPanels({
@@ -479,7 +481,11 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       'yyyy-MM-dd HH:mm:ss',
     ).format(DateTime.now());
     try {
-      context.read<PanelCubit>().addPanel(
+      final panelCubit = context.read<PanelCubit>();
+      final userId = await SharedPreferenceHelper.getUserId();
+      if (!mounted || userId == null) return;
+
+      panelCubit.addPanel(
         userId: userId.toString(),
         panelType: widget.panelType,
         panelName: widget.panelName,
@@ -518,15 +524,19 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
   Future<bool> _handleIPOperations({
     required String ipAddress,
     required int portNumber,
+    required String staticIpAddress,
+    required int staticPortNumber,
     required String password,
     required SocketRepository socketRepo,
   }) async {
     try {
       final _ =
-      Application()
-        ..mIPAddress = ipAddress
-        ..mPortNumber = portNumber
-        ..mPassword = password;
+          Application()
+            ..mIPAddress = ipAddress
+            ..mPortNumber = portNumber
+            ..mPassword = password
+            ..mStaticIPAddress = staticIpAddress
+            ..mStaticPortNumber = staticPortNumber;
 
       final response = await socketRepo.sendPacketSR1(Packets.connectPacket());
       return _handleSR1Response(response, socketRepo);
@@ -536,10 +546,10 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
       final errorText = e.toString().toLowerCase();
       final isConnectionFailed =
           errorText.contains('socketexception') ||
-              errorText.contains('connection refused') ||
-              errorText.contains('timed out') ||
-              errorText.contains('did not respond') ||
-              errorText.contains('failed');
+          errorText.contains('connection refused') ||
+          errorText.contains('timed out') ||
+          errorText.contains('did not respond') ||
+          errorText.contains('failed');
 
       ProgressDialog.dismiss(context);
 
@@ -547,7 +557,7 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
         await showInfoDialog(
           context: context,
           message:
-          'Unable to connect to the panel.\nPlease check the network connection and try again.',
+              'Unable to connect to the panel.\nPlease check the network connection and try again.',
         );
       } else {
         SnackBarHelper.showSnackBar(context, 'Unexpected error: $e');
@@ -559,7 +569,10 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
     }
   }
 
-  Future<bool> _handleSR1Response(String result, SocketRepository socketRepo) async {
+  Future<bool> _handleSR1Response(
+    String result,
+    SocketRepository socketRepo,
+  ) async {
     result = result.trim();
     debugPrint('Handling SR1 Response: $result');
 
@@ -590,7 +603,10 @@ class _AddPanelFormScreenState extends State<AddPanelFormScreen> {
           content: const Text("This panel appears to be already connected."),
           actions: [
             TextButton(
-              child: const Text("Force Disconnect", style: TextStyle(color: Colors.red)),
+              child: const Text(
+                "Force Disconnect",
+                style: TextStyle(color: Colors.red),
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
             ),
             TextButton(
@@ -642,5 +658,3 @@ class PanelFormControllers {
     panelSimNumberController.dispose();
   }
 }
-
-// on the response from panel in case of checking already connected dialog 'S*000#1#096138016117116205#123456789123456#0#V0.0.55#100024*E' the code is not stopping on check

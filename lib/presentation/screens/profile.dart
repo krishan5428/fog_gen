@@ -133,6 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final spacingBwtView = Responsive.spacingBwtView(context);
 
     return Scaffold(
+      backgroundColor: AppColors.white,
       appBar: CustomAppBar(
         pageName: 'Profile',
         isFilter: false,

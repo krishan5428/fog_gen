@@ -1,49 +1,57 @@
-name: fire_nex
+name: fog_gen_new
 description: "A new Flutter project."
+
 publish_to: 'none'
 
-version: 1.0.7+11
+version: 1.0.4+6
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.9.2
 
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.1.0
-  drift: ^2.15.0
-  drift_sqflite: ^2.0.0
-  path_provider: ^2.0.0
-  path: ^1.8.0
-  provider: ^6.1.0
-  flutter_native_splash: ^2.4.0
-  package_info_plus: ^8.3.0
-  shared_preferences: ^2.0.15
-  url_launcher: ^6.3.1
-#  telephony: ^0.2.0
-  intl: ^0.19.0
-  dio: ^5.4.0
-  flutter_bloc: ^8.1.3
-  bloc: ^8.1.2
+  package_info_plus: ^9.0.0
+  shared_preferences: ^2.5.3
   permission_handler: ^12.0.1
+  toastification: ^3.0.3
   logger: ^2.6.2
-  equatable: ^2.0.5
+  provider: ^6.1.5+1
+  intl: ^0.20.2
+  drift: ^2.29.0
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  flutter_switch: ^0.3.2
+  sqlite3_flutter_libs: ^0.5.40
+  flutter_slidable: ^4.0.3
+  url_launcher: ^6.3.2
+  flutter_launcher_icons: ^0.14.4
+  dio: ^5.9.0
+  flutter_bloc: ^9.1.1
+  video_player: ^2.10.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  drift_dev: ^2.15.0
-  build_runner: ^2.4.6
+
   flutter_lints: ^5.0.0
-  flutter_launcher_icons: ^0.14.4
+  drift_dev: ^2.29.0
+  build_runner: ^2.4.11
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
 
 flutter:
+
   uses-material-design: true
 
   assets:
     - assets/images/
-    - assets/svgs/
+    - assets/fonts/
 
   fonts:
     - family: Montserrat
@@ -56,20 +64,3 @@ flutter:
           weight: 600
         - asset: assets/fonts/montserrat_bold.ttf
           weight: 700
-
-flutter_native_splash:
-  color: "#FFFFFF"
-  image: assets/images/logo.png
-  branding: assets/images/top_background.png
-  android: true
-  ios: true
-  android_gravity: center
-  ios_content_mode: scaleAspectFit
-  fullscreen: true
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/sec_logo.png"
-  min_sdk_android: 21
-  remove_alpha_ios: true

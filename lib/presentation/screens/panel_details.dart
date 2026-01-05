@@ -1,16 +1,16 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/core/responses/socket_repository.dart';
-import 'package:fire_nex/presentation/bottom_sheet_dialog/change_admin_mobile_number.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
-import 'package:fire_nex/presentation/screens/edit_panel.dart';
-import 'package:fire_nex/presentation/screens/more_settings.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/responsive.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/core/responses/socket_repository.dart';
+import 'package:fog_gen_new/presentation/bottom_sheet_dialog/change_admin_mobile_number.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/ok_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
+import 'package:fog_gen_new/presentation/screens/edit_panel.dart';
+import 'package:fog_gen_new/presentation/screens/more_settings/more_settings.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/responsive.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -86,6 +86,7 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
     final panelNameKey = panelData.panelName.trim().toUpperCase();
 
     Future<void> deletePanel() async {
+      // Step 1: Two-step confirmation
       final firstConfirm = await showConfirmationDialog(
         context: context,
         message: 'Are you sure you want to delete this panel?',
@@ -99,19 +100,24 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
       );
       if (secondConfirm != true) return;
 
-      bool? isSend = false;
-      bool? deleteConfirm = false;
+      bool ipSuccess = false;
+      bool? smsSuccess = false;
 
       final panel = panelData;
 
-      // IP / IP-GSM Delete Logic
-      if (panel.is_ip_panel || panel.is_ip_gsm_panel) {
+      // ---------------------------------------------------------------------------
+      // 1. Attempt delete through IP
+      // ---------------------------------------------------------------------------
+      if (panel.is_ip_gsm_panel) {
         ProgressDialog.show(context);
+
         final _ =
             Application()
               ..mIPAddress = panel.ip_address
               ..mPortNumber = int.tryParse(panel.port_no)
-              ..mPassword = panel.password;
+              ..mPassword = panel.password
+              ..mStaticIPAddress = panel.static_ip_address
+              ..mStaticPortNumber = int.tryParse(panel.static_port_no);
 
         try {
           final socketRepo = SocketRepository();
@@ -119,51 +125,60 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
             Packets.getPacket(isReadPacket: false, args: ["012", "2"]),
           );
 
+          ProgressDialog.dismiss(context);
+
           if (response == "S*012#0*E") {
-            ProgressDialog.dismiss(context);
-            SnackBarHelper.showSnackBar(context, 'Done');
-            deleteConfirm = true;
+            // IP delete success
+            SnackBarHelper.showSnackBar(context, 'Panel removed through IP');
+            ipSuccess = true;
           } else {
-            ProgressDialog.dismiss(context);
-            if (panel.is_ip_gsm_panel) {
-              final fallback = await showConfirmationDialog(
-                context: context,
-                title: 'Network Unavailable❗️',
-                message:
-                    'We couldn’t reach the device through IP.\n Would you like to try sending the command by SMS?',
-              );
-              if (fallback == true) {
-                isSend = await _performDeleteActionWithDialog(context, panel);
-                deleteConfirm = true;
-              }
-            } else {
-              await showInfoDialog(
-                context: context,
-                message:
-                    'Seems like the panel is not connected!\nPlease check the Panel and try again!',
-              );
+            // IP reached the device but unexpected reply
+            final fallback = await showConfirmationDialog(
+              context: context,
+              title: 'Network Unavailable❗️',
+              message:
+                  'We couldn’t reach the device through IP.\nWould you like to try deleting the panel by SMS?',
+            );
+
+            if (fallback == true) {
+              smsSuccess = await _performDeleteActionWithDialog(context, panel);
             }
           }
         } catch (e) {
           ProgressDialog.dismiss(context);
-          final text = e.toString().toLowerCase();
-          final failed = text.contains('socket') || text.contains('failed');
-          if (failed) {
-            showInfoDialog(
+
+          // Connection error (common case)
+          final msg = e.toString().toLowerCase();
+          final connectionFailed =
+              msg.contains('socket') ||
+              msg.contains('failed') ||
+              msg.contains('timed out') ||
+              msg.contains('refused');
+
+          if (connectionFailed) {
+            final fallback = await showConfirmationDialog(
               context: context,
-              message: 'Unable to connect to the panel.\nTry again.',
+              title: 'Connection Failed',
+              message:
+                  'Unable to connect via IP.\nWould you like to delete the panel by SMS instead?',
             );
+
+            if (fallback == true) {
+              smsSuccess = await _performDeleteActionWithDialog(context, panel);
+            }
           } else {
             SnackBarHelper.showSnackBar(context, 'Unexpected error: $e');
           }
         }
       } else {
-        isSend = await _performDeleteActionWithDialog(context, panel);
-        deleteConfirm = true;
+        // Panel is not IP panel → directly use SMS
+        smsSuccess = await _performDeleteActionWithDialog(context, panel);
       }
 
-      // DB Delete Logic
-      if (isSend == true || deleteConfirm == true) {
+      // ---------------------------------------------------------------------------
+      // 2. Proceed to backend delete only if IP OR SMS succeeded
+      // ---------------------------------------------------------------------------
+      if (ipSuccess || smsSuccess!) {
         context.read<PanelCubit>().deletePanel(
           userId: panel.userId,
           panelId: panel.pnlId,
@@ -309,167 +324,89 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Column(
                       children: [
-                        if (panelData.is_ip_gsm_panel) ...[
-                          DefaultTabController(
-                            length: 2,
-                            child: Column(
-                              children: [
-                                TabBar(
-                                  labelColor: AppColors.colorPrimary,
-                                  unselectedLabelColor: Colors.grey,
-                                  indicatorColor: AppColors.colorPrimary,
-                                  tabs: const [
-                                    Tab(text: "GSM Dialer"),
-                                    Tab(text: "IP Comm"),
+                        DefaultTabController(
+                          length: 2,
+                          child: Column(
+                            children: [
+                              TabBar(
+                                labelColor: AppColors.colorPrimary,
+                                unselectedLabelColor: Colors.grey,
+                                indicatorColor: AppColors.colorPrimary,
+                                tabs: const [
+                                  Tab(text: "GSM Dialer"),
+                                  Tab(text: "IP Comm"),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                height: spacingBwtView * 20,
+                                child: TabBarView(
+                                  children: [
+                                    // GSM TAB
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          PanelDetailsScreen._infoRow(
+                                            "PANEL NAME",
+                                            panelData.panelName,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "SITE NAME",
+                                            panelData.site.toUpperCase(),
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "PANEL SIM NO.",
+                                            panelData.panelSimNumber,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "ADMIN MOBILE NO.",
+                                            panelData.adminMobileNumber,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "ADDRESS",
+                                            panelData.address,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // IP TAB
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          PanelDetailsScreen._infoRow(
+                                            "IP ADDRESS",
+                                            panelData.ip_address,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "PORT NUMBER",
+                                            panelData.port_no,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "STATIC IP ADDRESS",
+                                            panelData.static_ip_address,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "STATIC PORT NUMBER",
+                                            panelData.static_port_no,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "PASSWORD",
+                                            panelData.password,
+                                          ),
+                                          PanelDetailsScreen._infoRow(
+                                            "ADDRESS",
+                                            panelData.address,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
-
-                                const SizedBox(height: 10),
-
-                                SizedBox(
-                                  height: spacingBwtView * 20,
-                                  child: TabBarView(
-                                    children: [
-                                      // GSM TAB
-                                      SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            PanelDetailsScreen._infoRow(
-                                              "PANEL NAME",
-                                              panelData.panelName,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "SITE NAME",
-                                              panelData.site.toUpperCase(),
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "PANEL SIM NO.",
-                                              panelData.panelSimNumber,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "ADMIN MOBILE NO.",
-                                              panelData.adminMobileNumber,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "ADDRESS",
-                                              panelData.address,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // IP TAB
-                                      SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            PanelDetailsScreen._infoRow(
-                                              "IP ADDRESS",
-                                              panelData.ip_address,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "PORT NUMBER",
-                                              panelData.port_no,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "STATIC IP ADDRESS",
-                                              panelData.static_ip_address,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "STATIC PORT NUMBER",
-                                              panelData.static_port_no,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "PASSWORD",
-                                              panelData.password,
-                                            ),
-                                            PanelDetailsScreen._infoRow(
-                                              "ADDRESS",
-                                              panelData.address,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-
-                        ///------------------------------------------------
-                        /// NORMAL IP PANEL
-                        ///------------------------------------------------
-                        if (panelData.is_ip_panel &&
-                            !panelData.is_ip_gsm_panel) ...[
-                          PanelDetailsScreen._infoRow(
-                            "PANEL NAME",
-                            panelData.panelName,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "SITE NAME",
-                            panelData.site,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "IP ADDRESS",
-                            panelData.ip_address,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "PORT NUMBER",
-                            panelData.port_no,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "STATIC IP ADDRESS",
-                            panelData.static_ip_address,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "STATIC PORT NUMBER",
-                            panelData.static_port_no,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "PASSWORD",
-                            panelData.password,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "ADDRESS",
-                            panelData.address,
-                          ),
-                        ],
-
-                        ///------------------------------------------------
-                        /// GPRS PANEL (NORMAL)
-                        ///------------------------------------------------
-                        if (!panelData.is_ip_panel &&
-                            !panelData.is_ip_gsm_panel) ...[
-                          PanelDetailsScreen._infoRow(
-                            "PANEL NAME",
-                            panelData.panelName,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "SITE NAME",
-                            panelData.site,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "PANEL SIM NO.",
-                            panelData.panelSimNumber,
-                          ),
-                          PanelDetailsScreen._infoRow(
-                            "ADMIN MOBILE NO.",
-                            panelData.adminMobileNumber,
-                          ),
-
-                          if (dialerPanels.contains(panelNameKey))
-                            PanelDetailsScreen._infoRow(
-                              "ADMIN CODE",
-                              panelData.adminCode,
-                            ),
-
-                          PanelDetailsScreen._infoRow(
-                            "ADDRESS",
-                            panelData.address,
-                          ),
-                        ],
-
+                        ),
                         const SizedBox(height: 30),
 
                         CustomButton(

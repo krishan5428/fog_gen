@@ -1,12 +1,11 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
-import 'package:fire_nex/utils/navigation.dart';
+import 'package:video_player/video_player.dart';
 
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
 import '../../utils/app_info.dart';
 import 'login.dart';
 
@@ -14,31 +13,39 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String version = '';
+  late VideoPlayerController _controller;
+  bool _navigated = false;
+  final Duration maxSplashDuration = const Duration(seconds: 6);
 
   @override
   void initState() {
     super.initState();
-    version = AppInfo.instance.version;
 
-    _navigateAfterDelay();
+    _controller = VideoPlayerController.asset('assets/images/logo_video.mp4')
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play();
+      });
+
+    _controller.addListener(_videoListener);
   }
 
-  Future<void> _navigateAfterDelay() async {
-    print('Waiting...');
-    await Future.delayed(const Duration(milliseconds: 2000));
+  void _videoListener() {
+    if (_controller.value.position >= maxSplashDuration && !_navigated) {
+      _navigated = true;
+      _navigateNext();
+    }
+  }
 
-    print("Checking login state...");
+  Future<void> _navigateNext() async {
     bool isLoggedIn = await SharedPreferenceHelper.getLoginState();
-    print("Login state: $isLoggedIn");
 
     if (!mounted) return;
 
-    print("Navigating...");
     CustomNavigation.instance.pushReplace(
       context: context,
       screen: isLoggedIn ? const PanelListPage() : const LoginScreen(),
@@ -48,76 +55,90 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+      const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Image.asset(
-              'assets/images/top_background.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned(
-            top: 50,
-            right: 20,
-            child: Text(
-              'Version ${AppInfo.instance.version}',
-              style: TextStyle(
-                color: AppColors.colorPrimaryDark,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Center(
-            child: Image.asset(
-              'assets/images/sec_logo.png',
-              width: 200,
-              height: 150,
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: CircularProgressIndicator(color: AppColors.colorPrimary),
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '2025 © All rights reserved by ',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-                ),
-                Text(
-                  'Securico',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: AppColors.colorPrimary,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            if (_controller.value.isInitialized)
+              SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller.value.size.width,
+                    height: _controller.value.size.height,
+                    child: VideoPlayer(_controller),
                   ),
                 ),
-              ],
+              ),
+
+            // Version
+            Positioned(
+              top: 10,
+              right: 20,
+              child: Text(
+                'Version ${AppInfo.instance.version}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ],
+
+            // Loader
+            const Positioned(
+              bottom: 50,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+
+            // Footer
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    '2026 © All rights reserved by ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  Text(
+                    'Securico',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_videoListener);
+    _controller.dispose();
+    super.dispose();
   }
 }

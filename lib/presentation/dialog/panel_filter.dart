@@ -1,5 +1,5 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/widgets/custom_button.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/presentation/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 
 class PanelFilterDialog extends StatefulWidget {

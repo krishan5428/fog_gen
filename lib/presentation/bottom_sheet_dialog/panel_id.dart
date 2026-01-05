@@ -1,6 +1,6 @@
-import 'package:fire_nex/core/responses/socket_repository.dart';
-import 'package:fire_nex/core/utils/packets.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/core/responses/socket_repository.dart';
+import 'package:fog_gen_new/core/utils/packets.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';

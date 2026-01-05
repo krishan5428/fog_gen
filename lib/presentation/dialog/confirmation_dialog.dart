@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
-import '../../utils/navigation.dart';
 
 Future<bool?> showConfirmationDialog({
   required BuildContext context,
@@ -18,7 +17,7 @@ Future<bool?> showConfirmationDialog({
         backgroundColor: AppColors.lightGrey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 15,vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,28 +37,25 @@ Future<bool?> showConfirmationDialog({
                 children: [
                   TextButton(
                     onPressed: () {
-                      CustomNavigation.instance.popWithResult(
-                        context: context,
-                        result: false,
-                      );
+                      Navigator.of(dialogContext).pop(false);
                     },
                     child: Text(
                       cancelText,
                       style: TextStyle(color: AppColors.colorPrimary),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed:
-                        () => CustomNavigation.instance.popWithResult(
-                          context: context,
-                          result: true,
-                        ), // confirm
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.colorPrimary,
-                      foregroundColor: AppColors.white,
+                  Flexible(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25), // corner radius here
+                        ),
+                        backgroundColor: AppColors.colorPrimary,
+                        foregroundColor: AppColors.white,
+                      ),
+                      child: Text(confirmText),
                     ),
-                    child: Text(confirmText),
                   ),
                 ],
               ),

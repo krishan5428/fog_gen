@@ -1,10 +1,11 @@
-import 'package:fire_nex/core/responses/socket_repository.dart';
-import 'package:fire_nex/core/utils/packets.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/presentation/dialog/ok_dialog.dart';
-import 'package:fire_nex/presentation/dialog/progress.dart';
-import 'package:fire_nex/presentation/dialog/progress_with_message.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/core/responses/socket_repository.dart';
+import 'package:fog_gen_new/core/utils/packets.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/ok_dialog.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
+import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
+import 'package:fog_gen_new/presentation/screens/main/main_screen.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
@@ -82,7 +83,7 @@ class PanelCard extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.colorPrimary,
                     side: const BorderSide(
-                      width: 0.5,
+                      width: 1,
                       color: AppColors.colorPrimary,
                     ),
                   ),
@@ -110,10 +111,7 @@ class PanelCard extends StatelessWidget {
 
             SizedBox(height: spacing),
 
-            if (isGsmDialerPanel)
-              _buildGsmDialerButtons(context, smallTextSize, spacing)
-            else
-              _buildNormalPanelButtons(context, smallTextSize, spacing),
+            _buildNormalPanelButtons(context, smallTextSize * 0.9, spacing),
           ],
         ),
       ),
@@ -138,92 +136,14 @@ class PanelCard extends StatelessWidget {
                 buttonText: 'ALARM RESET',
                 onPressed: () => onAlarmReset(context),
                 buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
               ),
             ),
             SizedBox(width: spacing),
             Expanded(
               child: CustomButton(
-                buttonText: 'EVACUATE',
+                buttonText: 'TRIGGER FOGGER',
                 onPressed: () => onEvacuate(context),
                 buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: spacing / 2),
-        SizedBox(
-          width: double.infinity,
-          child: CustomButton(
-            buttonText: 'SOUNDER OFF',
-            onPressed: () => onSounderOff(context),
-            buttonTextSize: textSize,
-            backgroundColor: AppColors.litePrimary,
-            foregroundColor: AppColors.colorPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // GSM DIALER PANELS → Arm, Disarm, Sounder Off, Alarm Alert
-  // ---------------------------------------------------------------------------
-
-  Widget _buildGsmDialerButtons(
-    BuildContext context,
-    double textSize,
-    double spacing,
-  ) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: CustomButton(
-                buttonText: 'ARM',
-                onPressed: () => onArmButtonPressed(context),
-                buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
-              ),
-            ),
-            SizedBox(width: spacing),
-            Expanded(
-              child: CustomButton(
-                buttonText: 'DISARM',
-                onPressed: () => onDisarmButtonPressed(context),
-                buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: spacing / 2),
-        Row(
-          children: [
-            Expanded(
-              child: CustomButton(
-                buttonText: 'ALARM ALERT',
-                onPressed: () => onAlarmResetButtonPressed(context),
-                buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
-              ),
-            ),
-            SizedBox(width: spacing),
-
-            Expanded(
-              child: CustomButton(
-                buttonText: 'PANIC',
-                onPressed: () => onPanicButtonPressed(context),
-                buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
               ),
             ),
           ],
@@ -234,10 +154,16 @@ class PanelCard extends StatelessWidget {
             Expanded(
               child: CustomButton(
                 buttonText: 'SOUNDER OFF',
-                onPressed: () => onSounderButtonPressed(context),
+                onPressed: () => onSounderOff(context),
                 buttonTextSize: textSize,
-                backgroundColor: AppColors.litePrimary,
-                foregroundColor: AppColors.colorPrimary,
+              ),
+            ),
+            SizedBox(width: spacing),
+            Expanded(
+              child: CustomButton(
+                buttonText: 'Extended View',
+                onPressed: () => onExtendedButtonClicked(context, panelData),
+                buttonTextSize: textSize,
               ),
             ),
           ],
@@ -246,10 +172,6 @@ class PanelCard extends StatelessWidget {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // EXISTING COMMAND FLOWS (unchanged)
-  // ---------------------------------------------------------------------------
-
   void onAlarmReset(BuildContext context) {
     _sendOutputCommand(
       context: context,
@@ -257,6 +179,13 @@ class PanelCard extends StatelessWidget {
       title: "Confirm Alarm Reset",
       confirmationMessage:
           "Are you sure you want to SEND SMS to reset the alarm?",
+    );
+  }
+
+  void onExtendedButtonClicked(BuildContext context, PanelData panelData) {
+    CustomNavigation.instance.pushReplace(
+      context: context,
+      screen: MainScreen(panelData: panelData),
     );
   }
 
@@ -294,7 +223,7 @@ class PanelCard extends StatelessWidget {
     );
 
     if (confirm != true) {
-      SnackBarHelper.showSnackBar(context, 'Execution revoked!');
+      SnackBarHelper.showSnackBar(context, 'Cancelled!');
       return;
     }
 
@@ -399,7 +328,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Done');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked!');
+      SnackBarHelper.showSnackBar(context, 'Cancelled!');
     }
   }
 
@@ -422,7 +351,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
     }
   }
 
@@ -445,7 +374,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
     }
   }
 
@@ -468,7 +397,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
     }
   }
 
@@ -486,7 +415,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
     }
   }
 
@@ -504,7 +433,7 @@ class PanelCard extends StatelessWidget {
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
-      SnackBarHelper.showSnackBar(context, 'Revoked');
+      SnackBarHelper.showSnackBar(context, 'Cancelled');
     }
   }
 }

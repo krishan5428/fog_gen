@@ -1,9 +1,9 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/constants/strings.dart';
-import 'package:fire_nex/core/data/pojo/panel_data.dart';
-import 'package:fire_nex/presentation/dialog/confirmation_dialog.dart';
-import 'package:fire_nex/presentation/screens/add_number_solitare.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/constants/strings.dart';
+import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
+import 'package:fog_gen_new/presentation/screens/add_number_solitare.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/navigation.dart';
@@ -69,7 +69,7 @@ class AlertModulePage extends StatelessWidget {
                         message: 'You will receive the number list via SMS!',
                       );
                     } else {
-                      SnackBarHelper.showSnackBar(context, 'Revoked');
+                      SnackBarHelper.showSnackBar(context, 'Cancelled');
                     }
                   }
                 },
@@ -123,7 +123,7 @@ class AlertModulePage extends StatelessWidget {
 
                     isSend == true
                         ? SnackBarHelper.showSnackBar(context, 'Request Sent')
-                        : SnackBarHelper.showSnackBar(context, 'Revoked');
+                        : SnackBarHelper.showSnackBar(context, 'Cancelled');
                   }
                 },
               ),
@@ -150,7 +150,7 @@ class AlertModulePage extends StatelessWidget {
 
                     isSend == true
                         ? SnackBarHelper.showSnackBar(context, 'Request Sent')
-                        : SnackBarHelper.showSnackBar(context, 'Revoked');
+                        : SnackBarHelper.showSnackBar(context, 'Cancelled');
                   }
                 },
               ),

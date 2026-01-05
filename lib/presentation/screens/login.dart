@@ -1,11 +1,12 @@
-import 'package:fire_nex/constants/app_colors.dart';
-import 'package:fire_nex/presentation/dialog/url_dialog.dart';
-import 'package:fire_nex/presentation/screens/add_vendor.dart';
-import 'package:fire_nex/presentation/screens/panel_list.dart';
-import 'package:fire_nex/presentation/screens/signup.dart';
-import 'package:fire_nex/utils/auth_helper.dart';
-import 'package:fire_nex/utils/navigation.dart';
-import 'package:fire_nex/utils/snackbar_helper.dart';
+import 'package:flutter/services.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/presentation/dialog/url_dialog.dart';
+import 'package:fog_gen_new/presentation/screens/add_vendor.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/screens/signup.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,69 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscureText = true;
 
-  // void _handleLogin() async {
-  //   try {
-  //     final mobile = _mobileController.text.trim();
-  //     final password = _passwordController.text.trim();
-  //
-  //     if (mobile.isEmpty || password.isEmpty) {
-  //       SnackBarHelper.showSnackBar(
-  //         context,
-  //         "Please enter both mobile number and password.",
-  //       );
-  //       return;
-  //     }
-  //
-  //     final device = getDeviceType();
-  //
-  //     if (mobile == "9899446573" && password == "123456") {
-  //       final dummyUserId = 999999;
-  //
-  //       await SharedPreferenceHelper.setLoginState(true, dummyUserId, device);
-  //
-  //       SnackBarHelper.showSnackBar(context, 'Login Successful');
-  //       CustomNavigation.instance.pushReplace(
-  //         context: context,
-  //         screen: PanelListPage(),
-  //       );
-  //       return;
-  //     }
-  //
-  //     // Real user check
-  //     final userViewModel = context.read<UserViewModel>();
-  //     final user = await userViewModel.getUserByMobileAndPassword(
-  //       mobile,
-  //       password,
-  //     );
-  //
-  //     if (!mounted) return;
-  //
-  //     if (user != null) {
-  //       final vendorViewModel = context.read<VendorViewModel>();
-  //       final vendor = await vendorViewModel.getVendorByUserId(user.id);
-  //
-  //       await SharedPreferenceHelper.setLoginState(true, user.id, device);
-  //
-  //       SnackBarHelper.showSnackBar(context, 'Login Successful');
-  //
-  //       CustomNavigation.instance.pushReplace(
-  //         context: context,
-  //         screen: vendor != null ? PanelListPage() : AddVendorPage(),
-  //       );
-  //     } else {
-  //       SnackBarHelper.showSnackBar(
-  //         context,
-  //         'Invalid credentials. Please try again.',
-  //       );
-  //     }
-  //   } catch (e) {
-  //     SnackBarHelper.showSnackBar(
-  //       context,
-  //       'An error occurred. Please try again.',
-  //     );
-  //   }
-  // }
-
   void _handleLogin(BuildContext context) {
     final mobile = _mobileController.text.trim();
     final pass = _passwordController.text.trim();
@@ -107,6 +45,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     final device = getDeviceType();
 
     return BlocListener<UserCubit, UserState>(
@@ -178,9 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 150),
-                Image.asset('assets/images/sec_logo.png', width: 200),
-
+                const SizedBox(height: 100),
+                Image.asset('assets/images/logo.png', width: 120),
                 const SizedBox(height: 30),
 
                 Row(
