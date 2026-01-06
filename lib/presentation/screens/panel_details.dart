@@ -20,8 +20,6 @@ import '../../core/utils/application_class.dart';
 import '../../core/utils/packets.dart';
 import '../../utils/auth_helper.dart';
 import '../bottom_sheet_dialog/change_address.dart';
-import '../cubit/fire/fire_cubit.dart';
-import '../cubit/intrusion/intru_cubit.dart';
 import '../cubit/panel/panel_cubit.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -111,13 +109,12 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
       if (panel.is_ip_gsm_panel) {
         ProgressDialog.show(context);
 
-        final _ =
-            Application()
-              ..mIPAddress = panel.ip_address
-              ..mPortNumber = int.tryParse(panel.port_no)
-              ..mPassword = panel.password
-              ..mStaticIPAddress = panel.static_ip_address
-              ..mStaticPortNumber = int.tryParse(panel.static_port_no);
+        final _ = Application()
+          ..mIPAddress = panel.ip_address
+          ..mPortNumber = int.tryParse(panel.port_no)
+          ..mPassword = panel.password
+          ..mStaticIPAddress = panel.static_ip_address
+          ..mStaticPortNumber = int.tryParse(panel.static_port_no);
 
         try {
           final socketRepo = SocketRepository();
@@ -208,39 +205,13 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
       }
     }
 
-    void afterDelete() async {
-      final intruId = await SharedPreferenceHelper.getIntruIdForPanelSimNumber(
-        panelData.panelSimNumber,
-      );
-      final fireId = await SharedPreferenceHelper.getFireIdForPanelSimNumber(
-        panelData.panelSimNumber,
-      );
-
-      if (intruId != null) {
-        context.read<IntruCubit>().deleteIntruWRTIntruId(
-          userId: panelData.userId,
-          intruId: intruId,
-        );
-      }
-      if (fireId != null) {
-        context.read<FireCubit>().deleteFireWRTFireId(
-          userId: panelData.userId,
-          fireId: fireId,
-        );
-      }
-
-      await SharedPreferenceHelper.clearIdsForPanelSimNumber(
-        panelData.panelSimNumber,
-      );
-    }
-
     return MultiBlocListener(
       listeners: [
         BlocListener<PanelCubit, PanelState>(
           listener: (context, state) async {
             if (state is DeletePanelsSuccess) {
               if (dialerPanels.contains(panelNameKey)) {
-                afterDelete();
+                // afterDelete();
               } else {
                 await showInfoDialog(
                   context: context,
@@ -261,27 +232,6 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
             }
           },
         ),
-
-        // Intrusion delete listener
-        BlocListener<IntruCubit, IntruState>(
-          listener: (context, state) async {
-            if (state is DeleteIntruSuccess) {
-              await showInfoDialog(
-                context: context,
-                message: "Panel has been reset.",
-                onOk: () {
-                  CustomNavigation.instance.pushReplace(
-                    context: context,
-                    screen: const PanelListPage(),
-                  );
-                },
-              );
-            }
-          },
-        ),
-
-        // Fire delete listener
-        BlocListener<FireCubit, FireState>(listener: (context, state) {}),
       ],
       child: Scaffold(
         appBar: const CustomAppBar(pageName: 'Panel Details', isFilter: false),
@@ -439,9 +389,8 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
                           children: [
                             Expanded(
                               child: CustomButton(
-                                onPressed:
-                                    () =>
-                                        CustomNavigation.instance.pop(context),
+                                onPressed: () =>
+                                    CustomNavigation.instance.pop(context),
                                 buttonText: "BACK",
                                 backgroundColor: AppColors.litePrimary,
                                 foregroundColor: AppColors.colorPrimary,
@@ -575,7 +524,6 @@ class _PanelDetailsScreenState extends State<PanelDetailsScreen> {
         "$adminCode CHANGE CODE ENTER #1234-1234* END",
       ];
     }
-
     return null;
   }
 }
