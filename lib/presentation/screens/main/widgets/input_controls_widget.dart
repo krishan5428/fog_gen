@@ -131,7 +131,7 @@ class InputControlsWidget extends StatelessWidget {
     );
 
     // Input 3 (Index 2): Low Fluid - Shows LOW only when ARM ALERT
-    final bool isLowFluid = viewModel.inputStatuses[2] == "ARM ALERT";
+    final bool isLowFluid = viewModel.inputStatuses[2] == "ALARM";
 
     return Container(
       padding: const EdgeInsets.all(10),

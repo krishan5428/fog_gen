@@ -15,6 +15,8 @@ enum MainViewEvent {
   showConnectionFailedToast,
   showInactivityWarningDialog,
   dismissInactivityDialog,
+  showSounderOffSuccessToast,
+  showCommandFailedToast,
 }
 
 class MainViewModel extends ChangeNotifier {
@@ -23,6 +25,9 @@ class MainViewModel extends ChangeNotifier {
   final log = Logger();
   Timer? _inactivityTimer;
   Timer? _autoDisconnectTimer;
+
+  bool _isForceCooldownActive = false;
+  bool get isForceCooldownActive => _isForceCooldownActive;
 
   bool _showingInactivityDialog = false;
 
@@ -65,6 +70,23 @@ class MainViewModel extends ChangeNotifier {
     _warningTimer?.cancel();
     panelSR1ViewModel?.dispose();
     super.dispose();
+  }
+
+  Future<void> forceDisconnectAndAllowReconnect() async {
+    log.w("Force disconnect initiated. Cooling down for 5 seconds.");
+
+    _isForceCooldownActive = true;
+    notifyListeners();
+
+    disconnect(force: true, showToast: false);
+
+    await Future.delayed(const Duration(seconds: 5));
+
+    if (_isDisposed) return;
+    _isForceCooldownActive = false;
+    notifyListeners();
+
+    log.i("Force disconnect cooldown complete. Connect allowed.");
   }
 
   /// Called by the global Listener in app.dart on any tap.
@@ -123,6 +145,48 @@ class MainViewModel extends ChangeNotifier {
   void notifyListeners() {
     if (!_isDisposed) {
       super.notifyListeners();
+    }
+  }
+
+  Future<void> sendSounderOffAckCommand() async {
+    log.i("[Sounder] Sending Sounder OFF / ACK command (HIGH PRIORITY)");
+
+    try {
+      final packet = Packets.getPacket(
+        isReadPacket: false,
+        args: ["007", "000", "2"],
+      );
+
+      log.d("[Sounder] Packet sent → $packet");
+
+      final response = await socketRepository.sendPacketSR1(
+        packet,
+        isPriority: true,
+      );
+
+      log.d("[Sounder] Raw response received → $response");
+
+      if (_isDisposed) return;
+
+      if (response.contains("S*007#")) {
+        log.i("[Sounder] ACK received – Sounder OFF successful");
+
+        _setEvent(MainViewEvent.showSounderOffSuccessToast);
+      } else {
+        log.e("[Sounder] Unexpected response → $response");
+
+        _setEvent(MainViewEvent.showCommandFailedToast);
+      }
+    } catch (e, s) {
+      log.e(
+        "[Sounder] Exception while sending Sounder OFF command",
+        error: e,
+        stackTrace: s,
+      );
+
+      if (!_isDisposed) {
+        _setEvent(MainViewEvent.showCommandFailedToast);
+      }
     }
   }
 

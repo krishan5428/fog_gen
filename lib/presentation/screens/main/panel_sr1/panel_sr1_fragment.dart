@@ -129,22 +129,6 @@ class _PanelSR1ViewState extends State<_PanelSR1View> {
     );
   }
 
-  void _showMoreSettingsPage(BuildContext context) {
-    // final viewModel = Provider.of<PanelSR1ViewModel>(context, listen: false);
-    // final String siteName = viewModel.siteName;
-    // if (siteName.isEmpty) {
-    //   debugPrint('Error: Could not open settings. SiteName is empty.');
-    //   return;
-    // }
-
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => MoreSettingsPage(siteName: siteName),
-    //   ),
-    // );
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<PanelSR1ViewModel>();
@@ -498,36 +482,6 @@ class _PanelSR1ViewState extends State<_PanelSR1View> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons(PanelSR1ViewModel viewModel) {
-    const buttonTextStyle = TextStyle(
-      fontFamily: 'Montserrat',
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.5,
-      fontSize: 12,
-    );
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              _showMoreSettingsPage(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.colorPrimary,
-              foregroundColor: AppColors.white,
-              shape: const StadiumBorder(),
-              textStyle: buttonTextStyle,
-            ),
-            child: const Text('MORE SETTINGS'),
-          ),
         ),
       ],
     );

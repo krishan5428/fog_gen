@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_fragment.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_viewmodel.dart';
@@ -158,6 +159,29 @@ class _MainViewState extends State<_MainView> {
           description: 'Please select a panel to connect.',
         );
         break;
+
+      case MainViewEvent.showSounderOffSuccessToast:
+        _showToast(
+          context: context,
+          type: ToastificationType.info,
+          title: 'SOUNDER SILENCED',
+          description: 'The sounder has been turned off.',
+          alignment: Alignment.center,
+          primaryColor: AppColors.colorAccent,
+          icon: Icons.volume_off,
+        );
+        break;
+
+      case MainViewEvent.showCommandFailedToast:
+        _showToast(
+          context: context,
+          type: ToastificationType.error,
+          title: 'Command Failed',
+          description:
+              'The panel did not respond as expected. Please try again.',
+          alignment: Alignment.center,
+        );
+        break;
       default:
         break;
     }
@@ -167,7 +191,7 @@ class _MainViewState extends State<_MainView> {
   }
 
   void _showAlreadyConnectedDialog() async {
-    final parentContext = context; // Capture provider-aware context
+    final parentContext = context;
     showDialog(
       context: parentContext,
       builder: (dialogContext) {
@@ -221,10 +245,7 @@ class _MainViewState extends State<_MainView> {
                           Provider.of<MainViewModel>(
                             parentContext,
                             listen: false,
-                          ).disconnect(
-                            force: true,
-                            showToast: false, // optional UX choice
-                          );
+                          ).forceDisconnectAndAllowReconnect();
 
                           Navigator.of(dialogContext).pop();
                         },
@@ -858,8 +879,8 @@ Widget _buildButtonPanel(MainViewModel viewModel) => Column(
       icon: const Icon(Icons.volume_off, size: 16),
       label: const Text('SOUNDER OFF', style: TextStyle(fontSize: 12)),
       onPressed: () {
-        // HapticFeedback.lightImpact();
-        // viewModel.sendAutomationToggleCommand(3, false);
+        HapticFeedback.lightImpact();
+        viewModel.sendSounderOffAckCommand();
       },
       style: OutlinedButton.styleFrom(
         shape: const StadiumBorder(),
@@ -879,7 +900,7 @@ Widget _buildActionButtons(MainViewModel viewModel) {
   return SizedBox(
     width: double.infinity,
     child: FilledButton.icon(
-      onPressed: viewModel.isConnecting
+      onPressed: viewModel.isConnecting || viewModel.isForceCooldownActive
           ? null
           : () {
               if (viewModel.isConnected) {
@@ -900,8 +921,12 @@ Widget _buildActionButtons(MainViewModel viewModel) {
             )
           : Icon(viewModel.isConnected ? Icons.link_off : Icons.link),
       label: Text(
-        viewModel.isConnected ? "DISCONNECT" : "CONNECT",
-        style: TextStyle(fontSize: 12),
+        viewModel.isForceCooldownActive
+            ? "WAITING..."
+            : viewModel.isConnected
+            ? "DISCONNECT"
+            : "CONNECT",
+        style: const TextStyle(fontSize: 12),
       ),
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.colorPrimary,
