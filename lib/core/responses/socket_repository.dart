@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:collection';
+import 'package:flutter/cupertino.dart';
+import 'package:fog_gen_new/core/utils/packets.dart';
 import 'package:logger/logger.dart';
 
 import '../../core/utils/application_class.dart';
@@ -19,13 +21,13 @@ class SocketRepository {
 
   // Connection health tracking
   int _consecutiveFailures = 0;
-  bool _isInCooldown = false;
 
   // ================================
   // QUEUE REQUEST
   // ================================
   Future<String> _queueRequest(String packet, {bool isPriority = false}) async {
     if (_isStopped) {
+      // If stopped, just return null or empty to avoid crashing UI logic expecting a future
       return Future.error(Exception("SocketRepository is stopped"));
     }
 
@@ -37,7 +39,14 @@ class SocketRepository {
       timestamp: DateTime.now(),
     );
 
+    final packetId = Packets.getPacketId(packet);
+
+    _logger.i(
+      "📥 QUEUED → packetId=$packetId | priority=$isPriority | queueSize=${_requestQueue.length + 1}",
+    );
+
     if (isPriority) {
+      // Insert priority packets at the front of the line (after other priority packets)
       final index = _requestQueue.toList().indexWhere((r) => !r.isPriority);
       if (index == -1) {
         _requestQueue.addLast(request);
@@ -52,8 +61,6 @@ class SocketRepository {
       _requestQueue.addLast(request);
     }
 
-    _logger.d("🐛 Request queued | Size=${_requestQueue.length} | Priority=$isPriority");
-
     if (!_isProcessingQueue) _processQueue();
 
     return completer.future;
@@ -67,25 +74,20 @@ class SocketRepository {
     _isProcessingQueue = true;
 
     while (_requestQueue.isNotEmpty) {
-
-      // ✔ IMPORTANT: STOP EVERYTHING if stop flag is true
       if (_isStopped) {
-        _logger.w("⛔ Queue processor stopped — exiting loop");
-        _isProcessingQueue = false;
-        return;
-      }
-
-      if (_isInCooldown) {
-        _logger.w("⚠️ Cooling down after repeated failures...");
-        await Future.delayed(const Duration(milliseconds: 500));
-        _isInCooldown = false;
+        _logger.w("⛔ Queue stopped by user/system");
+        break;
       }
 
       final request = _requestQueue.removeFirst();
+      final packetId = Packets.getPacketId(request.packet);
 
       try {
-        _logger.d("▶️ Processing request (${_requestQueue.length} left)");
+        _logger.d(
+          "▶️ PROCESSING → packetId=$packetId | remaining=${_requestQueue.length}",
+        );
 
+        // Execute the transaction
         final response = await _executeTransaction(request.packet);
 
         _consecutiveFailures = 0;
@@ -94,27 +96,25 @@ class SocketRepository {
           request.completer.complete(response);
         }
 
+        _logger.i("✅ RESPONSE OK → packetId=$packetId");
+
+        // Small delay between packets to prevent flooding the hardware
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
         _consecutiveFailures++;
-        _logger.e("❌ Request failed ($e) | Failure count: $_consecutiveFailures");
+        _logger.e("❌ RESPONSE FAILED → packetId=$packetId | error=$e");
 
         if (!request.completer.isCompleted) {
           request.completer.completeError(e);
         }
 
-        if (_consecutiveFailures >= 3) {
-          _isInCooldown = true;
-          _logger.w("🕒 Entering cooldown mode");
-          await Future.delayed(const Duration(milliseconds: 500));
-        } else {
-          await Future.delayed(const Duration(milliseconds: 200));
-        }
+        // On error, wait a bit longer before trying the next item in queue
+        await Future.delayed(const Duration(milliseconds: 200));
       }
     }
 
     _isProcessingQueue = false;
-    _logger.d("✅ Queue processing complete");
+    _logger.d("✅ Queue empty");
   }
 
   // ================================
@@ -123,86 +123,85 @@ class SocketRepository {
   Future<String> _executeTransaction(String packet) async {
     if (_isStopped) throw Exception("SocketRepository is stopped");
 
-    final completer = Completer<String>();
+    final packetId = Packets.getPacketId(packet);
     Socket? socket;
     Timer? timeoutTimer;
+    final completer = Completer<String>();
 
-    final staticIp = _app.mStaticIPAddress;
-    final staticPort = _app.mStaticPortNumber ?? 0;
+    // Prepare connection targets (Static IP first, then Local IP)
+    final targets = <_ConnectionTarget>[
+      if (_app.mStaticIPAddress?.isNotEmpty == true &&
+          (_app.mStaticPortNumber ?? 0) > 0)
+        _ConnectionTarget(
+          _app.mStaticIPAddress!,
+          _app.mStaticPortNumber!,
+          isStatic: true,
+        ),
+      if (_app.mIPAddress?.isNotEmpty == true && (_app.mPortNumber ?? 0) > 0)
+        _ConnectionTarget(_app.mIPAddress!, _app.mPortNumber!, isStatic: false),
+    ];
 
-    final localIp = _app.mIPAddress;
-    final localPort = _app.mPortNumber ?? 0;
-
-    final List<_ConnectionTarget> tryTargets = [];
-
-    if (staticIp != null && staticIp.isNotEmpty && staticPort > 0) {
-      tryTargets.add(_ConnectionTarget(staticIp, staticPort, isStatic: true));
-    }
-    if (localIp != null && localIp.isNotEmpty && localPort > 0) {
-      tryTargets.add(_ConnectionTarget(localIp, localPort, isStatic: false));
-    }
-
-    if (tryTargets.isEmpty) {
-      throw Exception("No IP/Port available");
-    }
-
-    for (final target in tryTargets) {
-
-      // ✔ STOP CHECK
-      if (_isStopped) throw Exception("SocketRepository is stopped");
-
+    for (final t in targets) {
       try {
-        _logger.i("🌐 Connecting to ${target.ip}:${target.port}");
+        _logger.i("🌐 CONNECT → ${t.ip}:${t.port} | packetId=$packetId");
 
         socket = await Socket.connect(
-          target.ip,
-          target.port,
-          timeout: const Duration(seconds: 5),
+          t.ip,
+          t.port,
+          timeout: const Duration(seconds: 4),
         );
 
-        socket.setOption(SocketOption.tcpNoDelay, true);
+        // --- FIX: BROKEN PIPE HANDLING ---
+        try {
+          _logger.d("📤 SEND → $packet");
+          socket.write(packet);
+          await socket.flush();
+        } catch (e) {
+          _logger.e("⚠️ WRITE FAILED (Broken Pipe?) → $e");
+          socket.destroy();
+          continue; // Try next target if write fails
+        }
 
+        // Setup Timeout
         timeoutTimer = Timer(const Duration(seconds: 4), () {
           if (!completer.isCompleted) {
-            completer.completeError(TimeoutException("Timeout waiting for panel"));
+            _logger.w("⏱️ TIMEOUT → packetId=$packetId | ${t.ip}:${t.port}");
+            completer.completeError(TimeoutException("Response Timeout"));
             socket?.destroy();
           }
         });
 
+        // Listen for data
         socket.listen(
               (data) {
-            if (_isStopped) {
-              if (!completer.isCompleted) {
-                completer.completeError(Exception("Stopped — response ignored"));
-              }
-              socket?.destroy();
-              return;
-            }
-
             final response = utf8.decode(data).trim();
+            _logger.i("📥 RECEIVE ← ${t.ip}:${t.port} | response=$response");
+
             if (!completer.isCompleted) {
               timeoutTimer?.cancel();
               completer.complete(response);
             }
+            // We got our answer, we can close the socket now
+            socket?.destroy();
           },
-          onError: (err) {
-            if (!completer.isCompleted) completer.completeError(err);
-          },
-          onDone: () {
+          onError: (e) {
+            _logger.e("🔴 SOCKET ERROR → $e");
             if (!completer.isCompleted) {
-              completer.completeError(Exception("Connection closed early"));
+              // Don't fail immediately, maybe the other target works?
+              // But for this specific socket connection, it's done.
             }
           },
-          cancelOnError: true,
+          onDone: () {
+            // _logger.d("🔌 SOCKET CLOSED → ${t.ip}:${t.port}");
+          },
         );
-
-        socket.write(packet);
-        await socket.flush();
 
         return await completer.future;
       } catch (e) {
-        timeoutTimer?.cancel();
         socket?.destroy();
+        timeoutTimer?.cancel();
+        _logger.w("⚠️ CONNECT FAILED → ${t.ip}:${t.port} | $e");
+        // Loop to next target
       }
     }
 
@@ -220,35 +219,75 @@ class SocketRepository {
     return _queueRequest(packet, isPriority: isPriority);
   }
 
+  /// Sends a disconnect packet immediately, bypassing the main queue to ensure
+  /// it goes out even if the queue is busy or paused.
   Future<void> sendDisconnectPacket() async {
-    final staticIp = _app.mStaticIPAddress;
-    final staticPort = _app.mStaticPortNumber ?? 0;
-
-    final localIp = _app.mIPAddress;
-    final localPort = _app.mPortNumber ?? 0;
-
+    // 1. Prepare targets
     final targets = <_ConnectionTarget>[];
-
-    if (staticIp != null && staticIp.isNotEmpty && staticPort > 0) {
-      targets.add(_ConnectionTarget(staticIp, staticPort, isStatic: true));
+    if (_app.mStaticIPAddress?.isNotEmpty == true &&
+        (_app.mStaticPortNumber ?? 0) > 0) {
+      targets.add(
+        _ConnectionTarget(
+          _app.mStaticIPAddress!,
+          _app.mStaticPortNumber!,
+          isStatic: true,
+        ),
+      );
     }
-    if (localIp != null && localIp.isNotEmpty && localPort > 0) {
-      targets.add(_ConnectionTarget(localIp, localPort, isStatic: false));
+    if (_app.mIPAddress?.isNotEmpty == true && (_app.mPortNumber ?? 0) > 0) {
+      targets.add(
+        _ConnectionTarget(_app.mIPAddress!, _app.mPortNumber!, isStatic: false),
+      );
     }
 
+    debugPrint(
+      "[Disconnect] Initiating disconnect sequence. Targets=${targets.length}",
+    );
+
+    // 2. Iterate and try to send
     for (final t in targets) {
+      Socket? socket;
       try {
-        final socket = await Socket.connect(
+        debugPrint(
+          "[Disconnect] Attempting → ${t.isStatic ? 'STATIC' : 'LOCAL'} (${t.ip}:${t.port})",
+        );
+
+        socket = await Socket.connect(
           t.ip,
           t.port,
           timeout: const Duration(seconds: 2),
         );
-        socket.write("S*1234#W#013*E");
-        await socket.flush();
+
+        final packet = Packets.disconnectPacket();
+        debugPrint("[Disconnect] Sending packet → $packet");
+
+        // FIX: Wrap write in try-catch to prevent crash if socket closes immediately
+        try {
+          socket.write(packet);
+          await socket.flush();
+        } catch (writeError) {
+          debugPrint("[Disconnect] Write failed (Broken Pipe?): $writeError");
+          socket.destroy();
+          continue; // Try next target
+        }
+
+        // FIX: Give a tiny delay for bytes to hit the wire before destroying
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        debugPrint(
+          "[Disconnect] Disconnect packet sent successfully → ${t.ip}:${t.port}",
+        );
         socket.destroy();
-        return;
-      } catch (_) {}
+        return; // Success, exit
+      } catch (e) {
+        debugPrint(
+          "[Disconnect] Failed for ${t.isStatic ? 'STATIC' : 'LOCAL'} (${t.ip}:${t.port}) → $e",
+        );
+        socket?.destroy();
+      }
     }
+
+    debugPrint("[Disconnect] All disconnect attempts failed.");
   }
 
   // ================================
@@ -263,7 +302,6 @@ class SocketRepository {
     // Cancel all queued pending responses
     clearQueue();
 
-    _isInCooldown = false;
     _consecutiveFailures = 0;
   }
 
@@ -271,7 +309,9 @@ class SocketRepository {
     while (_requestQueue.isNotEmpty) {
       final req = _requestQueue.removeFirst();
       if (!req.completer.isCompleted) {
-        req.completer.completeError(Exception("Queue cleared"));
+        // FIX: Don't throw exception, just complete with null or custom message
+        // to prevent red screen errors in logs during navigation
+        req.completer.completeError("Request cancelled: Socket Stopped");
       }
     }
   }

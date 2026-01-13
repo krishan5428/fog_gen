@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
-import '../../constants/strings.dart';
 import '../../core/data/pojo/panel_data.dart';
 import '../../utils/auth_helper.dart';
 import '../../utils/navigation.dart';
@@ -91,11 +90,9 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                       controller: currentAdminMobileNumberController,
                       keyboardType: TextInputType.number,
                       maxLength: 10,
-                      validator:
-                          (value) =>
-                              value == null || value.length < 10
-                                  ? 'Enter valid current admin mobile number'
-                                  : null,
+                      validator: (value) => value == null || value.length < 10
+                          ? 'Enter valid current admin mobile number'
+                          : null,
                     ),
                     VerticalSpace(),
                     FormSection(
@@ -103,11 +100,9 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                       controller: newAdminMobileNumberController,
                       keyboardType: TextInputType.number,
                       maxLength: 10,
-                      validator:
-                          (value) =>
-                              value == null || value.length < 10
-                                  ? 'Enter valid new admin mobile number'
-                                  : null,
+                      validator: (value) => value == null || value.length < 10
+                          ? 'Enter valid new admin mobile number'
+                          : null,
                     ),
                     VerticalSpace(),
                     FormSection(
@@ -115,11 +110,9 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                       controller: reenterAdminMobileNumberController,
                       keyboardType: TextInputType.number,
                       maxLength: 10,
-                      validator:
-                          (value) =>
-                              value == null || value.length < 10
-                                  ? 'Enter valid re-entered admin mobile number'
-                                  : null,
+                      validator: (value) => value == null || value.length < 10
+                          ? 'Enter valid re-entered admin mobile number'
+                          : null,
                     ),
                     if (errorText != null)
                       Padding(
@@ -205,14 +198,13 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                                   panel.panelSimNumber.trim().isNotEmpty &&
                                   device.isNotEmpty) {
                                 debugPrint('sms executed');
-                                isSend =
-                                    (await _trySendSms(
-                                      context,
-                                      device,
-                                      smsPermission,
-                                      panel.panelSimNumber,
-                                      [messages],
-                                    ))!;
+                                isSend = (await _trySendSms(
+                                  context,
+                                  device,
+                                  smsPermission,
+                                  panel.panelSimNumber,
+                                  [messages],
+                                ))!;
                               }
 
                               if (isSend) {
@@ -223,7 +215,10 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
                                   value: newAdminMobileNumber,
                                 );
                               } else {
-                                SnackBarHelper.showSnackBar(context, 'Cancelled');
+                                SnackBarHelper.showSnackBar(
+                                  context,
+                                  'Cancelled',
+                                );
                               }
                             }
                           },
@@ -271,8 +266,7 @@ String getAdminMobileNumberMessages({
   required PanelData panel,
   required String newAdminMobileNumber,
 }) {
-  if (neuronPanels.contains(panel.panelName)) {
-    return '''
+  return '''
 < 1234 TEL NO
 #01-+91$newAdminMobileNumber*
 #02-+91${panel.adminMobileNumber}*
@@ -281,9 +275,4 @@ String getAdminMobileNumberMessages({
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-  } else if (fourGComPanels.contains(panel.panelName)) {
-    return "SECURICO 1234 ADD ADMIN +91-$newAdminMobileNumber END";
-  } else {
-    return "";
-  }
 }

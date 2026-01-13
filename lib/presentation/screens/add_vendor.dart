@@ -1,4 +1,4 @@
-import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';

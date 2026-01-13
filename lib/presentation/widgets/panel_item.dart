@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'package:fog_gen_new/core/responses/socket_repository.dart';
 import 'package:fog_gen_new/core/utils/packets.dart';
 import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
@@ -6,15 +8,13 @@ import 'package:fog_gen_new/presentation/dialog/progress.dart';
 import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
 import 'package:fog_gen_new/presentation/screens/main/main_screen.dart';
 import 'package:fog_gen_new/utils/snackbar_helper.dart';
-import 'package:flutter/material.dart';
 
 import '../../constants/app_colors.dart';
 import '../../core/data/pojo/panel_data.dart';
 import '../../core/utils/application_class.dart';
 import '../../utils/navigation.dart';
 import '../../utils/responsive.dart';
-import '../screens/panel_details.dart';
-import '../screens/panel_list.dart';
+import '../screens/panel_details/panel_details.dart';
 import 'custom_button.dart';
 
 class PanelCard extends StatelessWidget {
@@ -34,6 +34,7 @@ class PanelCard extends StatelessWidget {
     final spacing = Responsive.spacingBwtView(context);
     final smallTextSize = Responsive.smallTextSize(context);
     debugPrint("PanelCard → Loaded panel: ${panelData.panelName}");
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
@@ -70,15 +71,28 @@ class PanelCard extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final updatedPanel = await CustomNavigation.instance.push(
+                    CustomNavigation.instance.push(
                       context: context,
                       screen: PanelDetailsScreen(panelData: panelData),
                     );
-                    if (updatedPanel != null) {
-                      final parentState =
-                          context.findAncestorStateOfType<PanelListState>();
-                      parentState?.updatePanelInList(updatedPanel);
-                    }
+
+                    // final updatedPanel = await CustomNavigation.instance.push(
+                    //   context: context,
+                    //   screen: PanelDetailsScreen(panelData: panelData),
+                    // );
+                    //
+                    // // FIX: Use ViewModel instead of finding Ancestor State
+                    // if (updatedPanel != null && context.mounted) {
+                    //   try {
+                    //     context.read<PanelListViewModel>().updateSinglePanel(
+                    //       updatedPanel,
+                    //     );
+                    //   } catch (e) {
+                    //     debugPrint(
+                    //       "PanelListViewModel not found in context (PanelCard might be used outside PanelList): $e",
+                    //     );
+                    //   }
+                    // }
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.colorPrimary,
@@ -230,11 +244,10 @@ class PanelCard extends StatelessWidget {
     if (panelData.is_ip_panel || panelData.is_ip_gsm_panel) {
       ProgressDialog.show(context);
 
-      final _ =
-          Application()
-            ..mIPAddress = panelData.ip_address
-            ..mPortNumber = int.tryParse(panelData.port_no)
-            ..mPassword = panelData.ip_address;
+      final _ = Application()
+        ..mIPAddress = panelData.ip_address
+        ..mPortNumber = int.tryParse(panelData.port_no)
+        ..mPassword = panelData.ip_address;
 
       final lastOutput = outputNumber - 1;
 
@@ -337,10 +350,9 @@ class PanelCard extends StatelessWidget {
     final String adminCode = panelData.adminCode;
     final String panelName = panelData.panelName.trim().toUpperCase();
 
-    String message =
-        panelName == "MULTICOM 4G DIALER"
-            ? "< $adminCode ARM >"
-            : "$adminCode FULL ARM END";
+    String message = panelName == "MULTICOM 4G DIALER"
+        ? "< $adminCode ARM >"
+        : "$adminCode FULL ARM END";
 
     final isSend = await ProgressDialogWithMessage.show(
       context,
@@ -360,10 +372,9 @@ class PanelCard extends StatelessWidget {
     final String adminCode = panelData.adminCode;
     final String panelName = panelData.panelName.trim().toUpperCase();
 
-    String message =
-        panelName == "MULTICOM 4G DIALER"
-            ? "< $adminCode DISARM >"
-            : "$adminCode DISARM END";
+    String message = panelName == "MULTICOM 4G DIALER"
+        ? "< $adminCode DISARM >"
+        : "$adminCode DISARM END";
 
     final isSend = await ProgressDialogWithMessage.show(
       context,
@@ -383,10 +394,9 @@ class PanelCard extends StatelessWidget {
     final String adminCode = panelData.adminCode;
     final String panelName = panelData.panelName.trim().toUpperCase();
 
-    String message =
-        panelName == "MULTICOM 4G DIALER"
-            ? "< $adminCode ALARM RESET >"
-            : "$adminCode ALARM RESET END";
+    String message = panelName == "MULTICOM 4G DIALER"
+        ? "< $adminCode ALARM RESET >"
+        : "$adminCode ALARM RESET END";
 
     final isSend = await ProgressDialogWithMessage.show(
       context,

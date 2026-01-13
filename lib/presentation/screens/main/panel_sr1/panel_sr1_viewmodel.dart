@@ -52,10 +52,10 @@ class PanelSR1ViewModel extends ChangeNotifier {
   bool _isSystemErrorDetected = false;
   bool get isSystemErrorDetected => _isSystemErrorDetected;
 
-  String _date = "_-_-__";
+  String _date = "--/--/----";
   String get date => _date;
 
-  String _time = "_:_:_";
+  String _time = "--:--:--";
   String get time => _time;
 
   bool _isAm = true;
@@ -102,7 +102,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
   bool _isNormalPolling = false;
 
   PanelSR1ViewModel({required SocketRepository socketRepository})
-      : _socketRepository = socketRepository {
+    : _socketRepository = socketRepository {
     _requestInitialData();
   }
 
@@ -141,36 +141,41 @@ class PanelSR1ViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 1. Get User Status (009)
       final userStatusResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["009"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
       _processReadResponse(userStatusResponse);
       _isPanelStatusLoading = false;
       notifyListeners();
 
+      // 2. Get Input Status (008)
       final inputResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["008"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
       _processReadResponse(inputResponse);
       _isZoneStatusLoading = false;
       notifyListeners();
 
+      // 3. Get Outputs (007)
       final outputResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["007"]),
       );
       if (_isDisposed) return;
       _processReadResponse(outputResponse);
 
+      // 4. Get Time (011)
       final timeResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["011"]),
       );
       if (_isDisposed) return;
       _processReadResponse(timeResponse);
 
+      // 5. Get Signal (020)
       final signalResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["020"]),
       );
@@ -197,7 +202,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
     try {
       final inputResponse = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["008"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
       _processReadResponse(inputResponse);
@@ -211,7 +216,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
   }
 
   Future<void> _requestNormalPollUpdate() async {
-    log.w("NORMAL POLL REQUEST STARTED");
+    // log.v("NORMAL POLL REQUEST STARTED"); // Reduced log noise
     if (_isDisposed || _isNormalPolling) return;
     _isNormalPolling = true;
 
@@ -255,7 +260,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
     _fastPollingTimer?.cancel();
     _normalPollingTimer?.cancel();
 
-    log.d("Starting 2-second FAST polling (Zone/Fire Status)");
+    // Fast Polling (2s) for Zones
     _fastPollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (_isDisposed) {
         timer.cancel();
@@ -264,12 +269,9 @@ class PanelSR1ViewModel extends ChangeNotifier {
       _requestFastPollUpdate();
     });
 
-    log.d("Starting 5-second NORMAL polling (Status/Signal)");
+    // Normal Polling (5s) for System Status
     _normalPollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      log.w("TIMER TICK (5s)");
-
       if (_isDisposed) {
-        log.e("Timer stopped because ViewModel disposed");
         timer.cancel();
         return;
       }
@@ -277,113 +279,90 @@ class PanelSR1ViewModel extends ChangeNotifier {
       final timeSinceLastResponse = DateTime.now().difference(
         _lastResponseTime,
       );
-      log.w("WATCHDOG CHECK: ${timeSinceLastResponse.inSeconds}s elapsed");
 
+      // Watchdog Check (60 seconds timeout)
       if (timeSinceLastResponse.inSeconds > 60) {
         log.e("CRITICAL: No data received for > 60s. Triggering timeout.");
-
         timer.cancel();
         _fastPollingTimer?.cancel();
-
         _setEvent(PanelSR1ViewEvent.showConnectionTimeout);
         return;
       }
 
-      if (_isNormalPolling) {
-        log.w("Normal poll busy — skipping");
-        return;
-      }
+      if (_isNormalPolling) return; // Skip if busy
 
       _requestNormalPollUpdate();
     });
   }
 
   void _processReadResponse(String data) {
-    log.e("PROCESS RESPONSE CALLED with data: '$data'");
     if (_isDisposed) return;
 
-    log.i("RAW DATA RECEIVED: '$data'");
+    // Basic Validation
     final isValidPacket =
         data.startsWith("S*") &&
-            data.endsWith("*E") &&
-            (data.contains("007") ||
-                data.contains("008") ||
-                data.contains("009") ||
-                data.contains("011") ||
-                data.contains("020"));
+        data.endsWith("*E") &&
+        (data.contains("007") ||
+            data.contains("008") ||
+            data.contains("009") ||
+            data.contains("011") ||
+            data.contains("020"));
 
     if (isValidPacket) {
-      log.i("WATCHDOG RESET → Valid packet");
-      _lastResponseTime = DateTime.now();
-
-      if (!_isConnectionHealthy) {
-        _isConnectionHealthy = true;
-      }
+      _lastResponseTime = DateTime.now(); // Reset Watchdog
+      if (!_isConnectionHealthy) _isConnectionHealthy = true;
     } else {
-      log.w("WATCHDOG IGNORE → Invalid packet");
+      // Ignore random noise or partial packets
+      return;
     }
 
-    if (data.contains("009")) {
-      final splitData = Packets.splitPacket(data);
-      if (splitData.isNotEmpty) _updateUserStatus(splitData[0].split(''));
-    } else if (data.contains("007")) {
-      final splitData = Packets.splitOutputPacket(data);
-      if (splitData.isNotEmpty) _updateOutputStatus(splitData);
-    } else if (data.contains("011")) {
-      final splitData = Packets.splitOutputPacket(data);
-      if (splitData.isNotEmpty) _extractDateAndTime(splitData.join());
-    } else if (data.contains("008")) {
-      final splitData = Packets.splitPacket(data);
-      if (splitData.isNotEmpty && splitData[0].length >= 6) {
-        final statusString = splitData[0];
+    try {
+      if (data.contains("009")) {
+        final splitData = Packets.splitPacket(data);
+        if (splitData.isNotEmpty) _updateUserStatus(splitData[0].split(''));
+      } else if (data.contains("007")) {
+        final splitData = Packets.splitOutputPacket(data);
+        if (splitData.isNotEmpty) _updateOutputStatus(splitData);
+      } else if (data.contains("011")) {
+        final splitData = Packets.splitOutputPacket(data);
+        if (splitData.isNotEmpty) _extractDateAndTime(splitData.join());
+      } else if (data.contains("008")) {
+        final splitData = Packets.splitPacket(data);
+        if (splitData.isNotEmpty && splitData[0].length >= 4) {
+          final statusString = splitData[0];
 
-        log.d("Input status raw: $statusString");
+          _inputStatuses[0] = _getInputStatusDesc(statusString[0]);
+          _inputStatuses[1] = _getInputStatusDesc(statusString[1]);
+          _inputStatuses[2] = _getInputStatusDesc(statusString[2]);
+          _inputStatuses[3] = _getInputStatusDesc(statusString[3]);
 
-        if (_inputStatuses.length >= 4 && statusString.length >= 4) {
-          _inputStatuses[0] = _getInputStatusDesc(statusString[0]); // Z1
-          _inputStatuses[1] = _getInputStatusDesc(statusString[1]); // Z2
-          _inputStatuses[2] = _getInputStatusDesc(statusString[2]); // Z3
-          _inputStatuses[3] = _getInputStatusDesc(statusString[3]); // Z4
+          if (statusString.length >= 5) {
+            final systemErrorValue = statusString[4];
+            _isSystemErrorDetected = systemErrorValue != '0';
+          }
+
+          if (statusString.length >= 6) {
+            _isMainsOk = statusString[5] == '1' || statusString[5] == '9';
+          }
         }
-
-        log.i(
-          "Input Zones Updated: Z1: ${_inputStatuses[0]}, Z2: ${_inputStatuses[1]}, Z3: ${_inputStatuses[2]}, Z4: ${_inputStatuses[3]}",
-        );
-
-        String systemErrorValue = "UNKNOWN";
-        if (statusString.length >= 5) {
-          systemErrorValue = statusString[4];
-          _isSystemErrorDetected = systemErrorValue != '0';
-        }
-
-        log.i("Tamper/System Error Status: $systemErrorValue");
-
-        if (statusString.length >= 6) {
-          _isMainsOk = statusString[5] == '1' || statusString[5] == '9';
-        }
-      }
-    } else if (data.contains("020")) {
-      final splitData = Packets.splitPacket(data);
-      if (splitData.isNotEmpty && splitData[0].length == 1) {
-        try {
-          final level = int.parse(splitData[0]);
+      } else if (data.contains("020")) {
+        final splitData = Packets.splitPacket(data);
+        if (splitData.isNotEmpty && splitData[0].length == 1) {
+          final level = int.tryParse(splitData[0]) ?? 0;
           _signalStrengthLevel = level.clamp(0, 4);
-        } catch (e) {
-          log.w("Failed to parse signal strength: $e");
-          _signalStrengthLevel = 0;
         }
       }
+      notifyListeners();
+    } catch (e) {
+      log.e("Error parsing read response: $e");
     }
-    notifyListeners();
   }
 
   Future<void> sendAutomationToggleCommand(int autoNumber, bool turnOn) async {
     try {
       final command = turnOn ? "1" : "0";
-
-      // 🔹 Log intent
       log.i(
-        "[Automation] Preparing command → autoNumber=$autoNumber, turnOn=$turnOn, command=$command",
+        "[Automation] Sending command → autoNumber=$autoNumber, command=$command",
       );
 
       final packet = Packets.getPacket(
@@ -391,33 +370,18 @@ class PanelSR1ViewModel extends ChangeNotifier {
         args: ["007", "00$autoNumber", command],
       );
 
-      // 🔹 Log packet before sending
-      log.d("[Automation] Sending packet → $packet");
-
       final response = await _socketRepository.sendPacketSR1(
         packet,
         isPriority: true,
       );
 
-      // 🔹 Log raw response
-      log.d("[Automation] Raw response received → $response");
-
-      if (_isDisposed) {
-        log.w("[Automation] ViewModel disposed, ignoring response");
-        return;
-      }
+      if (_isDisposed) return;
 
       if (response.contains("S*007#")) {
-        log.i(
-          "[Automation] Command ACK received (S*007#) → autoNumber=$autoNumber",
-        );
+        log.i("[Automation] ACK received.");
 
         if (autoNumber == 1) {
           _outputAuto1Status = turnOn ? "ON" : "OFF";
-          log.i(
-            "[Automation] Fogger state updated → $_outputAuto1Status",
-          );
-
           _setEvent(
             turnOn
                 ? PanelSR1ViewEvent.showFoggerArmedToast
@@ -425,65 +389,42 @@ class PanelSR1ViewModel extends ChangeNotifier {
           );
         } else if (autoNumber == 3) {
           _outputAuto3Status = turnOn ? "ON" : "OFF";
-          log.i(
-            "[Automation] Exhaust fan state updated → ${_outputAuto3Status}",
-          );
-
           _setEvent(
             turnOn
                 ? PanelSR1ViewEvent.showExhaustFanOnToast
                 : PanelSR1ViewEvent.showExhaustFanOffToast,
           );
         }
-
         notifyListeners();
-        log.d("[Automation] Listeners notified");
+
+        await Future.delayed(const Duration(milliseconds: 250));
 
         await refreshOutputStatus();
-        log.d("[Automation] Output status refreshed");
-
-        if (autoNumber == 1) {
-          await refreshInputStatus();
-          log.d("[Automation] Input status refreshed (fogger)");
-        }
+        if (autoNumber == 1) await refreshInputStatus();
       } else {
-        // 🔹 Unexpected response
-        log.e(
-          "[Automation] Command failed → Unexpected response: $response",
-        );
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
-    } catch (e, s) {
-      // 🔹 Exception case
-      log.e(
-        "[Automation] Exception while sending command",
-        error: e,
-        stackTrace: s,
-      );
-
-      if (!_isDisposed) {
-        _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
-      }
+    } catch (e) {
+      log.e("[Automation] Exception: $e");
+      if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
   Future<void> sendAutomationPulseCommand(int autoNumber) async {
     try {
       if (autoNumber == 2 && _outputAuto1Status != "ON") {
-        log.w(
-          "Fogger Trigger (Automation 2) pressed, but system (Automation 1) is not ON.",
-        );
+        log.w("Blocked Fogger Trigger: System not ARMED.");
         _setEvent(PanelSR1ViewEvent.showFoggerNotActiveToast);
         return;
       }
 
-      const command = "3";
+      const command = "3"; // Pulse
       final response = await _socketRepository.sendPacketSR1(
         Packets.getPacket(
           isReadPacket: false,
           args: ["007", "00$autoNumber", command],
         ),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
 
@@ -492,28 +433,25 @@ class PanelSR1ViewModel extends ChangeNotifier {
           _setEvent(PanelSR1ViewEvent.showEvacuatePulseSuccessToast);
         } else if (autoNumber == 2) {
           _setEvent(PanelSR1ViewEvent.showFoggerTriggerSuccessToast);
-          log.i("Fogger triggered successfully. Automatically triggering Sounder ON.");
           await sendSounderOnCommand();
         } else {
           _setEvent(PanelSR1ViewEvent.showOutputStatusUpdatedToast);
         }
+
+        await Future.delayed(const Duration(milliseconds: 250));
         await refreshOutputStatus();
       } else {
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      log.e("Failed to send automation pulse command: $e");
+      log.e("Failed to send automation pulse: $e");
       if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
   Future<void> sendInputPulseCommand(int inputNumber) async {
-    log.i("Sending Input Pulse command for Input $inputNumber (HIGH PRIORITY)");
     try {
       if (inputNumber == 1 && _outputAuto1Status != "ON") {
-        log.w(
-          "Panic Alarm (Input 1) pressed, but system (Automation 1) is not ON.",
-        );
         _setEvent(PanelSR1ViewEvent.showFoggerNotActiveToast);
         return;
       }
@@ -526,7 +464,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
           isReadPacket: false,
           args: ["008", packetIndex, command],
         ),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
 
@@ -535,22 +473,23 @@ class PanelSR1ViewModel extends ChangeNotifier {
           PanelSR1ViewEvent.showInputPulseSuccessToast,
           data: {'inputNumber': inputNumber},
         );
+
+        await Future.delayed(const Duration(milliseconds: 250));
         await refreshInputStatus();
       } else {
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      log.e("Failed to send input pulse command: $e");
+      log.e("Failed to send input pulse: $e");
       if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
   Future<void> sendSounderOffAckCommand() async {
-    log.i("Sending Sounder OFF/ACK command (HIGH PRIORITY)");
     try {
       final response = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: false, args: ["007", "000", "2"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
 
@@ -558,22 +497,22 @@ class PanelSR1ViewModel extends ChangeNotifier {
         _outputSounderStatus = "ACK";
         _setEvent(PanelSR1ViewEvent.showSounderOffSuccessToast);
         notifyListeners();
+
+        await Future.delayed(const Duration(milliseconds: 250));
         await refreshOutputStatus();
       } else {
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      log.e("Failed to send sounder off/ack command: $e");
       if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
   Future<void> sendSounderOnCommand() async {
-    log.i("Sending Sounder ON command (HIGH PRIORITY)");
     try {
       final response = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: false, args: ["007", "000", "1"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
 
@@ -581,22 +520,22 @@ class PanelSR1ViewModel extends ChangeNotifier {
         _outputSounderStatus = "ON";
         _setEvent(PanelSR1ViewEvent.showSounderToggleSuccessToast);
         notifyListeners();
+
+        await Future.delayed(const Duration(milliseconds: 250));
         await refreshOutputStatus();
       } else {
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      log.e("Failed to send sounder on command: $e");
       if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
   Future<void> sendAlarmResetCommand() async {
-    log.i("Sending Alarm Reset command (HIGH PRIORITY)");
     try {
       final response = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: false, args: ["007", "000", "4"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (_isDisposed) return;
 
@@ -604,12 +543,13 @@ class PanelSR1ViewModel extends ChangeNotifier {
         _outputSounderStatus = "OFF";
         _setEvent(PanelSR1ViewEvent.showAlarmResetSuccessToast);
         notifyListeners();
+
+        await Future.delayed(const Duration(milliseconds: 250));
         await refreshOutputStatus();
       } else {
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      log.e("Failed to send alarm reset command: $e");
       if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
@@ -629,7 +569,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
     try {
       final response = await _socketRepository.sendPacketSR1(
         Packets.getPacket(isReadPacket: true, args: ["008"]),
-        isPriority: true, // Priority implemented
+        isPriority: true,
       );
       if (!_isDisposed) _processReadResponse(response);
     } catch (e) {
@@ -638,7 +578,6 @@ class PanelSR1ViewModel extends ChangeNotifier {
   }
 
   Future<void> syncDateTime() async {
-    log.i("Syncing panel date and time");
     final now = DateTime.now();
     final hour = now.hour.toString().padLeft(2, '0');
     final minute = now.minute.toString().padLeft(2, '0');
@@ -659,19 +598,14 @@ class PanelSR1ViewModel extends ChangeNotifier {
       if (_isDisposed) return;
 
       if (response.contains("S*011#0*E")) {
-        log.i("Date and time sync successful");
         _currentPanelTime = now;
         _startClock();
         _setEvent(PanelSR1ViewEvent.showDateTimeSyncSuccessToast);
       } else {
-        log.w("Failed to sync date and time. Response: $response");
         _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
       }
     } catch (e) {
-      if (!_isDisposed) {
-        log.e("Error syncing date and time: $e");
-        _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
-      }
+      if (!_isDisposed) _setEvent(PanelSR1ViewEvent.showCommandFailedToast);
     }
   }
 
@@ -703,33 +637,28 @@ class PanelSR1ViewModel extends ChangeNotifier {
   }
 
   void _updateOutputStatus(List<String> strings) {
-    if (strings.isNotEmpty && strings.length >= 4) {
-      if (strings[0].length > 1) {
-        final sounderState = strings[0][1];
-        switch (sounderState) {
-          case '0':
-            _outputSounderStatus = "OFF";
-            break;
-          case '1':
-            _outputSounderStatus = "ON";
-            break;
-          case '2':
-            _outputSounderStatus = "ACK";
-            break;
-          default:
-            _outputSounderStatus = "OFF";
-        }
+    if (strings.isEmpty || strings.length < 4) return;
+
+    if (strings[0].length > 1) {
+      final sounderState = strings[0][1];
+      if (sounderState == '1') {
+        _outputSounderStatus = "ON";
+      } else if (sounderState == '2') {
+        _outputSounderStatus = "ACK";
       } else {
         _outputSounderStatus = "OFF";
       }
-
-      _outputAuto1Status =
-      (strings[1].length > 1 && strings[1][1] == '0') ? "OFF" : "ON";
-      _outputAuto2Status =
-      (strings[2].length > 1 && strings[2][1] == '0') ? "OFF" : "ON";
-      _outputAuto3Status =
-      (strings[3].length > 1 && strings[3][1] == '0') ? "OFF" : "ON";
     }
+
+    _outputAuto1Status = (strings[1].length > 1 && strings[1][1] == '0')
+        ? "OFF"
+        : "ON";
+    _outputAuto2Status = (strings[2].length > 1 && strings[2][1] == '0')
+        ? "OFF"
+        : "ON";
+    _outputAuto3Status = (strings[3].length > 1 && strings[3][1] == '0')
+        ? "OFF"
+        : "ON";
   }
 
   void _updateUserStatus(List<String> chars) {
@@ -751,7 +680,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
       _currentPanelTime = DateTime(year, month, day, hour, minute, second);
       _startClock();
     } catch (e) {
-      log.e("Error parsing date/time: $e");
+      log.w("Error parsing date/time: $e");
     }
   }
 
@@ -762,16 +691,20 @@ class PanelSR1ViewModel extends ChangeNotifier {
         timer.cancel();
         return;
       }
-      _currentPanelTime = _currentPanelTime?.add(const Duration(seconds: 1));
-      if (_currentPanelTime != null) {
-        final dt = _currentPanelTime!;
-        _date =
-        "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
-        _time =
-        "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
-        _isAm = dt.hour < 12;
-        notifyListeners();
+
+      if (_currentPanelTime == null) {
+        _currentPanelTime = DateTime.now();
+      } else {
+        _currentPanelTime = _currentPanelTime!.add(const Duration(seconds: 1));
       }
+
+      final dt = _currentPanelTime!;
+      _date =
+          "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
+      _time =
+          "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
+      _isAm = dt.hour < 12;
+      notifyListeners();
     });
   }
 }

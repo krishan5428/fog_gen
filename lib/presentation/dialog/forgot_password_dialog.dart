@@ -1,158 +1,101 @@
-import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fog_gen_new/presentation/dialog/progress.dart';
 
 import '../../constants/app_colors.dart';
-import '../../utils/navigation.dart';
-import '../../utils/responsive.dart';
+import '../../core/repo/user_repo.dart';
+import '../../utils/snackbar_helper.dart';
+import '../cubit/forgotPass/forget_pswd_cubit.dart';
+import '../cubit/forgotPass/forgot_pass_state.dart';
 import '../widgets/form_section.dart';
 
-Future<void> forgotPasswordDialog(BuildContext context) async {
-  final TextEditingController mobileNumberController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final fontSize = Responsive.fontSize(context);
-  final spacingBwtView = Responsive.spacingBwtView(context);
+void forgotPasswordDialog(BuildContext context) {
+  final mobileController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
 
-  await showDialog(
+  showDialog(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
-      String? message; // error or success message
-      String? password;
-
-      return StatefulBuilder(
-        builder: (ctx, setState) {
-          return Dialog(
-            backgroundColor: AppColors.lightGrey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Forgot Password",
-                    style: TextStyle(
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FormSection(
-                          label: 'Enter Mobile Number',
-                          controller: mobileNumberController,
-                          keyboardType: TextInputType.number,
-                          maxLength: 10,
-                          validator: (value) {
-                            if (value == null || value.trim().length != 10) {
-                              return 'Enter a valid 10-digit mobile number';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: spacingBwtView),
-
-                        if (message != null) ...[
-                          Text(
-                            message!,
-                            style: TextStyle(
-                              fontSize: fontSize * 0.9,
-                              color:
-                                  Colors.red,
+      return BlocProvider(
+        create: (_) => ForgetPswdCubit(repository: context.read<UserRepo>()),
+        child: BlocConsumer<ForgetPswdCubit, ForgetPswdState>(
+          listener: (context, state) {
+            if (state is ForgetPswdStateLoading) {
+              ProgressDialog.show(context);
+            } else {
+              ProgressDialog.dismiss(context);
+            }
+            if (state is ForgetPswdStateError) {
+              SnackBarHelper.showSnackBar(context, state.error);
+            }
+            if (state is ForgetPswdStateSuccess) {
+              SnackBarHelper.showSnackBar(context, state.msg);
+              Navigator.of(dialogContext).pop();
+            }
+          },
+          builder: (context, state) {
+            return AlertDialog(
+              backgroundColor: AppColors.white,
+              title: const Text("Forgot Password"),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FormSection(
+                        label: 'Enter Mobile Number',
+                        controller: mobileController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 10,
+                        validator: (value) {
+                          if (value == null || value.length != 10) {
+                            return 'Enter valid 10-digit number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: AppColors.black),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.colorPrimary,
+                              foregroundColor: AppColors.white,
+                            ),
+                            onPressed: state is ForgetPswdStateLoading
+                                ? null
+                                : () {
+                                    if (formKey.currentState!.validate()) {
+                                      context
+                                          .read<ForgetPswdCubit>()
+                                          .forgetPassword(
+                                            mobile: mobileController.text
+                                                .trim(),
+                                          );
+                                    }
+                                  },
+                            child: const Text("Submit"),
+                          ),
                         ],
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          CustomNavigation.instance.pop(dialogContext);
-                        },
-                        child: const Text(
-                          "Close",
-                          style: TextStyle(color: AppColors.colorPrimary),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (!formKey.currentState!.validate()) return;
-
-                          final mobile = mobileNumberController.text.trim();
-                          // final db = Provider.of<AppDatabase>(
-                          //   context,
-                          //   listen: false,
-                          // );
-                          // final user = await db.userDao.getUserByMobile(mobile);
-
-                          // if (user == null) {
-                          //   setState(() {
-                          //     password = null;
-                          //     message =
-                          //         'No account found for this mobile number.';
-                          //   });
-                          // } else {
-                          // setState(() {
-                          //   password = user.password;
-                          //   message =
-                          //       'Account found for $mobile. Password will be sent via SMS.';
-                          // });
-
-                          try {
-                            // await ProgressDialogWithMessage.show(
-                            //   context,
-                            //   messages: [
-                            //     "Your fog_gen_new Account password is: ${user.password}",
-                            //   ],
-                            //   panelSimNumber: user.mobileNumber,
-                            // );
-                            // await SendSms(
-                            //   mobile,
-                            //   "Your FireNex Account password is: ${user.password}",
-                            // );
-
-                            // Close dialog after success
-                            Navigator.of(dialogContext).pop();
-                            CustomNavigation.instance.pop(context);
-
-                            // Optional: show a snackbar after closing
-                            SnackBarHelper.showSnackBar(
-                              context,
-                              "Password sent successfully to $mobile",
-                            );
-                          } catch (e) {
-                            setState(() {
-                              message = 'Failed to send SMS: $e';
-                            });
-                          }
-                          // }
-                        },
-
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.colorPrimary,
-                          foregroundColor: AppColors.white,
-                        ),
-                        child: const Text("Submit"),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       );
     },
   );

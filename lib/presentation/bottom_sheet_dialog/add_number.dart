@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../constants/app_colors.dart';
-import '../../constants/strings.dart';
 import '../../core/data/pojo/panel_data.dart';
 import '../cubit/panel/panel_cubit.dart';
 import '../dialog/progress_with_message.dart';
@@ -36,7 +35,6 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final panel = widget.panel;
     final index = widget.index;
 
     return BlocListener<PanelCubit, PanelState>(
@@ -81,9 +79,9 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
               ),
               const SizedBox(height: 20),
               Text(
-                neuronPanels.contains(panel.panelName)
-                    ? "Add Number for MOBILE NUMBER ${(index + 1).toString().padLeft(2, '0')}"
-                    : "Add Number for USER${index.toString().padLeft(2, '0')}",
+                // neuronPanels.contains(panel.panelName) ?
+                "Add Number for MOBILE NUMBER ${(index + 1).toString().padLeft(2, '0')}",
+                // : "Add Number for USER${index.toString().padLeft(2, '0')}",
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -237,10 +235,9 @@ String getMobileNumberMessages({
   required String newNumber,
   required int index,
 }) {
-  if (neuronPanels.contains(panel.panelName)) {
-    index += 1;
-    if (index == 2) {
-      return '''
+  index += 1;
+  if (index == 2) {
+    return '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91$newNumber*
@@ -249,8 +246,8 @@ String getMobileNumberMessages({
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-    } else if (index == 3) {
-      return '''
+  } else if (index == 3) {
+    return '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -259,8 +256,8 @@ String getMobileNumberMessages({
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-    } else if (index == 4) {
-      return '''
+  } else if (index == 4) {
+    return '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -269,8 +266,8 @@ String getMobileNumberMessages({
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-    } else if (index == 5) {
-      return '''
+  } else if (index == 5) {
+    return '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -279,8 +276,8 @@ String getMobileNumberMessages({
 #05-+91$newNumber*
 >
 ''';
-    } else if (index == 6) {
-      return '''
+  } else if (index == 6) {
+    return '''
 < 1234 TEL NO
 #06-+91$newNumber*
 #07-+91${panel.mobileNumber6}*
@@ -289,8 +286,8 @@ String getMobileNumberMessages({
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-    } else if (index == 7) {
-      return '''
+  } else if (index == 7) {
+    return '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91$newNumber*
@@ -299,8 +296,8 @@ String getMobileNumberMessages({
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-    } else if (index == 8) {
-      return '''
+  } else if (index == 8) {
+    return '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -309,8 +306,8 @@ String getMobileNumberMessages({
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-    } else if (index == 9) {
-      return '''
+  } else if (index == 9) {
+    return '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -319,8 +316,8 @@ String getMobileNumberMessages({
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-    } else if (index == 10) {
-      return '''
+  } else if (index == 10) {
+    return '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -329,12 +326,9 @@ String getMobileNumberMessages({
 #10-+91$newNumber*
 >
 ''';
-    } else {
-      return "";
-    }
-  } else if (fourGComPanels.contains(panel.panelName)) {
-    return "SECURICO 1234 ADD USER${index.toString().padLeft(2, '0')} +91-$newNumber END";
   } else {
     return "";
   }
 }
+
+// }

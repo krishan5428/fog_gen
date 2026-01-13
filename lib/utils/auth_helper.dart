@@ -18,6 +18,10 @@ class SharedPreferenceHelper {
   static const _intruKeyPrefix = 'intruId_';
   static const _fireKeyPrefix = 'fireId_';
 
+  // Cache keys
+  static const String _keyCachedPanels = "cached_panel_list";
+
+  // --- Login State ---
   static Future<void> setLoginState(
     bool isLoggedIn,
     int userId,
@@ -41,6 +45,7 @@ class SharedPreferenceHelper {
     }
   }
 
+  // --- SMS Dialog ---
   static Future<bool> setSmsDialogShown(bool value) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -77,7 +82,7 @@ class SharedPreferenceHelper {
     }
   }
 
-  // get user id
+  // --- User ID ---
   static Future<int?> getUserId() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -88,7 +93,7 @@ class SharedPreferenceHelper {
     return null;
   }
 
-  // clear login state
+  // --- Clear State ---
   static Future<void> clearLoginState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
@@ -97,6 +102,7 @@ class SharedPreferenceHelper {
     await prefs.remove(_keyIsDialogShown);
   }
 
+  // --- User Data ---
   static Future<void> saveUserData(UserData user) async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = jsonEncode(user.toJson());
@@ -128,6 +134,7 @@ class SharedPreferenceHelper {
     return null;
   }
 
+  // --- Vendor Data ---
   static Future<VendorData?> getVendorData() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_keyVendor);
@@ -149,6 +156,7 @@ class SharedPreferenceHelper {
     await prefs.remove(_keyVendor);
   }
 
+  // --- Intrusion / Fire IDs ---
   static Future<void> setIntruIdForPanelSimNumber(
     String simNumber,
     String intruId,
@@ -179,5 +187,45 @@ class SharedPreferenceHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_intruKeyPrefix$simNumber');
     await prefs.remove('$_fireKeyPrefix$simNumber');
+  }
+
+  // --- Specific Cached Panel Methods ---
+  static Future<void> setCachedPanels(String jsonString) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyCachedPanels, jsonString);
+  }
+
+  static Future<String?> getCachedPanels() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyCachedPanels);
+  }
+
+  // =========================================================
+  //  NEW GENERIC METHODS (Fixes "getString" errors in Cubit)
+  // =========================================================
+
+  /// Generic getter for any String key
+  static Future<String?> getString(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(key);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error getting string for key $key: $e");
+      }
+      return null;
+    }
+  }
+
+  /// Generic setter for any String key
+  static Future<void> setString(String key, String value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, value);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error setting string for key $key: $e");
+      }
+    }
   }
 }

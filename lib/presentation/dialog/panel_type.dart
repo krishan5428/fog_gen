@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../utils/navigation.dart';
-import '../screens/add_ip_gprs_panel.dart';
+import '../screens/add_panel/add_ip_gprs_panel.dart';
 import '../widgets/vertical_gap.dart';
 
 class PanelTypeDialog extends StatelessWidget {
@@ -44,7 +44,7 @@ class PanelTypeDialog extends StatelessWidget {
                   const SizedBox(height: 25),
                   _buildCard(
                     imagePath: 'assets/images/pro_logo.png',
-                    title: 'fog_gen_new Pro',
+                    title: 'FogShield Pro',
                     aspectRatio: 6 / 3,
                     onTap: () {
                       CustomNavigation.instance.pop(context);
@@ -52,14 +52,14 @@ class PanelTypeDialog extends StatelessWidget {
                         context: context,
                         screen: const AddPanelFormScreen(
                           panelType: 'FOGGER PANEL',
-                          panelName: 'fog_gen_new Pro',
+                          panelName: 'FogShield Pro',
                         ),
                       );
                     },
                   ),
                   _buildCard(
                     imagePath: 'assets/images/nexus_logo.png',
-                    title: 'fog_gen_new Nexus',
+                    title: 'FogShield Nexus',
                     aspectRatio: 6 / 3,
                     onTap: () {
                       CustomNavigation.instance.pop(context);
@@ -67,14 +67,14 @@ class PanelTypeDialog extends StatelessWidget {
                         context: context,
                         screen: const AddPanelFormScreen(
                           panelType: 'FOGGER PANEL',
-                          panelName: 'fog_gen_new Nexus',
+                          panelName: 'FogShield Nexus',
                         ),
                       );
                     },
                   ),
                   _buildCard(
                     imagePath: 'assets/images/edge_logo.png',
-                    title: 'fog_gen_new Edge',
+                    title: 'FogShield Edge',
                     aspectRatio: 6 / 3,
                     onTap: () {
                       CustomNavigation.instance.pop(context);
@@ -82,7 +82,7 @@ class PanelTypeDialog extends StatelessWidget {
                         context: context,
                         screen: const AddPanelFormScreen(
                           panelType: 'FOGGER PANEL',
-                          panelName: 'fog_gen_new Edge',
+                          panelName: 'FogShield Edge',
                         ),
                       );
                     },

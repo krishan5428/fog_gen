@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../constants/app_colors.dart';
-import '../../constants/strings.dart';
 import '../../core/data/pojo/panel_data.dart';
 import '../../core/responses/socket_repository.dart';
 import '../../core/utils/application_class.dart';
@@ -88,11 +87,10 @@ Future<PanelData?> showChangeAddressBottomSheet(
                       controller: newAddressController,
                       keyboardType: TextInputType.text,
                       maxLength: 40,
-                      validator:
-                          (value) =>
-                              value == null || value.trim().isEmpty
-                                  ? 'Enter a valid address'
-                                  : null,
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Enter a valid address'
+                          : null,
                     ),
 
                     if (errorText != null)
@@ -264,10 +262,5 @@ String getAddressMessage({
   required String panelName,
   required String newAddress,
 }) {
-  if (neuronPanels.contains(panelName)) {
-    return "< 1234 SIGNATURE #$newAddress* >";
-  } else if (fourGComPanels.contains(panelName)) {
-    return "SECURICO 1234 ADD SIGNATURE $newAddress* END";
-  }
-  return "";
+  return "< 1234 SIGNATURE #$newAddress* >";
 }

@@ -1,5 +1,4 @@
 import 'package:fog_gen_new/constants/app_colors.dart';
-import 'package:fog_gen_new/constants/strings.dart';
 import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/common_classes.dart';
@@ -45,11 +44,7 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
       panel.mobileNumber10,
     ];
 
-    if (neuronPanels.contains(panel.panelName)) {
-      return allNumbers.sublist(0, 9); // show only first 9 numbers
-    } else {
-      return allNumbers; // show all 10 numbers for 4GCOM or others
-    }
+    return allNumbers.sublist(0, 9); // show only first 9 numbers
   }
 
   Future<String> getDevice() async {
@@ -68,10 +63,7 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
     PanelData panel,
     int index,
   ) async {
-    final title =
-        neuronPanels.contains(panel.panelName)
-            ? "Do you want to DELETE MOBILE NUMBER ${index + 1}?"
-            : "Do you want to DELETE USER0$index number?";
+    final title = "Do you want to DELETE MOBILE NUMBER ${index + 1}?";
     final confirm = await showConfirmationDialog(
       context: context,
       message: title,
@@ -82,11 +74,11 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
     bool? isSend = false;
 
     if (confirm == true) {
-      if (neuronPanels.contains(panel.panelName)) {
-        var message = '';
-        index += 1;
-        if (index == 2) {
-          message = '''
+      var message = '';
+      index += 1;
+      if (index == 2) {
+        message =
+            '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+910000000000*
@@ -95,8 +87,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-        } else if (index == 3) {
-          message = '''
+      } else if (index == 3) {
+        message =
+            '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -105,8 +98,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-        } else if (index == 4) {
-          message = '''
+      } else if (index == 4) {
+        message =
+            '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -115,8 +109,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #05-+91${panel.mobileNumber4}*
 >
 ''';
-        } else if (index == 5) {
-          message = '''
+      } else if (index == 5) {
+        message =
+            '''
 < 1234 TEL NO
 #01-+91${panel.adminMobileNumber}*
 #02-+91${panel.mobileNumber1}*
@@ -125,8 +120,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #05-+910000000000*
 >
 ''';
-        } else if (index == 6) {
-          message = '''
+      } else if (index == 6) {
+        message =
+            '''
 < 1234 TEL NO
 #06-+910000000000*
 #07-+91${panel.mobileNumber6}*
@@ -135,8 +131,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-        } else if (index == 7) {
-          message = '''
+      } else if (index == 7) {
+        message =
+            '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+910000000000*
@@ -145,8 +142,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-        } else if (index == 8) {
-          message = '''
+      } else if (index == 8) {
+        message =
+            '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -155,8 +153,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-        } else if (index == 9) {
-          message = '''
+      } else if (index == 9) {
+        message =
+            '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -165,8 +164,9 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #10-+91${panel.mobileNumber9}*
 >
 ''';
-        } else if (index == 10) {
-          message = '''
+      } else if (index == 10) {
+        message =
+            '''
 < 1234 TEL NO
 #06-+91${panel.mobileNumber5}*
 #07-+91${panel.mobileNumber6}*
@@ -175,26 +175,17 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 #10-+910000000000*
 >
 ''';
-        } else {
-          message = "";
-        }
-
-        isSend = await trySendSms(
-          context,
-          device,
-          smsPermission,
-          panel.panelSimNumber,
-          [message],
-        );
       } else {
-        isSend = await trySendSms(
-          context,
-          device,
-          smsPermission,
-          panel.panelSimNumber,
-          ['SECURICO 1234 REMOVE USER0$index END'],
-        );
+        message = "";
       }
+
+      isSend = await trySendSms(
+        context,
+        device,
+        smsPermission,
+        panel.panelSimNumber,
+        [message],
+      );
 
       if (isSend!) {
         context.read<PanelCubit>().updatePanelData(
@@ -290,12 +281,11 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
                                       top: Radius.circular(20),
                                     ),
                                   ),
-                                  builder:
-                                      (_) => AddNumberBottomSheet(
-                                        panel: widget.panelData,
-                                        index: index + 1,
-                                        existingNumbers: existingNumbers,
-                                      ),
+                                  builder: (_) => AddNumberBottomSheet(
+                                    panel: widget.panelData,
+                                    index: index + 1,
+                                    existingNumbers: existingNumbers,
+                                  ),
                                 );
 
                             if (updatedPanel != null) {
@@ -318,19 +308,19 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
                           ),
                         ),
                         IconButton(
-                          onPressed:
-                              isEmpty
-                                  ? null
-                                  : () => _sendDeleteMsg(
-                                    context,
-                                    widget.panelData,
-                                    index + 1,
-                                  ),
+                          onPressed: isEmpty
+                              ? null
+                              : () => _sendDeleteMsg(
+                                  context,
+                                  widget.panelData,
+                                  index + 1,
+                                ),
                           icon: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color:
-                                  isEmpty ? Colors.grey : AppColors.litePrimary,
+                              color: isEmpty
+                                  ? Colors.grey
+                                  : AppColors.litePrimary,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(

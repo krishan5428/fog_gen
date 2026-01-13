@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
 import '../../utils/app_info.dart';

@@ -12,15 +12,13 @@ class SnackBarHelper {
       reverseDuration: const Duration(milliseconds: 250),
     );
 
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    final slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     final fadeAnimation = CurvedAnimation(
       parent: animationController,
@@ -39,8 +37,10 @@ class SnackBarHelper {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.colorPrimary,
                   borderRadius: BorderRadius.circular(8),

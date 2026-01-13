@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:fog_gen_new/presentation/dialog/url_dialog.dart';
 import 'package:fog_gen_new/presentation/screens/add_vendor.dart';
-import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/presentation/screens/signup.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
@@ -45,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
@@ -212,15 +211,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.colorPrimary,
                           decoration: TextDecoration.underline,
                         ),
-                        recognizer:
-                            TapGestureRecognizer()
-                              ..onTap = () {
-                                showUrlDialog(
-                                  context,
-                                  policyUrl,
-                                  'Terms & Privacy Policy',
-                                );
-                              },
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            showUrlDialog(
+                              context,
+                              policyUrl,
+                              'Terms & Privacy Policy',
+                            );
+                          },
                       ),
                     ),
                   ],

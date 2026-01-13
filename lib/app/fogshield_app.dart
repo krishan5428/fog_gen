@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import '../core/repo/user_repo.dart';
 import '../presentation/screens/splash.dart';
 import '../presentation/cubit/user/user_cubit.dart';
 import '../presentation/cubit/panel/panel_cubit.dart';
@@ -17,19 +19,30 @@ class FogShieldApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => UserCubit(UserRepoImpl())),
-        BlocProvider(create: (_) => PanelCubit(PanelRepositoryImpl())),
-        BlocProvider(create: (_) => VendorCubit(VendorRepoImpl())),
-        BlocProvider(create: (_) => SiteCubit()),
-        BlocProvider(create: (_) => PanelSimNumberCubit()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'FogShield',
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
+    return MultiProvider(
+      providers: [Provider<UserRepo>(create: (_) => UserRepoImpl())],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<UserCubit>(
+            create: (context) => UserCubit(context.read<UserRepo>()),
+          ),
+          BlocProvider<PanelCubit>(
+            create: (_) => PanelCubit(PanelRepositoryImpl()),
+          ),
+          BlocProvider<VendorCubit>(
+            create: (_) => VendorCubit(VendorRepoImpl()),
+          ),
+          BlocProvider<SiteCubit>(create: (_) => SiteCubit()),
+          BlocProvider<PanelSimNumberCubit>(
+            create: (_) => PanelSimNumberCubit(),
+          ),
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'FogShield',
+          theme: AppTheme.lightTheme,
+          home: const SplashScreen(),
+        ),
       ),
     );
   }

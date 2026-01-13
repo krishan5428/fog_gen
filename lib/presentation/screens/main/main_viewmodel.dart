@@ -26,6 +26,7 @@ class MainViewModel extends ChangeNotifier {
   Timer? _inactivityTimer;
   Timer? _autoDisconnectTimer;
 
+  // --- STATE FLAGS ---
   bool _isForceCooldownActive = false;
   bool get isForceCooldownActive => _isForceCooldownActive;
 
@@ -39,6 +40,9 @@ class MainViewModel extends ChangeNotifier {
 
   bool _isInitializing = false;
   bool get isInitializing => _isInitializing;
+
+  // NEW: Flag to prevent infinite retry loops
+  bool _isAutoRetryingBusyState = false;
 
   MainViewEvent _event = MainViewEvent.none;
   MainViewEvent get event => _event;
@@ -65,21 +69,25 @@ class MainViewModel extends ChangeNotifier {
     _isDisposed = true;
     _initializationCheckTimer?.cancel();
     _siteNameSubscription?.cancel();
-    // Cancel timers on dispose
     _inactivityTimer?.cancel();
     _warningTimer?.cancel();
     panelSR1ViewModel?.dispose();
     super.dispose();
   }
 
+  // ----------------------------------------------------------------------
+  // FORCE DISCONNECT (Manual User Action)
+  // ----------------------------------------------------------------------
   Future<void> forceDisconnectAndAllowReconnect() async {
     log.w("Force disconnect initiated. Cooling down for 5 seconds.");
 
     _isForceCooldownActive = true;
     notifyListeners();
 
-    disconnect(force: true, showToast: false);
+    // Perform a full disconnect
+    await disconnect();
 
+    // Wait extra time for hardware to clear socket
     await Future.delayed(const Duration(seconds: 5));
 
     if (_isDisposed) return;
@@ -89,44 +97,38 @@ class MainViewModel extends ChangeNotifier {
     log.i("Force disconnect cooldown complete. Connect allowed.");
   }
 
-  /// Called by the global Listener in app.dart on any tap.
+  // ----------------------------------------------------------------------
+  // INACTIVITY LOGIC
+  // ----------------------------------------------------------------------
   void onUserInteraction() {
     if (!_isConnected) return;
     _restartInactivityTimer();
   }
 
-  /// Start inactivity timer when panel connects
   void startInactivityTimer() {
     if (!_isConnected) return;
     _restartInactivityTimer();
   }
 
-  /// Cancel both timers
   void stopInactivityTimers() {
     _inactivityTimer?.cancel();
     _autoDisconnectTimer?.cancel();
     _showingInactivityDialog = false;
   }
 
-  /// Restart the 3-minute timer
   void _restartInactivityTimer() {
     _inactivityTimer?.cancel();
-
     _inactivityTimer = Timer(
       const Duration(minutes: 3),
       () => _triggerInactivityDialog(),
     );
   }
 
-  /// Called after 3 minutes of no interaction
   void _triggerInactivityDialog() {
     if (!_isConnected || _showingInactivityDialog) return;
     _showingInactivityDialog = true;
-
-    // Fire UI event
     _setEvent(MainViewEvent.showInactivityWarningDialog);
 
-    // Start 1-minute auto disconnect countdown
     _autoDisconnectTimer?.cancel();
     _autoDisconnectTimer = Timer(const Duration(minutes: 1), () {
       _showingInactivityDialog = false;
@@ -134,68 +136,65 @@ class MainViewModel extends ChangeNotifier {
     });
   }
 
-  /// Called when user taps “Stay Connected”
   void stayConnected() {
     _showingInactivityDialog = false;
     _autoDisconnectTimer?.cancel();
     _restartInactivityTimer();
   }
 
-  @override
-  void notifyListeners() {
-    if (!_isDisposed) {
-      super.notifyListeners();
-    }
-  }
-
+  // ----------------------------------------------------------------------
+  // COMMANDS
+  // ----------------------------------------------------------------------
   Future<void> sendSounderOffAckCommand() async {
-    log.i("[Sounder] Sending Sounder OFF / ACK command (HIGH PRIORITY)");
-
+    log.i("[Sounder] Sending Sounder OFF / ACK command");
     try {
       final packet = Packets.getPacket(
         isReadPacket: false,
         args: ["007", "000", "2"],
       );
 
-      log.d("[Sounder] Packet sent → $packet");
-
       final response = await socketRepository.sendPacketSR1(
         packet,
         isPriority: true,
       );
 
-      log.d("[Sounder] Raw response received → $response");
-
       if (_isDisposed) return;
 
       if (response.contains("S*007#")) {
-        log.i("[Sounder] ACK received – Sounder OFF successful");
-
+        log.i("[Sounder] ACK received");
         _setEvent(MainViewEvent.showSounderOffSuccessToast);
       } else {
         log.e("[Sounder] Unexpected response → $response");
-
         _setEvent(MainViewEvent.showCommandFailedToast);
       }
-    } catch (e, s) {
-      log.e(
-        "[Sounder] Exception while sending Sounder OFF command",
-        error: e,
-        stackTrace: s,
-      );
-
-      if (!_isDisposed) {
-        _setEvent(MainViewEvent.showCommandFailedToast);
-      }
+    } catch (e) {
+      log.e("[Sounder] Exception: $e");
+      if (!_isDisposed) _setEvent(MainViewEvent.showCommandFailedToast);
     }
   }
 
-  /// Handles the response from an SR1 panel after a connection attempt.
+  // ----------------------------------------------------------------------
+  // CONNECTION & RESPONSE HANDLING (UPDATED)
+  // ----------------------------------------------------------------------
   void _handleSR1Response(String result, String siteName) {
-    if (result.contains("S*000#3#*E")) {
-      log.w("SR1 Response: Panel is busy or already connected.");
-      _setEvent(MainViewEvent.showAlreadyConnectedDialog);
-    } else if (result.startsWith("S*000#1")) {
+    // CASE 1: PANEL BUSY (#3#)
+    if (result.contains("S*000#3#")) {
+      log.w("SR1 Response: Panel is BUSY (#3#).");
+
+      if (!_isAutoRetryingBusyState) {
+        log.i("First BUSY response detected. Attempting AUTO-FIX...");
+        _attemptAutoFixBusyState();
+      } else {
+        // We already tried to fix it, and it's still busy. Show dialog.
+        log.e("Auto-Fix failed. Panel remains busy. Showing dialog.");
+        _isAutoRetryingBusyState = false;
+        _isConnecting = false;
+        notifyListeners();
+        _setEvent(MainViewEvent.showAlreadyConnectedDialog);
+      }
+    }
+    // CASE 2: SUCCESS (#1#)
+    else if (result.startsWith("S*000#1")) {
       try {
         final parts = result.replaceAll(RegExp(r'S\*|\*E'), '').split('#');
         if (parts.length >= 7) {
@@ -207,40 +206,67 @@ class MainViewModel extends ChangeNotifier {
           app.macAddress = macId;
           app.firmware = version;
           app.panelId = panelId;
-          log.i("SR1 Response: Handshake successful. Stored panel details.");
+          log.i("SR1 Response: Handshake successful.");
 
-          // --- MODIFIED: Create the ViewModel with siteName ---
+          // Success! Reset the retry flag
+          _isAutoRetryingBusyState = false;
+
           panelSR1ViewModel = PanelSR1ViewModel(
             socketRepository: socketRepository,
-            // siteName: siteName, // Pass the siteName
-          );
-          log.i(
-            "PanelSR1ViewModel created for '$siteName'. It will now fetch initial data in the background.",
           );
 
-          // Add listener to child viewModel to track loading completion
           panelSR1ViewModel!.addListener(_checkInitializationStatus);
 
           _connectionSuccess();
         } else {
-          log.w(
-            "SR1 Response: Handshake response format is unexpected: $result",
-          );
+          log.w("SR1 Response: Handshake format unexpected: $result");
           _connectionFailed();
         }
       } catch (e) {
-        log.e("Failed to parse SR1 handshake response: $e");
+        log.e("Failed to parse SR1 handshake: $e");
         _connectionFailed();
       }
-    } else {
-      log.w("SR1 Response: Unknown response received: $result");
+    }
+    // CASE 3: UNKNOWN
+    else {
+      log.w("SR1 Response: Unknown response: $result");
       _connectionFailed();
     }
   }
 
+  /// NEW: Logic to automatically kick a ghost session
+  Future<void> _attemptAutoFixBusyState() async {
+    _isAutoRetryingBusyState = true;
+
+    // 1. Send Disconnect Command silently
+    try {
+      final pwd = panel.password.isNotEmpty ? panel.password : "1234";
+      final disconnectPacket = "S*$pwd#W#013*E";
+      log.i("[AutoFix] Sending Kill Command: $disconnectPacket");
+
+      // We don't care about the response here, just send it to clear the buffer
+      await socketRepository
+          .sendPacketSR1(disconnectPacket, isPriority: true)
+          .timeout(const Duration(seconds: 2), onTimeout: () => "");
+    } catch (e) {
+      log.w("[AutoFix] Error sending kill packet (expected): $e");
+    }
+
+    // 2. Wait for Hardware to reset (3 seconds is standard for IoT chips)
+    log.i("[AutoFix] Waiting 3s for hardware socket reset...");
+    await Future.delayed(const Duration(seconds: 3));
+
+    // 3. Close local socket to be sure
+    socketRepository.stopAllActivity();
+
+    // 4. Retry Connection (Recursive call to connect)
+    log.i("[AutoFix] Retrying connection now...");
+    _isConnecting = false; // Reset flag so connect() runs
+    connect();
+  }
+
   void loadPanelDetails() {
     final app = Application();
-
     app.mIPAddress = panel.ip_address;
     app.mPortNumber = int.tryParse(panel.port_no) ?? 0;
     app.mStaticIPAddress = panel.static_ip_address;
@@ -248,45 +274,48 @@ class MainViewModel extends ChangeNotifier {
     app.mPassword = panel.password;
   }
 
-  /// Centralized method to handle a successful connection.
   void _connectionSuccess() {
     _isConnected = true;
     _isInitializing = true;
     notifyListeners();
 
-    startInactivityTimer(); // <-- clean call
+    startInactivityTimer();
     _startInitializationCheck();
   }
 
-  Future<void> performAppCloseDisconnect() async {
+  Future<void> disconnect() async {
+    log.i("User/System initiated disconnect.");
+
     if (_isConnected) {
-      log.i("App closing: Sending immediate disconnect packet.");
-      // We await this to ensure the OS doesn't kill the process before the packet leaves
-      await socketRepository.sendDisconnectPacket();
+      try {
+        final pwd = panel.password.isNotEmpty ? panel.password : "1234";
+        final disconnectPacket = "S*$pwd#W#013*E";
+
+        log.i("Sending Disconnect Packet: $disconnectPacket");
+
+        // Send and wait briefly for ACK
+        final response = await socketRepository
+            .sendPacketSR1(disconnectPacket, isPriority: true)
+            .timeout(const Duration(seconds: 2), onTimeout: () => "TIMEOUT");
+
+        if (response.contains("S*013#0")) {
+          log.i("✅ Disconnect confirmed by panel.");
+        }
+      } catch (e) {
+        log.w("Disconnect warning: $e");
+      }
     }
-  }
 
-  // Standard disconnect used by timers
-  void disconnect({bool showToast = true, bool force = false}) {
-    // If NOT force and already disconnected → do nothing
-    if (!_isConnected && !force) {
-      return;
-    }
+    // Always clean up local socket
+    socketRepository.stopAllActivity();
 
-    stopInactivityTimers();
-    _setEvent(MainViewEvent.dismissInactivityDialog);
-
-    // ✅ Always send packet if force OR connected
-    socketRepository.sendDisconnectPacket();
-
+    _setEvent(MainViewEvent.showDisconnectedToast);
     resetState();
-
-    if (showToast) {
-      _setEvent(MainViewEvent.showDisconnectedToast);
-    }
   }
 
-  /// NEW: Check initialization status periodically
+  // ----------------------------------------------------------------------
+  // INITIALIZATION CHECKERS
+  // ----------------------------------------------------------------------
   void _startInitializationCheck() {
     _initializationCheckTimer?.cancel();
 
@@ -298,70 +327,57 @@ class MainViewModel extends ChangeNotifier {
           return;
         }
 
-        if (!panelSR1ViewModel!.isPanelStatusLoading &&
+        if (panelSR1ViewModel != null &&
+            !panelSR1ViewModel!.isPanelStatusLoading &&
             !panelSR1ViewModel!.isZoneStatusLoading) {
-          log.i(
-            "SR1 Panel initialization complete - all critical data loaded.",
-          );
+          log.i("SR1 Panel initialization complete.");
           _completeInitialization();
           timer.cancel();
         }
       },
     );
 
-    // Safety timeout: force completion after 10 seconds
+    // Watchdog for init
     Timer(const Duration(seconds: 10), () {
       if (_isInitializing && !_isDisposed) {
-        log.w("Initialization timeout reached - forcing completion.");
+        log.w("Initialization timeout - forcing completion.");
         _completeInitialization();
       }
     });
   }
 
-  /// NEW: Listen to child viewModel changes
   void _checkInitializationStatus() {
     if (!_isInitializing || _isDisposed) return;
-
-    if (panelSR1ViewModel != null &&
-        !panelSR1ViewModel!.isPanelStatusLoading &&
-        !panelSR1ViewModel!.isZoneStatusLoading) {
-      log.i("Initialization status changed - data loading complete.");
-      // The periodic timer will pick this up and complete initialization
-    }
+    // Listener callback - logic handled in _startInitializationCheck
   }
 
-  /// NEW: Complete the initialization phase
   void _completeInitialization() async {
-    // MODIFIED: Make async
     if (!_isDisposed && _isInitializing) {
       _initializationCheckTimer?.cancel();
 
-      // NEW: Enforce a minimum 3-second display time
+      // Ensure minimum 3s splash
       const minDisplayDuration = Duration(seconds: 3);
       final timeSinceConnection = _connectionTime != null
           ? DateTime.now().difference(_connectionTime!)
           : minDisplayDuration;
 
       if (timeSinceConnection < minDisplayDuration) {
-        final remainingDelay = minDisplayDuration - timeSinceConnection;
-        log.i(
-          "Data loaded quickly. Waiting for an additional ${remainingDelay.inMilliseconds}ms to meet 3-second minimum.",
-        );
-        await Future.delayed(remainingDelay);
+        await Future.delayed(minDisplayDuration - timeSinceConnection);
       }
 
-      if (_isDisposed) return; // Check again after delay
+      if (_isDisposed) return;
 
       _isInitializing = false;
       notifyListeners();
-      log.i("Panel initialization complete - UI now showing full controls.");
     }
   }
 
-  /// Centralized method to handle a failed connection attempt.
   void _connectionFailed() {
     disconnect();
-    _setEvent(MainViewEvent.showConnectionFailedToast);
+    // Only show toast if we aren't in the middle of an auto-retry
+    if (!_isAutoRetryingBusyState) {
+      _setEvent(MainViewEvent.showConnectionFailedToast);
+    }
   }
 
   Future<void> connect() async {
@@ -373,7 +389,7 @@ class MainViewModel extends ChangeNotifier {
     try {
       loadPanelDetails();
 
-      // RECOMMENDED FIX: Create a brand new socket repo for a fresh connection
+      // Fresh Socket Repo for new attempt
       socketRepository = SocketRepository();
 
       final response = await socketRepository.sendPacketSR1(
@@ -383,10 +399,21 @@ class MainViewModel extends ChangeNotifier {
       _handleSR1Response(response, panel.site);
     } catch (e) {
       log.e("Connection failed: $e");
-      _setEvent(MainViewEvent.showConnectionFailedToast);
+
+      // If we were auto-retrying and it failed with Exception, stop retrying
+      if (_isAutoRetryingBusyState) {
+        _isAutoRetryingBusyState = false;
+        _setEvent(MainViewEvent.showAlreadyConnectedDialog);
+      } else {
+        _setEvent(MainViewEvent.showConnectionFailedToast);
+      }
     } finally {
-      _isConnecting = false;
-      notifyListeners();
+      // If we are auto-retrying, keep isConnecting true to prevent UI flicker
+      // otherwise set it to false
+      if (!_isAutoRetryingBusyState) {
+        _isConnecting = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -397,6 +424,7 @@ class MainViewModel extends ChangeNotifier {
     isUserEvent = false;
     _connectionTime = null;
 
+    _isAutoRetryingBusyState = false;
     _initializationCheckTimer?.cancel();
     stopInactivityTimers();
 
@@ -405,8 +433,6 @@ class MainViewModel extends ChangeNotifier {
       panelSR1ViewModel!.dispose();
       panelSR1ViewModel = null;
     }
-
-    // ❌ REMOVE wiping Application() values
 
     notifyListeners();
   }
@@ -420,17 +446,10 @@ class MainViewModel extends ChangeNotifier {
     _event = MainViewEvent.none;
   }
 
-  void disposeViewModel() {
-    _isDisposed = true;
-
-    _initializationCheckTimer?.cancel();
-    _siteNameSubscription?.cancel();
-    _inactivityTimer?.cancel();
-    _warningTimer?.cancel();
-
-    panelSR1ViewModel?.dispose();
-    panelSR1ViewModel = null;
-
-    socketRepository.clearQueue();
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
   }
 }

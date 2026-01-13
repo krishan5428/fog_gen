@@ -65,7 +65,8 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
       return false;
     }
 
-    if (siteNames.contains(siteName)) {
+    // FIX: Only show error if it exists AND it is NOT the current panel's site name
+    if (siteNames.contains(siteName) && siteName != widget.panelData.site) {
       SnackBarHelper.showSnackBar(
         context,
         'Site name "$siteName" already exists.',
@@ -73,7 +74,9 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
       return false;
     }
 
-    if (panelSimNumbers.contains(simNumber)) {
+    // FIX: Only show error if it exists AND it is NOT the current panel's sim number
+    if (panelSimNumbers.contains(simNumber) &&
+        simNumber != widget.panelData.panelSimNumber) {
       SnackBarHelper.showSnackBar(
         context,
         'Panel sim number "$simNumber" already exists.',
@@ -159,7 +162,10 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
     SnackBarHelper.showSnackBar(context, "Panel updated successfully");
     await Future.delayed(const Duration(milliseconds: 500));
     if (!context.mounted) return;
-    CustomNavigation.instance.popWithResult(context: context,result: updatedData);
+    CustomNavigation.instance.popWithResult(
+      context: context,
+      result: updatedData,
+    );
   }
 
   @override
@@ -175,7 +181,10 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
           _savingAndNavigating(state.panelData);
         } else if (state is UpdatePanelsFailure) {
           debugPrint('update panel data failure');
-          SnackBarHelper.showSnackBar(context, 'Failed to update panel data');
+          SnackBarHelper.showSnackBar(
+            context,
+            'Failed to update panel: ${state.message}',
+          );
         }
       },
       child: Scaffold(
@@ -184,7 +193,6 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Info box (fixed at top)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
@@ -207,9 +215,7 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -223,59 +229,53 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
                         maxLength: 40,
                       ),
                       const SizedBox(height: 12),
-
-                      if (!widget.panelData.is_ip_gsm_panel)
-                        CustomTextField(
-                          controller: formControllers.panelSimNumberController,
-                          hintText: 'Panel SIM Number',
-                          maxLength: 13,
-                        ),
-
-                      if (widget.panelData.is_ip_panel || widget.panelData.is_ip_gsm_panel) ...[
-                        const SizedBox(height: 12),
-                        CustomTextField(
-                          hintText: 'IP Address',
-                          maxLength: 15,
-                          controller: formControllers.ipAddressController,
-                        ),
-                        VerticalSpace(height: spacingBwtView * 1.2),
-                        CustomTextField(
-                          hintText: 'Port Number',
-                          isNumber: true,
-                          maxLength: 5,
-                          controller: formControllers.portNumberController,
-                        ),
-                        VerticalSpace(height: spacingBwtView * 1.2),
-                        CustomTextField(
-                          hintText: 'Static IP Address',
-                          isNumber: true,
-                          maxLength: 15,
-                          controller: formControllers.staticIpController,
-                        ),
-                        VerticalSpace(height: spacingBwtView * 1.2),
-                        CustomTextField(
-                          hintText: 'Static Port Number',
-                          isNumber: true,
-                          maxLength: 5,
-                          controller: formControllers.staticPortController,
-                        ),
-                        VerticalSpace(height: spacingBwtView * 1.2),
-                        CustomTextField(
-                          hintText: 'Password',
-                          isNumber: true,
-                          maxLength: 4,
-                          controller: formControllers.passwordController,
-                        ),
-                      ],
-
+                      CustomTextField(
+                        controller: formControllers.panelSimNumberController,
+                        hintText: 'Panel SIM Number',
+                        maxLength: 13,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        hintText: 'IP Address',
+                        maxLength: 15,
+                        controller: formControllers.ipAddressController,
+                      ),
+                      VerticalSpace(height: spacingBwtView * 1.2),
+                      CustomTextField(
+                        hintText: 'Port Number',
+                        isNumber: true,
+                        maxLength: 5,
+                        controller: formControllers.portNumberController,
+                      ),
+                      VerticalSpace(height: spacingBwtView * 1.2),
+                      CustomTextField(
+                        hintText: 'Static IP Address',
+                        isNumber: true,
+                        maxLength: 15,
+                        controller: formControllers.staticIpController,
+                      ),
+                      VerticalSpace(height: spacingBwtView * 1.2),
+                      CustomTextField(
+                        hintText: 'Static Port Number',
+                        isNumber: true,
+                        maxLength: 5,
+                        controller: formControllers.staticPortController,
+                      ),
+                      VerticalSpace(height: spacingBwtView * 1.2),
+                      CustomTextField(
+                        hintText: 'Password',
+                        isNumber: true,
+                        maxLength: 4,
+                        controller: formControllers.passwordController,
+                      ),
                       const SizedBox(height: 20),
-
                       Row(
                         children: [
                           Expanded(
                             child: CustomButton(
                               buttonText: "BACK",
-                              onPressed: () => CustomNavigation.instance.pop(context),
+                              onPressed: () =>
+                                  CustomNavigation.instance.pop(context),
                               backgroundColor: AppColors.litePrimary,
                               foregroundColor: AppColors.colorPrimary,
                             ),
@@ -289,6 +289,7 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),

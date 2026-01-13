@@ -6,7 +6,7 @@ import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_fragme
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_viewmodel.dart';
 import 'package:fog_gen_new/presentation/screens/main/widgets/input_controls_widget.dart';
 import 'package:fog_gen_new/presentation/screens/main/widgets/output_controls_widget.dart';
-import 'package:fog_gen_new/presentation/screens/panel_list.dart';
+import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
@@ -57,10 +57,8 @@ class _MainViewState extends State<_MainView> {
 
   @override
   void dispose() {
-    // All local timer cancels removed
     if (mounted) {
       final viewModel = mainViewModel;
-
       viewModel.removeListener(_handleMainViewModelEvents);
     }
     _panelSR1ViewModel?.removeListener(_handlePanelSR1ViewModelEvents);
@@ -127,13 +125,13 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Connection Failed',
           description:
-              'Could not connect to the panel. Please check the network and try again.',
+          'Could not connect to the panel. Please check the network and try again.',
         );
         break;
       case MainViewEvent.dismissInactivityDialog:
         if (viewModel.isConnected) {
           if (Navigator.canPop(context)) {
-            Navigator.pop(context); // <-- closes timeout dialog safely
+            Navigator.pop(context);
           }
         }
         break;
@@ -178,7 +176,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Command Failed',
           description:
-              'The panel did not respond as expected. Please try again.',
+          'The panel did not respond as expected. Please try again.',
           alignment: Alignment.center,
         );
         break;
@@ -235,7 +233,7 @@ class _MainViewState extends State<_MainView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               25,
-                            ), // corner radius here
+                            ),
                           ),
                           backgroundColor: AppColors.colorPrimary,
                           foregroundColor: AppColors.white,
@@ -262,7 +260,7 @@ class _MainViewState extends State<_MainView> {
   }
 
   void _handlePanelSR1ViewModelEvents() {
-    if (!mounted) return; // <-- IMPORTANT FIX
+    if (!mounted) return;
     if (_panelSR1ViewModel == null) return;
     final event = _panelSR1ViewModel!.event;
     if (event == PanelSR1ViewEvent.none) return;
@@ -282,16 +280,14 @@ class _MainViewState extends State<_MainView> {
         );
         break;
       case PanelSR1ViewEvent.showConnectionTimeout:
-        // 1. Trigger the actual disconnect logic
         Provider.of<MainViewModel>(context, listen: false).disconnect();
 
-        // 2. Show toast
         _showToast(
           context: context,
           type: ToastificationType.error,
           title: 'Connection Lost',
           description:
-              'No response from panel for over 1 minute. Please check network or power.',
+          'No response from panel for over 1 minute. Please check network or power.',
           alignment: Alignment.center,
           primaryColor: AppColors.colorAccent,
           icon: Icons.wifi_off,
@@ -398,7 +394,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Command Failed',
           description:
-              'The panel did not respond as expected. Please try again.',
+          'The panel did not respond as expected. Please try again.',
           alignment: Alignment.center,
         );
         break;
@@ -520,7 +516,6 @@ class _MainViewState extends State<_MainView> {
     _inactivityTimer?.cancel();
     _warningTimer?.cancel();
 
-    // 3 Minute Timer (Triggers warning dialog)
     _inactivityTimer = Timer(
       const Duration(minutes: 3),
       _showInactivityWarningDialog,
@@ -557,7 +552,7 @@ class _MainViewState extends State<_MainView> {
                 const SizedBox(height: 12),
                 Text(
                   "You were inactive for 3 minutes.\n\n"
-                  "You will be disconnected in 1 minute unless you stay connected.",
+                      "You will be disconnected in 1 minute unless you stay connected.",
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 20),
@@ -577,7 +572,7 @@ class _MainViewState extends State<_MainView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               25,
-                            ), // corner radius here
+                            ),
                           ),
                           backgroundColor: AppColors.colorPrimary,
                           foregroundColor: AppColors.white,
@@ -607,24 +602,21 @@ class _MainViewState extends State<_MainView> {
       onWillPop: () async {
         final vm = Provider.of<MainViewModel>(context, listen: false);
 
-        // Disconnect the panel safely
         if (viewModel.isConnected) {
-          vm.disconnect(showToast: false);
+          vm.disconnect();
           vm.socketRepository.stopAllActivity();
         }
 
-        // Remove any inactivity dialog if present
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
         }
 
-        // Navigate to Panel List
         CustomNavigation.instance.pushReplace(
           context: context,
           screen: PanelListPage(),
         );
 
-        return false; // Prevent default pop
+        return false;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -643,9 +635,6 @@ class _MainViewState extends State<_MainView> {
             isProfile: false,
             onBack: () {
               final vm = Provider.of<MainViewModel>(context, listen: false);
-
-              // vm.disposeViewModel();
-              // vm.dispose();
               vm.disconnect();
 
               CustomNavigation.instance.pushReplace(
@@ -700,7 +689,6 @@ class _MainViewState extends State<_MainView> {
       builder: (context, constraints) {
         Widget content = _buildFullContent(viewModel);
         return SingleChildScrollView(
-          // physics: BouncingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 110),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -722,7 +710,7 @@ class _MainViewState extends State<_MainView> {
           ],
         ),
         viewModel.isConnected
-            ? _buildControlCentre()
+            ? _buildControlCentre(viewModel)
             : _buildDisconnectedControlCentre(),
       ],
     );
@@ -903,22 +891,22 @@ Widget _buildActionButtons(MainViewModel viewModel) {
       onPressed: viewModel.isConnecting || viewModel.isForceCooldownActive
           ? null
           : () {
-              if (viewModel.isConnected) {
-                viewModel.disconnect();
-                viewModel.socketRepository.stopAllActivity();
-              } else {
-                viewModel.connect();
-              }
-            },
+        if (viewModel.isConnected) {
+          viewModel.disconnect();
+          viewModel.socketRepository.stopAllActivity();
+        } else {
+          viewModel.connect();
+        }
+      },
       icon: viewModel.isConnecting
           ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Colors.white,
+        ),
+      )
           : Icon(viewModel.isConnected ? Icons.link_off : Icons.link),
       label: Text(
         viewModel.isForceCooldownActive
@@ -973,9 +961,10 @@ Widget _buildConnectionStatus(MainViewModel viewModel) {
   );
 }
 
-Widget _buildControlCentre() {
-  return ChangeNotifierProvider(
-    create: (_) => PanelSR1ViewModel(socketRepository: SocketRepository()),
+Widget _buildControlCentre(MainViewModel viewModel) {
+  // Using .value ensures we use the existing connected VM, not a new disconnected one
+  return ChangeNotifierProvider.value(
+    value: viewModel.panelSR1ViewModel!,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

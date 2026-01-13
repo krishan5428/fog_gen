@@ -56,7 +56,7 @@ class AboutUsPage extends StatelessWidget {
                   Divider(),
 
                   SectionTitle(title: 'Service and Support Escalation'),
-                  SupportItem(icon: Icons.call, text: '+91-9999705491'),
+                  // SupportItem(icon: Icons.call, text: '+91-9999705491'),
                   SupportItem(
                     icon: Icons.email,
                     text: 'support@securicoelectronics.com',
