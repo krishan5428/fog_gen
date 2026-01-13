@@ -15,6 +15,7 @@ class CustomTextField extends StatelessWidget {
   final int maxLines;
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
+  final bool enabled; // NEW PARAMETER
 
   const CustomTextField({
     super.key,
@@ -28,6 +29,7 @@ class CustomTextField extends StatelessWidget {
     this.maxLines = 1,
     this.maxLength,
     this.inputFormatters,
+    this.enabled = true, // Default to true
   });
 
   @override
@@ -36,32 +38,33 @@ class CustomTextField extends StatelessWidget {
 
     return TextField(
       controller: controller,
+      enabled: enabled, // PASS TO TEXTFIELD
       obscureText: isPassword,
       maxLines: maxLines,
       maxLength: maxLength,
-      style: TextStyle(fontSize: fontSize),
+      style: TextStyle(fontSize: fontSize, color: enabled ? Colors.black : Colors.grey),
       keyboardType:
-          isNumber
-              ? TextInputType.numberWithOptions(decimal: true)
-              : isEmail
-              ? TextInputType.emailAddress
-              : TextInputType.text,
+      isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : isEmail
+          ? TextInputType.emailAddress
+          : TextInputType.text,
       inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: hintText,
         errorText: errorText,
         prefixIcon:
-            icon != null ? Icon(icon, color: AppColors.colorAccent) : null,
+        icon != null ? Icon(icon, color: AppColors.colorAccent) : null,
         labelStyle: const TextStyle(color: AppColors.colorPrimary),
         border: const OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.colorAccent),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: enabled ? Colors.white : Colors.grey.shade100, // Visual feedback for disabled state
         focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.colorPrimary, width: 1.5),
         ),
-        counterText: '', // hides default counter UI
+        counterText: '',
       ),
     );
   }
