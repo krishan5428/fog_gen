@@ -43,7 +43,7 @@ class PanelDetailsViewModel extends ChangeNotifier {
     final secondConfirm = await showConfirmationDialog(
       context: context,
       message:
-      'After deleting the Panel, you will not configure the panel.\nSure?',
+          'After deleting the Panel, you will not configure the panel.\nSure?',
     );
     if (secondConfirm != true) return;
 
@@ -90,7 +90,7 @@ class PanelDetailsViewModel extends ChangeNotifier {
             context: context,
             title: 'Network Unavailable❗️',
             message:
-            'We couldn’t reach the device through IP.\nWould you like to try deleting the panel by SMS?',
+                'We couldn’t reach the device through IP.\nWould you like to try deleting the panel by SMS?',
           );
 
           if (fallback == true && context.mounted) {
@@ -104,9 +104,9 @@ class PanelDetailsViewModel extends ChangeNotifier {
         final msg = e.toString().toLowerCase();
         final connectionFailed =
             msg.contains('socket') ||
-                msg.contains('failed') ||
-                msg.contains('timed out') ||
-                msg.contains('refused');
+            msg.contains('failed') ||
+            msg.contains('timed out') ||
+            msg.contains('refused');
 
         if (connectionFailed) {
           if (!context.mounted) return;
@@ -114,7 +114,7 @@ class PanelDetailsViewModel extends ChangeNotifier {
             context: context,
             title: 'Connection Failed',
             message:
-            'Unable to connect via IP (Offline).\nWould you like to delete the panel by SMS instead?',
+                'Unable to connect via IP (Offline).\nWould you like to delete the panel by SMS instead?',
           );
 
           if (fallback == true && context.mounted) {
@@ -138,11 +138,14 @@ class PanelDetailsViewModel extends ChangeNotifier {
 
     if (!shouldDeleteFromApp && context.mounted) {
       // OFFLINE FALLBACK: If hardware reset failed/skipped, ask to remove from App only
-      shouldDeleteFromApp = await showConfirmationDialog(
-          context: context,
-          title: "Remove from App?",
-          message: "Hardware reset failed or was skipped.\nDo you still want to remove this panel from your app list? (This works offline)"
-      ) ?? false;
+      shouldDeleteFromApp =
+          await showConfirmationDialog(
+            context: context,
+            title: "Remove from App?",
+            message:
+                "Hardware reset failed or was skipped.\nDo you still want to remove this panel from your app list? (This works offline)",
+          ) ??
+          false;
     }
 
     if (shouldDeleteFromApp && context.mounted) {

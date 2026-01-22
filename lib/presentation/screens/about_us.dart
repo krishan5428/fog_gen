@@ -106,7 +106,6 @@ class SupportItem extends StatelessWidget {
     if (text.contains('@')) {
       url = 'mailto:$text';
     } else {
-      // Remove spaces and non-numeric characters for phone numbers
       final cleanedNumber = text.replaceAll(RegExp(r'[^\d+]'), '');
       url = 'tel:$cleanedNumber';
     }

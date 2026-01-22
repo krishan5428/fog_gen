@@ -1,12 +1,11 @@
-import 'package:fog_gen_new/utils/send_sms.dart';
 import 'package:flutter/material.dart';
+import 'package:fog_gen_new/utils/send_sms.dart';
 
 import '../../constants/app_colors.dart';
 
 class ProgressDialogWithMessage {
   static bool _isShowing = false;
 
-  // Make this STATIC so it can be used inside static show()
   static Widget _buildSmsRow(
     int index,
     String message,
@@ -40,12 +39,11 @@ class ProgressDialogWithMessage {
           SizedBox(
             width: 20,
             height: 20,
-            child:
-                sent
-                    ? const Icon(Icons.check, color: Colors.green)
-                    : isSending
-                    ? const CircularProgressIndicator(strokeWidth: 2)
-                    : const SizedBox.shrink(),
+            child: sent
+                ? const Icon(Icons.check, color: Colors.green)
+                : isSending
+                ? const CircularProgressIndicator(strokeWidth: 2)
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -70,111 +68,107 @@ class ProgressDialogWithMessage {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder:
-          (ctx) => StatefulBuilder(
-            builder: (context, setState) {
-              bool dialogMounted = true;
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          bool dialogMounted = true;
 
-              // Safe setState
-              void safeSetState(VoidCallback fn) {
-                if (dialogMounted && context.mounted) {
-                  setState(fn);
+          // Safe setState
+          void safeSetState(VoidCallback fn) {
+            if (dialogMounted && context.mounted) {
+              setState(fn);
+            }
+          }
+
+          // Start sending
+          Future<void> sendAll() async {
+            safeSetState(() => isSending = true);
+
+            SendSms(
+              panelSimNumber,
+              messages,
+              safeSetState,
+              smsStatus,
+              onComplete: () {
+                if (_isShowing && context.mounted) {
+                  Navigator.of(context, rootNavigator: true).pop(true);
                 }
-              }
+              },
+            ).start();
+          }
 
-              // Start sending
-              Future<void> sendAll() async {
-                safeSetState(() => isSending = true);
-
-                SendSms(
-                  panelSimNumber,
-                  messages,
-                  safeSetState,
-                  smsStatus,
-                  onComplete: () {
-                    if (_isShowing && context.mounted) {
-                      Navigator.of(context, rootNavigator: true).pop(true);
-                    }
-                  },
-                ).start();
-              }
-
-              return WillPopScope(
-                onWillPop: () async => false,
-                child: Dialog(
-                  backgroundColor: Colors.grey[200],
-                  insetPadding: const EdgeInsets.all(20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            message,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-
-                          Flexible(
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: messages.length,
-                              itemBuilder:
-                                  (ctx, index) => _buildSmsRow(
-                                    index,
-                                    messages[index],
-                                    smsStatus[index],
-                                    isSending,
-                                  ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          if (!isSending)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    dialogMounted = false;
-                                    Navigator.of(
-                                      context,
-                                      rootNavigator: true,
-                                    ).pop(false);
-                                  },
-                                  child: const Text(
-                                    "Revoke",
-                                    style: TextStyle(
-                                      color: AppColors.colorPrimary,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.colorPrimary,
-                                    foregroundColor: AppColors.white,
-                                  ),
-                                  onPressed: sendAll,
-                                  child: const Text("Send SMS"),
-                                ),
-                              ],
-                            ),
-                        ],
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: Dialog(
+              backgroundColor: Colors.grey[200],
+              insetPadding: const EdgeInsets.all(20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        message,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
+                      const SizedBox(height: 12),
+
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: messages.length,
+                          itemBuilder: (ctx, index) => _buildSmsRow(
+                            index,
+                            messages[index],
+                            smsStatus[index],
+                            isSending,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (!isSending)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                dialogMounted = false;
+                                Navigator.of(
+                                  context,
+                                  rootNavigator: true,
+                                ).pop(false);
+                              },
+                              child: const Text(
+                                "Cancels",
+                                style: TextStyle(color: AppColors.colorPrimary),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.colorPrimary,
+                                foregroundColor: AppColors.white,
+                              ),
+                              onPressed: sendAll,
+                              child: const Text("Send SMS"),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          );
+        },
+      ),
     );
 
     _isShowing = false;
