@@ -34,15 +34,15 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
     panelData = widget.panelData;
     formControllers = PanelFormControllers();
 
-    formControllers.siteNameController.text = widget.panelData.site;
+    formControllers.siteNameController.text = widget.panelData.siteName;
     formControllers.panelSimNumberController.text =
         widget.panelData.panelSimNumber;
-    formControllers.ipAddressController.text = widget.panelData.ip_address;
-    formControllers.portNumberController.text = widget.panelData.port_no;
+    formControllers.ipAddressController.text = widget.panelData.ipAdd;
+    formControllers.portNumberController.text = widget.panelData.portNo;
     formControllers.staticIpController.text =
-        widget.panelData.static_ip_address;
-    formControllers.staticPortController.text = widget.panelData.static_port_no;
-    formControllers.passwordController.text = widget.panelData.password;
+        widget.panelData.staticIp;
+    formControllers.staticPortController.text = widget.panelData.staticPort;
+    formControllers.passwordController.text = widget.panelData.pass;
   }
 
   @override
@@ -66,7 +66,7 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
     }
 
     // FIX: Only show error if it exists AND it is NOT the current panel's site name
-    if (siteNames.contains(siteName) && siteName != widget.panelData.site) {
+    if (siteNames.contains(siteName) && siteName != widget.panelData.siteName) {
       SnackBarHelper.showSnackBar(
         context,
         'Site name "$siteName" already exists.',
@@ -125,14 +125,14 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
   }
 
   Future<void> _savePanel() async {
-    final isIPPanel = widget.panelData.is_ip_panel;
-    final isIPGPRSPanel = widget.panelData.is_ip_gsm_panel;
+    final isIPPanel = widget.panelData.isIpPanel;
+    final isIPGPRSPanel = widget.panelData.isIpGsmPanel;
 
     if (!_validateFields(isIPPanel, isIPGPRSPanel)) return;
 
     try {
       context.read<PanelCubit>().updatePanelDataList(
-        userId: widget.panelData.userId,
+        userId: widget.panelData.usrId,
         panelId: widget.panelData.pnlId,
         keys: [
           'site',

@@ -847,7 +847,7 @@ class _MainViewState extends State<_MainView> {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Text(
-        viewModel.panel.site,
+        viewModel.panel.siteName,
         style: TextStyle(
           color: AppColors.colorPrimary,
           fontSize: 18,

@@ -189,7 +189,7 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
 
       if (isSend!) {
         context.read<PanelCubit>().updatePanelData(
-          userId: panel.userId,
+          userId: panel.usrId,
           panelId: panel.pnlId,
           key: 'mobile_number$index',
           value: "0000000000",

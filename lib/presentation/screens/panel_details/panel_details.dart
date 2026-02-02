@@ -132,10 +132,10 @@ class PanelDetailsContent extends StatelessWidget {
                                       child: Column(
                                         children: [
                                           _infoRow("PANEL NAME", panelData.panelName),
-                                          _infoRow("SITE NAME", panelData.site.toUpperCase()),
+                                          _infoRow("SITE NAME", panelData.siteName.toUpperCase()),
                                           _infoRow("PANEL SIM NO.", panelData.panelSimNumber),
                                           _infoRow("ADMIN MOBILE NO.", panelData.adminMobileNumber),
-                                          _infoRow("ADDRESS", panelData.address),
+                                          _infoRow("ADDRESS", panelData.siteAddress),
                                         ],
                                       ),
                                     ),
@@ -143,12 +143,12 @@ class PanelDetailsContent extends StatelessWidget {
                                     SingleChildScrollView(
                                       child: Column(
                                         children: [
-                                          _infoRow("IP ADDRESS", panelData.ip_address),
-                                          _infoRow("PORT NUMBER", panelData.port_no),
-                                          _infoRow("STATIC IP ADDRESS", panelData.static_ip_address),
-                                          _infoRow("STATIC PORT NUMBER", panelData.static_port_no),
-                                          _infoRow("PASSWORD", panelData.password),
-                                          _infoRow("ADDRESS", panelData.address),
+                                          _infoRow("IP ADDRESS", panelData.ipAdd),
+                                          _infoRow("PORT NUMBER", panelData.portNo),
+                                          _infoRow("STATIC IP ADDRESS", panelData.staticIp),
+                                          _infoRow("STATIC PORT NUMBER", panelData.staticPort),
+                                          _infoRow("PASSWORD", panelData.pass),
+                                          _infoRow("ADDRESS", panelData.siteAddress),
                                         ],
                                       ),
                                     ),
@@ -166,7 +166,7 @@ class PanelDetailsContent extends StatelessWidget {
                           buttonText: "Update Address",
                         ),
 
-                        if (!panelData.is_ip_panel) const SizedBox(height: 10),
+                        if (!panelData.isIpPanel) const SizedBox(height: 10),
 
                         CustomButton(
                           onPressed: () => _showAdminMobileNumberChangeSheet(context, vm),

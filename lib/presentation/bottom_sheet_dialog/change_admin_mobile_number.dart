@@ -209,7 +209,7 @@ Future<PanelData?> showAdminMobileNumberChangeBottomSheet(
 
                               if (isSend) {
                                 context.read<PanelCubit>().updatePanelData(
-                                  userId: panel.userId,
+                                  userId: panel.usrId,
                                   panelId: panel.pnlId,
                                   key: 'admin_mobile_number',
                                   value: newAdminMobileNumber,

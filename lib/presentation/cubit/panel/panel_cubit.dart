@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
 import 'package:fog_gen_new/core/repo/panel_repo.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
@@ -22,39 +24,36 @@ class PanelCubit extends Cubit<PanelState> {
   // ===========================================================================
   void getPanel({required String userId}) async {
     // STEP 1: Optimistic Load (Show Local Data Immediately)
-    // This unblocks the UI so the user doesn't see a spinner while we sync.
     bool hasCachedData = await _emitCachedData();
 
     if (!hasCachedData) {
-      emit(PanelLoading()); // Only show loading if we have absolutely nothing
+      emit(PanelLoading());
     }
 
     // STEP 2: Background Sync & Fetch
     try {
-      // 2a. Sync Pending Actions (Push local updates to server)
+      // Sync local actions to server first
       await _syncAllPendingActions(userId);
 
-      // 2b. Fetch Fresh Data (Get latest server state)
+      // Fetch fresh data from server
       final response = await panelRepo.getPanels(userId);
 
       if (response.status) {
-        // 2c. Update Cache with Server Data
+        // Update local cache with server data
         await _cachePanels(response.panelsData);
-
-        // 2d. Emit Final Data (Refreshes UI with Server + Pending Adds)
+        // Re-emit to merge server data with any remaining pending adds
         await _emitCachedData();
       } else {
-        // API Error: If we haven't shown cache yet, try now
         if (!hasCachedData) _loadFromCacheFallback();
       }
     } catch (e) {
-      // Network Failure: Stay on cached data (Offline Mode)
+      // Offline: Stay on cached data
       if (!hasCachedData) _loadFromCacheFallback();
     }
   }
 
-  /// Helper to load and emit data from cache + pending
-  /// Returns true if data was found and emitted.
+  /// Helper to load and emit data from cache + pending.
+  /// Standardized to always emit a state so the UI unblocks.
   Future<bool> _emitCachedData() async {
     try {
       // Load Server Cache
@@ -73,17 +72,17 @@ class PanelCubit extends Cubit<PanelState> {
       // Combine: Pending Adds (Top) + Cached Data
       final combined = [...pendingAdds, ...cachedList];
 
-      if (combined.isNotEmpty) {
-        emit(GetPanelsSuccess(panelsData: combined));
-        return true;
-      }
+      // ALWAYS emit success, even if 'combined' is empty.
+      emit(GetPanelsSuccess(panelsData: combined));
+      return true;
     } catch (e) {
-      print("Cache load error: $e");
+      if (kDebugMode) {
+        print("Cache load error: $e");
+      }
     }
     return false;
   }
 
-  /// Fallback loader that emits failure if empty
   void _loadFromCacheFallback() async {
     final success = await _emitCachedData();
     if (!success) {
@@ -120,7 +119,6 @@ class PanelCubit extends Cubit<PanelState> {
         emit(UpdatePanelsFailure(message: response.msg));
       }
     } catch (e) {
-      // --- OFFLINE BATCH UPDATE ---
       try {
         Map<String, dynamic> changes = {};
         for (int i = 0; i < keys.length; i++) {
@@ -185,6 +183,9 @@ class PanelCubit extends Cubit<PanelState> {
     required String static_ip_address,
     required String static_port_no,
     required String password,
+    required String panel_acc_no,
+    required String mac_id,
+    required String version,
   }) async {
     emit(PanelLoading());
     try {
@@ -216,6 +217,9 @@ class PanelCubit extends Cubit<PanelState> {
         password: password,
         is_ip_panel: is_ip_panel,
         is_ip_gsm_panel: is_ip_gsm_panel,
+        panel_acc_no: panel_acc_no,
+        mac_id: mac_id,
+        version: version,
       );
 
       if (response.status) {
@@ -225,14 +229,15 @@ class PanelCubit extends Cubit<PanelState> {
         emit(AddPanelFailure(message: response.msg));
       }
     } catch (e) {
-      // Offline Add
+      // Offline Save: Standardize local object keys
       final tempPanel = PanelData(
         pnlId: -DateTime.now().millisecondsSinceEpoch,
-        userId: userId,
+        usrId: userId,
+        appType: 'FogShield',
         panelType: panelType,
         panelName: panelName,
-        site: site,
-        address: address,
+        siteName: site,
+        siteAddress: address,
         panelSimNumber: panelSimNumber,
         adminCode: adminCode,
         adminMobileNumber: adminMobileNumber,
@@ -247,15 +252,23 @@ class PanelCubit extends Cubit<PanelState> {
         mobileNumber8: mobileNumber8,
         mobileNumber9: mobileNumber9,
         mobileNumber10: mobileNumber10,
-        status: '1',
-        createdAt: DateTime.now().toString(),
-        ip_address: ip_address,
-        port_no: port_no,
-        static_ip_address: static_ip_address,
-        static_port_no: static_port_no,
-        password: password,
-        is_ip_panel: is_ip_panel,
-        is_ip_gsm_panel: is_ip_gsm_panel,
+        cOn: cOn,
+        ipAdd: ip_address,
+        portNo: port_no,
+        staticIp: static_ip_address,
+        staticPort: static_port_no,
+        pass: password,
+        isIpPanel: is_ip_panel,
+        isIpGsmPanel: is_ip_gsm_panel,
+        pnlAccNo: panel_acc_no,
+        pnlMac: mac_id,
+        pnlVer: version,
+        pnlLineNo: '',
+        pnlRcvrNo: '',
+        usr1: '',
+        usr2: '',
+        usr3: '',
+        usr4: '',
       );
 
       await _addToPendingList(PENDING_ADDS_KEY, tempPanel);
@@ -306,7 +319,7 @@ class PanelCubit extends Cubit<PanelState> {
         key,
         value,
       );
-      if (response.status) {
+      if (response.status && response.panelData != null) {
         emit(
           UpdatePanelsSuccess(
             msg: response.msg,
@@ -314,18 +327,19 @@ class PanelCubit extends Cubit<PanelState> {
           ),
         );
         getPanel(userId: userId);
-      } else {
+      } else if (!response.status) {
         emit(UpdatePanelsFailure(message: response.msg));
       }
     } catch (e) {
       final updated = await _updateLocalPanel(panelId, {key: value});
       if (updated != null) {
-        if (panelId > 0)
+        if (panelId > 0) {
           await _addPendingAction(PENDING_UPDATES_KEY, {
             'id': panelId,
             'key': key,
             'value': value,
           });
+        }
         emit(UpdatePanelsSuccess(msg: "Updated Offline", panelData: updated));
         getPanel(userId: userId);
       } else {
@@ -334,7 +348,7 @@ class PanelCubit extends Cubit<PanelState> {
     }
   }
 
-  // Convenience Wrappers
+  // Specific Wrappers using Standard Server Keys
   void updateSiteName({
     required String userId,
     required int panelId,
@@ -343,7 +357,7 @@ class PanelCubit extends Cubit<PanelState> {
     updatePanelData(
       userId: userId,
       panelId: panelId,
-      key: 'site',
+      key: 'site_name',
       value: siteName,
     );
   }
@@ -356,7 +370,7 @@ class PanelCubit extends Cubit<PanelState> {
     updatePanelData(
       userId: userId,
       panelId: panelId,
-      key: 'address',
+      key: 'site_address',
       value: address,
     );
   }
@@ -374,9 +388,19 @@ class PanelCubit extends Cubit<PanelState> {
     );
   }
 
-  // ===========================================================================
-  // 6. SPECIFIC UPDATES
-  // ===========================================================================
+  void updateAdminMobileNumber({
+    required String userId,
+    required int panelId,
+    required String adminMobileNumber,
+  }) async {
+    updatePanelData(
+      userId: userId,
+      panelId: panelId,
+      key: 'admin_mobile_number',
+      value: adminMobileNumber,
+    );
+  }
+
   void updateAdminCode({
     required String userId,
     required int panelId,
@@ -412,19 +436,6 @@ class PanelCubit extends Cubit<PanelState> {
     }
   }
 
-  void updateAdminMobileNumber({
-    required String userId,
-    required int panelId,
-    required String adminMobileNumber,
-  }) async {
-    updatePanelData(
-      userId: userId,
-      panelId: panelId,
-      key: 'admin_mobile_number',
-      value: adminMobileNumber,
-    );
-  }
-
   void updateSolitareMobileNumber({
     required String userId,
     required int panelId,
@@ -441,10 +452,10 @@ class PanelCubit extends Cubit<PanelState> {
   }
 
   // ===========================================================================
-  // 7. SYNC & STORAGE
+  // 6. SYNC & STORAGE
   // ===========================================================================
   Future<void> _syncAllPendingActions(String userId) async {
-    // 1. Adds
+    // 1. Sync Adds
     final adds = await _getPendingList(PENDING_ADDS_KEY);
     List<PanelData> remAdds = [];
     for (var p in adds) {
@@ -453,7 +464,7 @@ class PanelCubit extends Cubit<PanelState> {
           userId: userId,
           panelType: p.panelType,
           panelName: p.panelName,
-          site: p.site,
+          site: p.siteName,
           panelSimNumber: p.panelSimNumber,
           adminCode: p.adminCode,
           adminMobileNumber: p.adminMobileNumber,
@@ -468,15 +479,18 @@ class PanelCubit extends Cubit<PanelState> {
           mobileNumber8: p.mobileNumber8,
           mobileNumber9: p.mobileNumber9,
           mobileNumber10: p.mobileNumber10,
-          address: p.address,
-          cOn: p.createdAt,
-          ip_address: p.ip_address,
-          port_no: p.port_no,
-          static_ip_address: p.static_ip_address,
-          static_port_no: p.static_port_no,
-          password: p.password,
-          is_ip_panel: p.is_ip_panel,
-          is_ip_gsm_panel: p.is_ip_gsm_panel,
+          address: p.siteAddress,
+          cOn: p.cOn,
+          ip_address: p.ipAdd,
+          port_no: p.portNo,
+          static_ip_address: p.staticIp,
+          static_port_no: p.staticPort,
+          password: p.pass,
+          is_ip_panel: p.isIpPanel,
+          is_ip_gsm_panel: p.isIpGsmPanel,
+          panel_acc_no: p.pnlAccNo,
+          mac_id: p.pnlMac,
+          version: p.pnlVer
         );
         if (!res.status) remAdds.add(p);
       } catch (e) {
@@ -485,7 +499,7 @@ class PanelCubit extends Cubit<PanelState> {
     }
     await _savePendingList(PENDING_ADDS_KEY, remAdds);
 
-    // 2. Deletes
+    // 2. Sync Deletes
     final dels = await _getPendingActions(PENDING_DELETES_KEY);
     List<Map<String, dynamic>> remDels = [];
     for (var d in dels) {
@@ -497,7 +511,7 @@ class PanelCubit extends Cubit<PanelState> {
     }
     await _savePendingActions(PENDING_DELETES_KEY, remDels);
 
-    // 3. Updates
+    // 3. Sync Updates
     final upds = await _getPendingActions(PENDING_UPDATES_KEY);
     List<Map<String, dynamic>> remUpds = [];
     for (var u in upds) {
@@ -519,7 +533,7 @@ class PanelCubit extends Cubit<PanelState> {
     await _savePendingActions(PENDING_UPDATES_KEY, remUpds);
   }
 
-  // --- Local Helpers ---
+  // --- Local Database Helpers ---
   Future<PanelData?> _updateLocalPanel(
     int panelId,
     Map<String, dynamic> changes,
@@ -528,6 +542,7 @@ class PanelCubit extends Cubit<PanelState> {
     List<PanelData> pending = await _getPendingList(PENDING_ADDS_KEY);
     int idx = pending.indexWhere((p) => p.pnlId == panelId);
     if (idx != -1) {
+      // Logic for editing a panel that hasn't hit the server yet
       return pending[idx];
     }
 

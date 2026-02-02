@@ -99,11 +99,11 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
 
   void _initializePanelConnection() {
     final app = Application();
-    app.mIPAddress = panelData.ip_address;
-    app.mPortNumber = int.tryParse(panelData.port_no);
-    app.mPassword = panelData.password;
-    app.mStaticIPAddress = panelData.static_ip_address;
-    app.mStaticPortNumber = int.tryParse(panelData.static_port_no);
+    app.mIPAddress = panelData.ipAdd;
+    app.mPortNumber = int.tryParse(panelData.portNo);
+    app.mPassword = panelData.pass;
+    app.mStaticIPAddress = panelData.staticIp;
+    app.mStaticPortNumber = int.tryParse(panelData.staticPort);
   }
 
   void _setEvent(TelephoneSettingsEvent event) {

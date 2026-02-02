@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:fog_gen_new/core/responses/socket_repository.dart';
 import 'package:fog_gen_new/core/utils/application_class.dart';
 import 'package:fog_gen_new/core/utils/packets.dart';
+import 'package:intl/intl.dart';
 
 import '../../../utils/auth_helper.dart';
 
@@ -14,10 +14,8 @@ class AddPanelViewModel extends ChangeNotifier {
   final addressController = TextEditingController();
 
   // GPRS Controllers
-  final panelSimNumberController =
-      TextEditingController(); // mapped from gprs.ipAddress
-  final adminNumberController =
-      TextEditingController(); // mapped from gprs.portNumber
+  final panelSimNumberController = TextEditingController();
+  final adminNumberController = TextEditingController();
 
   // IP Controllers
   final ipAddressController = TextEditingController();
@@ -28,6 +26,11 @@ class AddPanelViewModel extends ChangeNotifier {
 
   final SocketRepository _socketRepo = SocketRepository();
   bool _isLoading = false;
+
+  // Parsed Hardware Info
+  String _pnlMac = '';
+  String _pnlVer = '';
+  String _pnlAccNo = '';
 
   bool get isLoading => _isLoading;
 
@@ -109,12 +112,37 @@ class AddPanelViewModel extends ChangeNotifier {
             int.tryParse(staticPortController.text.trim()) ?? 0;
 
       final response = await _socketRepo.sendPacketSR1(Packets.connectPacket());
+
+      // LOG THE RAW RESPONSE
+      debugPrint("📡 Raw Socket Response from Panel: $response");
+
+      // PARSE THE RESPONSE
+      _parseHardwareInfo(response);
+
       return _handleSR1Response(response);
     } catch (e) {
-      debugPrint("Socket Error: $e");
+      debugPrint("❌ Socket Error during connection: $e");
       return ConnectionStatus.failed;
     } finally {
       setLoading(false);
+    }
+  }
+
+  void _parseHardwareInfo(String response) {
+    try {
+      // Example: S*000#1#004145098123236254#123456789123456#0#V0.1.1C#999999*E
+      response = response.trim();
+      final parts = response.split('#');
+      if (parts.length >= 7) {
+        _pnlMac = parts[2]; // 004145098123236254
+        _pnlVer = parts[5]; // V0.1.1C
+        String accNoPart = parts[6]; // 999999*E
+        _pnlAccNo = accNoPart.replaceAll('*E', ''); // 999999
+
+        debugPrint("✅ Parsed Info - Mac: $_pnlMac, Ver: $_pnlVer, Acc: $_pnlAccNo");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Failed to parse hardware info: $e");
     }
   }
 
@@ -139,7 +167,7 @@ class AddPanelViewModel extends ChangeNotifier {
     }
   }
 
-  // --- Data Preparation for Cubit ---
+  // --- Data Preparation for Cubit (Standardized Server Keys) ---
   Future<Map<String, dynamic>?> prepareSaveData({
     required String panelType,
     required String panelName,
@@ -152,25 +180,38 @@ class AddPanelViewModel extends ChangeNotifier {
     ).format(DateTime.now());
 
     return {
-      'userId': userId.toString(),
-      'panelType': panelType,
-      'panelName': panelName,
-      'site': siteNameController.text.trim(),
-      'panelSimNumber': panelSimNumberController.text.trim(),
-      'adminCode': "1234",
-      'adminMobileNumber': adminNumberController.text.trim(),
-      'mobileNumberSubId': '0',
-      'mobileNumber1': "0000000000",
-      // ... (filling other mobiles with 0 as per original code)
-      'address': addressController.text.trim(),
-      'cOn': currentTime,
-      'password': passwordController.text.trim(),
-      'ip_address': ipAddressController.text.trim(),
+      'usr_id': userId.toString(),
+      'pnl_type': panelType,
+      'panel_name': panelName,
+      'site_name': siteNameController.text.trim(),
+      'panel_sim_number': panelSimNumberController.text.trim(),
+      'admin_code': "1234",
+      'admin_mobile_number': adminNumberController.text.trim(),
+      'mobile_number_sub_id': '0',
+      'mobile_number1': "0000000000",
+      'mobile_number2': "0000000000",
+      'mobile_number3': "0000000000",
+      'mobile_number4': "0000000000",
+      'mobile_number5': "0000000000",
+      'mobile_number6': "0000000000",
+      'mobile_number7': "0000000000",
+      'mobile_number8': "0000000000",
+      'mobile_number9': "0000000000",
+      'mobile_number10': "0000000000",
+      'site_address': addressController.text.trim(),
+      'c_on': currentTime,
+      'pass': passwordController.text.trim(),
+      'ip_add': ipAddressController.text.trim(),
       'is_ip_gsm_panel': true,
       'is_ip_panel': false,
       'port_no': portNumberController.text.trim(),
-      'static_ip_address': staticIpController.text.trim(),
-      'static_port_no': staticPortController.text.trim(),
+      'static_ip': staticIpController.text.trim(),
+      'static_port': staticPortController.text.trim(),
+
+      // IMPORTANT: These keys were missing, causing the 'Null' error in UI
+      'pnl_mac': _pnlMac,
+      'pnl_ver': _pnlVer,
+      'pnl_acc_no': _pnlAccNo,
     };
   }
 

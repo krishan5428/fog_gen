@@ -22,11 +22,11 @@ class MoreSettingsViewModel extends ChangeNotifier {
 
   void _setupPanelConnection() {
     final app = Application();
-    app.mIPAddress = panelData.ip_address;
-    app.mPortNumber = int.tryParse(panelData.port_no);
-    app.mPassword = panelData.password;
-    app.mStaticIPAddress = panelData.static_ip_address;
-    app.mStaticPortNumber = int.tryParse(panelData.static_port_no);
+    app.mIPAddress = panelData.ipAdd;
+    app.mPortNumber = int.tryParse(panelData.portNo);
+    app.mPassword = panelData.pass;
+    app.mStaticIPAddress = panelData.staticIp;
+    app.mStaticPortNumber = int.tryParse(panelData.staticPort);
   }
 
   // --- ACTIONS ---
@@ -129,7 +129,7 @@ class MoreSettingsViewModel extends ChangeNotifier {
     BuildContext context,
     String smsCommandType,
   ) async {
-    if (panelData.is_ip_gsm_panel) {
+    if (panelData.isIpGsmPanel) {
       if (!context.mounted) return;
 
       final confirm = await showConfirmationDialog(
@@ -142,7 +142,7 @@ class MoreSettingsViewModel extends ChangeNotifier {
       if (confirm == true) {
         _sendSMSCommand(smsCommandType, context);
       }
-    } else if (panelData.is_ip_panel) {
+    } else if (panelData.isIpPanel) {
       if (!context.mounted) return;
 
       showInfoDialog(

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 import 'package:fog_gen_new/presentation/cubit/mappings/panel_sim_number_cubit.dart';
 import 'package:fog_gen_new/presentation/cubit/mappings/site_cubit.dart';
+import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
 import 'package:fog_gen_new/presentation/dialog/ok_dialog.dart';
 import 'package:fog_gen_new/presentation/dialog/progress.dart';
 import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
 import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/presentation/widgets/custom_button.dart';
 import 'package:fog_gen_new/presentation/widgets/custom_text_field.dart';
+import 'package:provider/provider.dart';
+
 import '../../../constants/app_colors.dart';
 import '../../../utils/navigation.dart';
 import '../../../utils/responsive.dart';
@@ -57,15 +59,14 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
       listener: (context, state) {
         if (state is AddPanelSuccess) {
           ProgressDialog.dismiss(context);
-          // Show message (might be "Saved Offline")
-          SnackBarHelper.showSnackBar(context, state.message);
+          SnackBarHelper.showSnackBar(context, "Panel added successfully");
           CustomNavigation.instance.pushReplace(
             context: context,
             screen: const PanelListPage(),
           );
         } else if (state is AddPanelFailure) {
           ProgressDialog.dismiss(context);
-          SnackBarHelper.showSnackBar(context, "Error: ${state.message}");
+          SnackBarHelper.showSnackBar(context, "Error: while adding panel");
         }
       },
       child: Scaffold(
@@ -119,11 +120,13 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
     );
   }
 
-  Future<void> _onSavePressed(BuildContext context, AddPanelViewModel vm) async {
+  Future<void> _onSavePressed(
+    BuildContext context,
+    AddPanelViewModel vm,
+  ) async {
     final siteNames = context.read<SiteCubit>().state;
     final simNumbers = context.read<PanelSimNumberCubit>().state;
 
-    // 1. Validation
     final validationError = vm.validateForm(
       existingSiteNames: siteNames,
       existingPanelSims: simNumbers,
@@ -134,41 +137,26 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
       return;
     }
 
-    // 2. Try Connection (Validation)
     ProgressDialog.show(context);
     final connectionStatus = await vm.connectToPanel();
     ProgressDialog.dismiss(context);
 
     bool proceedToSave = false;
 
-    // Handle Connection Results
     if (connectionStatus == ConnectionStatus.failed) {
-      // NEW: Allow Offline Save
-      final bool saveOffline = await showDialog<bool>(
+      final bool? saveOffline = await showConfirmationDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text("Connection Failed"),
-          content: const Text(
+        message:
             "Could not connect to the panel to verify settings.\n\n"
-                "This might be due to no internet or incorrect IP.\n"
-                "Do you want to save this panel offline anyway?",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text("Save Offline", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ) ?? false;
+            "This might be due to no internet or incorrect IP.\n"
+            "Do you want to save this panel offline anyway?",
+        title: "Connection Failed",
+        cancelText: "Cancel",
+        confirmText: "Save Offline",
+      );
 
-      if (!saveOffline) return;
+      if (!saveOffline!) return;
       proceedToSave = true;
-
     } else if (connectionStatus == ConnectionStatus.alreadyConnected) {
       final shouldDisconnect = await _showAlreadyConnectedDialog(context);
       if (shouldDisconnect) {
@@ -176,14 +164,11 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
         if (disconnected) proceedToSave = true;
       }
     } else {
-      // Connected successfully
       proceedToSave = true;
     }
 
     if (!proceedToSave) return;
 
-    // 3. Handle SMS (Skip if we are saving offline due to connection issues?
-    // Usually SMS requires network/signal, but we'll try it or let it fail silently/UI cancel)
     final smsSent = await _handleNeuronPanels(
       context,
       panelNumber: vm.panelSimNumberController.text,
@@ -193,15 +178,11 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
 
     if (!smsSent) {
       if (mounted) {
-        // If user cancelled SMS, we might still want to stop?
-        // Or if offline, maybe we skip SMS? For now, respecting existing flow:
         showInfoDialog(context: context, message: 'SMS operation Cancelled');
       }
       return;
     }
 
-    // 4. Save to DB (Trigger Cubit)
-    // The Cubit will now handle "No Internet" by saving to local Pending List
     final panelData = await vm.prepareSaveData(
       panelType: widget.panelType,
       panelName: widget.panelName,
@@ -210,75 +191,80 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
     if (panelData != null && mounted) {
       ProgressDialog.show(context);
 
+      // FIXED: Standardized keys and use ?? "" to prevent null errors
       context.read<PanelCubit>().addPanel(
-        userId: panelData['userId'],
-        panelType: panelData['panelType'],
-        panelName: panelData['panelName'],
-        site: panelData['site'],
-        panelSimNumber: panelData['panelSimNumber'],
-        adminCode: panelData['adminCode'],
-        adminMobileNumber: panelData['adminMobileNumber'],
-        mobileNumberSubId: panelData['mobileNumberSubId'],
-        mobileNumber1: panelData['mobileNumber1'],
-        mobileNumber2: "0000000000",
-        mobileNumber3: "0000000000",
-        mobileNumber4: "0000000000",
-        mobileNumber5: "0000000000",
-        mobileNumber6: "0000000000",
-        mobileNumber7: "0000000000",
-        mobileNumber8: "0000000000",
-        mobileNumber9: "0000000000",
-        mobileNumber10: "0000000000",
-        address: panelData['address'],
-        cOn: panelData['cOn'],
-        password: panelData['password'],
-        ip_address: panelData['ip_address'],
-        is_ip_gsm_panel: panelData['is_ip_gsm_panel'],
-        is_ip_panel: panelData['is_ip_panel'],
-        port_no: panelData['port_no'],
-        static_ip_address: panelData['static_ip_address'],
-        static_port_no: panelData['static_port_no'],
+        userId: panelData['usr_id'] ?? "",
+        panelType: panelData['pnl_type'] ?? "",
+        panelName: panelData['panel_name'] ?? "",
+        site: panelData['site_name'] ?? "",
+        panelSimNumber: panelData['panel_sim_number'] ?? "",
+        adminCode: panelData['admin_code'] ?? "",
+        adminMobileNumber: panelData['admin_mobile_number'] ?? "",
+        mobileNumberSubId: panelData['mobile_number_sub_id'] ?? "",
+        mobileNumber1: panelData['mobile_number1'] ?? "",
+        mobileNumber2: panelData['mobile_number2'] ?? "",
+        mobileNumber3: panelData['mobile_number3'] ?? "",
+        mobileNumber4: panelData['mobile_number4'] ?? "",
+        mobileNumber5: panelData['mobile_number5'] ?? "",
+        mobileNumber6: panelData['mobile_number6'] ?? "",
+        mobileNumber7: panelData['mobile_number7'] ?? "",
+        mobileNumber8: panelData['mobile_number8'] ?? "",
+        mobileNumber9: panelData['mobile_number9'] ?? "",
+        mobileNumber10: panelData['mobile_number10'] ?? "",
+        address: panelData['site_address'] ?? "",
+        cOn: panelData['c_on'] ?? "",
+        password: panelData['pass'] ?? "",
+        ip_address: panelData['ip_add'] ?? "",
+        is_ip_gsm_panel: panelData['is_ip_gsm_panel'] ?? false,
+        is_ip_panel: panelData['is_ip_panel'] ?? false,
+        port_no: panelData['port_no'] ?? "",
+        static_ip_address: panelData['static_ip'] ?? "",
+        static_port_no: panelData['static_port'] ?? "",
+        // Added hardware info keys with fallbacks
+        mac_id: panelData['pnl_mac'] ?? "",
+        version: panelData['pnl_ver'] ?? "",
+        panel_acc_no: panelData['pnl_acc_no'] ?? "",
       );
     }
   }
 
   Future<bool> _showAlreadyConnectedDialog(BuildContext context) async {
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text("Connection Status"),
-          content: const Text(
-            "This panel appears to be already connected.",
-          ),
-          actions: [
-            TextButton(
-              child: const Text(
-                "Force Disconnect",
-                style: TextStyle(color: Colors.red),
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text("Connection Status"),
+              content: const Text(
+                "This panel appears to be already connected.",
               ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-            ),
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-            ),
-          ],
-        );
-      },
-    ) ??
+              actions: [
+                TextButton(
+                  child: const Text(
+                    "Force Disconnect",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                ),
+                TextButton(
+                  child: const Text("Cancel"),
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                ),
+              ],
+            );
+          },
+        ) ??
         false;
   }
 
   Future<bool> _handleNeuronPanels(
-      BuildContext context, {
-        required String panelNumber,
-        required String adminNumber,
-        required String address,
-      }) async {
+    BuildContext context, {
+    required String panelNumber,
+    required String adminNumber,
+    required String address,
+  }) async {
     String message1 =
-    '''
+        '''
 < 1234 TEL NO
 #01-+91$adminNumber*
 #02-+910000000000*
@@ -350,10 +336,10 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
   }
 
   Widget _buildGeneralDetails(
-      AddPanelViewModel vm,
-      double fontSize,
-      double spacing,
-      ) {
+    AddPanelViewModel vm,
+    double fontSize,
+    double spacing,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: spacing),
       child: Column(
@@ -378,10 +364,10 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
   }
 
   Widget _buildGprsSettings(
-      AddPanelViewModel vm,
-      double fontSize,
-      double spacing,
-      ) {
+    AddPanelViewModel vm,
+    double fontSize,
+    double spacing,
+  ) {
     return ExpansionTile(
       title: _buildSectionTitle('GSM Dialer Settings', fontSize),
       initiallyExpanded: true,
@@ -406,10 +392,10 @@ class _AddPanelFormBodyState extends State<_AddPanelFormBody> {
   }
 
   Widget _buildIpSettings(
-      AddPanelViewModel vm,
-      double fontSize,
-      double spacing,
-      ) {
+    AddPanelViewModel vm,
+    double fontSize,
+    double spacing,
+  ) {
     return ExpansionTile(
       title: _buildSectionTitle('IP Comm. Settings', fontSize),
       initiallyExpanded: true,

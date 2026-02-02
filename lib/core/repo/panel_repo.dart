@@ -32,6 +32,9 @@ abstract class PanelRepo {
     required String password,
     required bool is_ip_panel,
     required bool is_ip_gsm_panel,
+    required String panel_acc_no,
+    required String mac_id,
+    required String version,
   });
 
   Future<PanelResponse> getPanels(String userId);

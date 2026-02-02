@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:fog_gen_new/core/responses/socket_repository.dart';
 import 'package:fog_gen_new/core/utils/packets.dart';
 import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
@@ -53,7 +52,7 @@ class PanelCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      panelData.site.toUpperCase(),
+                      panelData.siteName.toUpperCase(),
                       style: TextStyle(
                         color: AppColors.colorAccent,
                         fontSize: fontSize * 1.2,
@@ -241,13 +240,13 @@ class PanelCard extends StatelessWidget {
       return;
     }
 
-    if (panelData.is_ip_panel || panelData.is_ip_gsm_panel) {
+    if (panelData.isIpPanel || panelData.isIpGsmPanel) {
       ProgressDialog.show(context);
 
       final _ = Application()
-        ..mIPAddress = panelData.ip_address
-        ..mPortNumber = int.tryParse(panelData.port_no)
-        ..mPassword = panelData.ip_address;
+        ..mIPAddress = panelData.ipAdd
+        ..mPortNumber = int.tryParse(panelData.portNo)
+        ..mPassword = panelData.pass;
 
       final lastOutput = outputNumber - 1;
 
@@ -277,7 +276,7 @@ class PanelCard extends StatelessWidget {
             errorText.contains('failed');
 
         if (isConnectionFailed) {
-          if (panelData.is_ip_gsm_panel) {
+          if (panelData.isIpGsmPanel) {
             final confirm = await showConfirmationDialog(
               context: context,
               title: 'Network Unavailable❗️',
@@ -307,7 +306,7 @@ class PanelCard extends StatelessWidget {
     BuildContext context,
     int outputNumber,
   ) async {
-    if (panelData.is_ip_gsm_panel) {
+    if (panelData.isIpGsmPanel) {
       final confirm = await showConfirmationDialog(
         context: context,
         message:

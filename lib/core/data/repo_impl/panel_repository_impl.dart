@@ -41,13 +41,18 @@ class PanelRepositoryImpl implements PanelRepo {
     required String static_ip_address,
     required String static_port_no,
     required String password,
+    required String panel_acc_no,
+    required String mac_id,
+    required String version,
   }) async {
     try {
       final formData = FormData.fromMap({
-        'userid': userId,
-        'panel_type': panelType,
+        'usr_id': userId,
+        'app_type': 'FogShield',
+        'pnl_type': panelType,
         'panel_name': panelName,
-        'site': site,
+        'site_name': site,
+        'site_address': address,
         'panel_sim_number': panelSimNumber,
         'admin_code': adminCode,
         'admin_mobile_number': adminMobileNumber,
@@ -62,15 +67,17 @@ class PanelRepositoryImpl implements PanelRepo {
         'mobile_number8': mobileNumber8,
         'mobile_number9': mobileNumber9,
         'mobile_number10': mobileNumber10,
-        'address': address,
         'c_on': cOn,
-        'ip_address': ip_address,
+        'ip_add': ip_address,
         'port_no': port_no,
-        'static_ip_address': static_ip_address,
-        'static_port_no': static_port_no,
-        'password': password,
-        'is_ip_panel': is_ip_panel,
-        'is_ip_gsm_panel': is_ip_gsm_panel,
+        'static_ip': static_ip_address,
+        'static_port': static_port_no,
+        'pass': password,
+        'is_ip_panel': is_ip_panel ? 1 : 0,
+        'is_ip_gsm_panel': is_ip_gsm_panel ? 1 : 0,
+        'pnl_acc_no' :panel_acc_no,
+        'pnl_mac': mac_id,
+        'pnl_ver': version,
       });
 
       final response = await _dio.post(
@@ -78,31 +85,24 @@ class PanelRepositoryImpl implements PanelRepo {
         data: formData,
       );
 
-      print("✅ Request URL: ${response.requestOptions.uri}");
-      print("✅ Request Headers: ${response.requestOptions.headers}");
-      print("✅ Request Data: ${response.requestOptions.data}");
-      print("✅ Response Status: ${response.statusCode}");
-      print("✅ Response Data: ${response.data}");
-
       return AddPanelResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('❌ Error adding panels: ${e.message}');
-      if (e.response != null) {
-        print('❌ Status Code: ${e.response?.statusCode}');
-        print('❌ Response Data: ${e.response?.data}');
-        print('❌ Request URL: ${e.requestOptions.uri}');
-        print('❌ Request Data: ${e.requestOptions.data}');
-      }
-      rethrow;
     } catch (e) {
-      print('⚠️ Unexpected error: $e');
+      if (kDebugMode) {
+        print('❌ Error in addPanel: $e');
+      }
       rethrow;
     }
   }
 
   @override
-  Future<PanelResponse> getPanels(String userId) async {
-    final formData = FormData.fromMap({'userid': userId});
+  Future<PanelResponse> getPanels(
+      String userId, {
+        String appType = 'FogShield',
+      }) async {
+    final formData = FormData.fromMap({
+      'usr_id': userId,
+      'app_type': appType,
+    });
 
     try {
       final response = await _dio.post(
@@ -113,7 +113,7 @@ class PanelRepositoryImpl implements PanelRepo {
       return PanelResponse.fromJson(response.data);
     } catch (e) {
       if (kDebugMode) {
-        print(' Error fetching panels: $e');
+        print('❌ Error in getPanels: $e');
       }
       rethrow;
     }
@@ -121,203 +121,21 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<DeletePanelResponse> deletePanel(String userId, int panelId) async {
-    final url = WebUrlConstants.deletePanel;
-
-    final payload = {'pnl_id': panelId, 'userid': userId};
-
-    debugPrint("🔵 deletePanel() started");
-    debugPrint("🌐 URL: $url");
-    debugPrint("➡️ Payload: $payload");
-
-    final formData = FormData.fromMap(payload);
-
-    try {
-      debugPrint("⏳ Sending POST request...");
-      final response = await _dio.post(
-        url,
-        data: formData,
-        options: Options(contentType: Headers.jsonContentType),
-      );
-
-      debugPrint("📩 Response Status: ${response.statusCode}");
-      debugPrint("📥 Response Data: ${response.data}");
-
-      if (response.statusCode == 200) {
-        debugPrint("✅ deletePanel() success");
-        return DeletePanelResponse.fromJson(response.data);
-      } else {
-        debugPrint(
-          "❌ Server returned ${response.statusCode}: ${response.data}",
-        );
-        throw Exception('Failed to delete panel');
-      }
-    } catch (e, stack) {
-      debugPrint("🔥 deletePanel() error: $e");
-      debugPrint("🧵 Stacktrace: $stack");
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updateAddress(
-    String userId,
-    int panelId,
-    String address,
-  ) async {
     final formData = FormData.fromMap({
       'pnl_id': panelId,
-      'userid': userId,
-      'address': address,
+      'usr_id': userId,
     });
 
     try {
       final response = await _dio.post(
-        WebUrlConstants.updatePanel,
+        WebUrlConstants.deletePanel,
         data: formData,
       );
 
-      return UpdatePanelResponse.fromJson(response.data);
+      return DeletePanelResponse.fromJson(response.data);
     } catch (e) {
       if (kDebugMode) {
-        print(' Error updateAddress : $e');
-      }
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updateAdminCode(
-    String userId,
-    int panelId,
-    int adminCode,
-  ) async {
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'userid': userId,
-      'admin_code': adminCode,
-    });
-
-    try {
-      final response = await _dio.post(
-        WebUrlConstants.updatePanel,
-        data: formData,
-      );
-
-      return UpdatePanelResponse.fromJson(response.data);
-    } catch (e) {
-      if (kDebugMode) {
-        print(' Error updateAdminCode : $e');
-      }
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updateAdminMobileNumber(
-    String userId,
-    int panelId,
-    String adminMobileNumber,
-  ) async {
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'userid': userId,
-      'admin_mobile_number': adminMobileNumber,
-    });
-
-    try {
-      final response = await _dio.post(
-        WebUrlConstants.updatePanel,
-        data: formData,
-      );
-
-      return UpdatePanelResponse.fromJson(response.data);
-    } catch (e) {
-      if (kDebugMode) {
-        print(' Error updateAdminMobileNumber : $e');
-      }
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updatePanelSimNumber(
-    String userId,
-    int panelId,
-    String panelSimNumber,
-  ) async {
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'userid': userId,
-      'panel_sim_number': panelSimNumber,
-    });
-
-    try {
-      final response = await _dio.post(
-        WebUrlConstants.updatePanel,
-        data: formData,
-      );
-
-      return UpdatePanelResponse.fromJson(response.data);
-    } catch (e) {
-      if (kDebugMode) {
-        print(' Error updatePanelSimNumber : $e');
-      }
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updateSiteName(
-    String userId,
-    int panelId,
-    String siteName,
-  ) async {
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'userid': userId,
-      'site': siteName,
-    });
-
-    try {
-      final response = await _dio.post(
-        WebUrlConstants.updatePanel,
-        data: formData,
-      );
-
-      return UpdatePanelResponse.fromJson(response.data);
-    } catch (e) {
-      if (kDebugMode) {
-        print(' Error updateSiteName : $e');
-      }
-      rethrow;
-    }
-  }
-
-  @override
-  Future<UpdatePanelResponse> updateSolitareMobileNumber(
-    String userId,
-    int panelId,
-    String index,
-    String number,
-  ) async {
-    final indexNumber = "mobile_number$index";
-
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'userid': userId,
-      indexNumber: number,
-    });
-
-    try {
-      final response = await _dio.post(
-        WebUrlConstants.updatePanel,
-        data: formData,
-      );
-
-      return UpdatePanelResponse.fromJson(response.data);
-    } catch (e) {
-      if (kDebugMode) {
-        print(' Error updateSiteName : $e');
+        print('❌ Error in deletePanel: $e');
       }
       rethrow;
     }
@@ -325,25 +143,17 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<UpdatePanelResponse> updatePanelData(
-    String userId,
-    int panelId,
-    String key,
-    String value,
-  ) async {
+      String userId,
+      int panelId,
+      String key,
+      String value,
+      ) async {
+    // Standard key directly as provided (must match API server keys)
     final formData = FormData.fromMap({
       'pnl_id': panelId,
-      'userid': userId,
+      'usr_id': userId,
       key: value,
     });
-
-    if (kDebugMode) {
-      debugPrint('📡 updatePanelData called with:');
-      debugPrint('User ID: $userId');
-      debugPrint('Panel ID: $panelId');
-      debugPrint('Key: $key');
-      debugPrint('Value: $value');
-      debugPrint('FormData: ${formData.fields}');
-    }
 
     try {
       final response = await _dio.post(
@@ -351,14 +161,10 @@ class PanelRepositoryImpl implements PanelRepo {
         data: formData,
       );
 
-      if (kDebugMode) {
-        debugPrint('✅ updatePanelData response: ${response.data}');
-      }
-
       return UpdatePanelResponse.fromJson(response.data);
     } catch (e) {
       if (kDebugMode) {
-        print('Error updatePanelData : $e');
+        print('❌ Error in updatePanelData: $e');
       }
       rethrow;
     }
@@ -366,27 +172,22 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<UpdatePanelResponse> updatePanelDataInList(
-    String userId,
-    int panelId,
-    List<String> keys,
-    List<dynamic> values,
-  ) async {
-    final Map<String, dynamic> formMap = {'pnl_id': panelId, 'userid': userId};
+      String userId,
+      int panelId,
+      List<String> keys,
+      List<dynamic> values,
+      ) async {
+    final Map<String, dynamic> formMap = {
+      'pnl_id': panelId,
+      'usr_id': userId,
+    };
 
     for (int i = 0; i < keys.length; i++) {
+      // Keys are used directly as provided (must match API server keys)
       formMap[keys[i]] = values[i];
     }
 
     final formData = FormData.fromMap(formMap);
-
-    if (kDebugMode) {
-      debugPrint('📡 updatePanelDataInList called with:');
-      debugPrint('User ID: $userId');
-      debugPrint('Panel ID: $panelId');
-      debugPrint('Keys: $keys');
-      debugPrint('Values: $values');
-      debugPrint('FormData: ${formData.fields}');
-    }
 
     try {
       final response = await _dio.post(
@@ -394,16 +195,63 @@ class PanelRepositoryImpl implements PanelRepo {
         data: formData,
       );
 
-      if (kDebugMode) {
-        debugPrint('✅ updatePanelDataInList response: ${response.data}');
-      }
-
       return UpdatePanelResponse.fromJson(response.data);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Error updatePanelDataInList : $e');
+        debugPrint('❌ Error in updatePanelDataInList: $e');
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<UpdatePanelResponse> updateAddress(
+      String userId,
+      int panelId,
+      String address,
+      ) async =>
+      updatePanelData(userId, panelId, 'site_address', address);
+
+  @override
+  Future<UpdatePanelResponse> updateAdminCode(
+      String userId,
+      int panelId,
+      int adminCode,
+      ) async =>
+      updatePanelData(userId, panelId, 'admin_code', adminCode.toString());
+
+  @override
+  Future<UpdatePanelResponse> updateAdminMobileNumber(
+      String userId,
+      int panelId,
+      String adminMobileNumber,
+      ) async =>
+      updatePanelData(userId, panelId, 'admin_mobile_number', adminMobileNumber);
+
+  @override
+  Future<UpdatePanelResponse> updatePanelSimNumber(
+      String userId,
+      int panelId,
+      String panelSimNumber,
+      ) async =>
+      updatePanelData(userId, panelId, 'panel_sim_number', panelSimNumber);
+
+  @override
+  Future<UpdatePanelResponse> updateSiteName(
+      String userId,
+      int panelId,
+      String siteName,
+      ) async =>
+      updatePanelData(userId, panelId, 'site_name', siteName);
+
+  @override
+  Future<UpdatePanelResponse> updateSolitareMobileNumber(
+      String userId,
+      int panelId,
+      String index,
+      String number,
+      ) async {
+    final key = "mobile_number$index";
+    return updatePanelData(userId, panelId, key, number);
   }
 }

@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_viewmodel.dart';
 import 'package:logger/logger.dart';
+
 import '../../../core/data/pojo/panel_data.dart';
 import '../../../core/responses/socket_repository.dart';
 import '../../../core/utils/application_class.dart';
@@ -240,7 +242,7 @@ class MainViewModel extends ChangeNotifier {
 
     // 1. Send Disconnect Command silently
     try {
-      final pwd = panel.password.isNotEmpty ? panel.password : "1234";
+      final pwd = panel.pass.isNotEmpty ? panel.pass : "1234";
       final disconnectPacket = "S*$pwd#W#013*E";
       log.i("[AutoFix] Sending Kill Command: $disconnectPacket");
 
@@ -267,11 +269,11 @@ class MainViewModel extends ChangeNotifier {
 
   void loadPanelDetails() {
     final app = Application();
-    app.mIPAddress = panel.ip_address;
-    app.mPortNumber = int.tryParse(panel.port_no) ?? 0;
-    app.mStaticIPAddress = panel.static_ip_address;
-    app.mStaticPortNumber = int.tryParse(panel.static_port_no) ?? 0;
-    app.mPassword = panel.password;
+    app.mIPAddress = panel.ipAdd;
+    app.mPortNumber = int.tryParse(panel.portNo) ?? 0;
+    app.mStaticIPAddress = panel.staticIp;
+    app.mStaticPortNumber = int.tryParse(panel.staticPort) ?? 0;
+    app.mPassword = panel.pass;
   }
 
   void _connectionSuccess() {
@@ -288,7 +290,7 @@ class MainViewModel extends ChangeNotifier {
 
     if (_isConnected) {
       try {
-        final pwd = panel.password.isNotEmpty ? panel.password : "1234";
+        final pwd = panel.pass.isNotEmpty ? panel.pass : "1234";
         final disconnectPacket = "S*$pwd#W#013*E";
 
         log.i("Sending Disconnect Packet: $disconnectPacket");
@@ -396,7 +398,7 @@ class MainViewModel extends ChangeNotifier {
         Packets.connectPacket(),
       );
 
-      _handleSR1Response(response, panel.site);
+      _handleSR1Response(response, panel.siteName);
     } catch (e) {
       log.e("Connection failed: $e");
 

@@ -5,9 +5,9 @@ class WebUrlConstants {
   static const Duration receiveTimeout = Duration(seconds: 10);
   static const Duration sendTimeout = Duration(seconds: 10);
 
-  static const String addPanel = 'add_panel_fog_gen.php';
-  static const String getAllPanels = 'get_panel_fog_gen.php';
-  static const String deletePanel = 'delete_panel_fog_gen.php';
+  static const String addPanel = 'add_update_panel_master.php';
+  static const String getAllPanels = 'get_panels_master.php';
+  static const String deletePanel = 'delete_panel_master.php';
   static const String updatePanel = 'update_panel_fog_gen.php';
 
   static const String loginUser = 'login.php';

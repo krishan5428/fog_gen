@@ -148,15 +148,15 @@ Future<PanelData?> showChangeAddressBottomSheet(
 
                             try {
                               /// Handle IP or IP+GPRS panels
-                              if (panelData.is_ip_panel ||
-                                  panelData.is_ip_gsm_panel) {
+                              if (panelData.isIpPanel ||
+                                  panelData.isIpGsmPanel) {
                                 final socketRepository = SocketRepository();
                                 final app = Application();
-                                app.mIPAddress = panelData.ip_address;
+                                app.mIPAddress = panelData.ipAdd;
                                 app.mPortNumber = int.tryParse(
-                                  panelData.port_no,
+                                  panelData.portNo,
                                 );
-                                app.mPassword = panelData.password;
+                                app.mPassword = panelData.pass;
 
                                 final response = await socketRepository
                                     .sendPacketSR1(
@@ -168,13 +168,13 @@ Future<PanelData?> showChangeAddressBottomSheet(
 
                                 if (response == "S*007#0*E") {
                                   context.read<PanelCubit>().updatePanelData(
-                                    userId: panelData.userId,
+                                    userId: panelData.usrId,
                                     panelId: panelData.pnlId,
                                     key: 'address',
                                     value: newAddress,
                                   );
                                 } else {
-                                  if (panelData.is_ip_gsm_panel) {
+                                  if (panelData.isIpGsmPanel) {
                                     final confirm = await showConfirmationDialog(
                                       context: context,
                                       message:
@@ -188,7 +188,7 @@ Future<PanelData?> showChangeAddressBottomSheet(
                                       );
                                     }
                                   }
-                                  if (panelData.is_ip_panel) {
+                                  if (panelData.isIpPanel) {
                                     showInfoDialog(
                                       context: context,
                                       message:
@@ -250,7 +250,7 @@ void _sendSMSCommand(
 
   if (isSent == true) {
     context.read<PanelCubit>().updatePanelData(
-      userId: panelData.userId,
+      userId: panelData.usrId,
       panelId: panelData.pnlId,
       key: 'address',
       value: newAddress,

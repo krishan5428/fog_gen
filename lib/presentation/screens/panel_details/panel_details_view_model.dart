@@ -59,16 +59,16 @@ class PanelDetailsViewModel extends ChangeNotifier {
     final panel = panelData;
 
     // --- CASE 1: IP PANEL ---
-    if (panel.is_ip_gsm_panel) {
+    if (panel.isIpGsmPanel) {
       ProgressDialog.show(context);
 
       // Setup Application Global
       final _ = Application()
-        ..mIPAddress = panel.ip_address
-        ..mPortNumber = int.tryParse(panel.port_no)
-        ..mPassword = panel.password
-        ..mStaticIPAddress = panel.static_ip_address
-        ..mStaticPortNumber = int.tryParse(panel.static_port_no);
+        ..mIPAddress = panel.ipAdd
+        ..mPortNumber = int.tryParse(panel.portNo)
+        ..mPassword = panel.pass
+        ..mStaticIPAddress = panel.staticIp
+        ..mStaticPortNumber = int.tryParse(panel.staticPort);
 
       try {
         final socketRepo = SocketRepository();
@@ -151,7 +151,7 @@ class PanelDetailsViewModel extends ChangeNotifier {
     if (shouldDeleteFromApp && context.mounted) {
       // This Cubit call handles the offline logic (Delete local -> Sync later)
       context.read<PanelCubit>().deletePanel(
-        userId: panel.userId,
+        userId: panel.usrId,
         panelId: panel.pnlId,
       );
     }

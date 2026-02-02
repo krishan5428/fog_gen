@@ -202,7 +202,7 @@ class _AddNumberBottomSheetState extends State<AddNumberBottomSheet> {
 
     if (result) {
       context.read<PanelCubit>().updatePanelData(
-        userId: panel.userId,
+        userId: panel.usrId,
         panelId: panel.pnlId,
         key: 'mobile_number${widget.index.toString()}',
         value: newNumber,

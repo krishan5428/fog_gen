@@ -80,7 +80,7 @@ class PanelListViewModel extends ChangeNotifier {
 
   List<String> _extractSiteNames(List<PanelData> panels) {
     return panels
-        .map((panel) => panel.site.trim())
+        .map((panel) => panel.siteName.trim())
         .where((name) => name.isNotEmpty)
         .toSet()
         .toList()
