@@ -8,7 +8,7 @@ class WebUrlConstants {
   static const String addPanel = 'add_update_panel_master.php';
   static const String getAllPanels = 'get_panels_master.php';
   static const String deletePanel = 'delete_panel_master.php';
-  static const String updatePanel = 'update_panel_fog_gen.php';
+  static const String updatePanel = 'add_update_panel_master.php';
 
   static const String loginUser = 'login.php';
   static const String delUser = 'del_user.php';

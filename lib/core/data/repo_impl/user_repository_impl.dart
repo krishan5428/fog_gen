@@ -13,7 +13,11 @@ class UserRepoImpl implements UserRepo {
   final Dio _dio = ApiClient.dio;
 
   @override
-  Future<LoginResponse> login(String mobile, String pass) async {
+  Future<LoginResponse> login(
+    String mobile,
+    String pass,
+    String fcmToken,
+  ) async {
     print("Hitting URL: ${WebUrlConstants.loginUser}");
     try {
       final response = await _dio.post(

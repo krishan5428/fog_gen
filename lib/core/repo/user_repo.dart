@@ -5,7 +5,7 @@ import '../responses/signup_response.dart';
 import '../responses/update_user_response.dart';
 
 abstract class UserRepo {
-  Future<LoginResponse> login(String mobile, String password);
+  Future<LoginResponse> login(String mobile, String password, String fcmToken);
 
   Future<SignupResponse> signUp(
     String name,

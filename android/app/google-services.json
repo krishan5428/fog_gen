@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995643215034",
+    "project_id": "securicofogshield",
+    "storage_bucket": "securicofogshield.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995643215034:android:08666afbaa058475754683",
+        "android_client_info": {
+          "package_name": "com.securico.fog_gen_new"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCywwUF6ej2C5qQCkWFhKVrcyAiE1JsdO0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

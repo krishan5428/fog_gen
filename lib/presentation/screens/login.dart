@@ -1,4 +1,8 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:fog_gen_new/presentation/dialog/url_dialog.dart';
 import 'package:fog_gen_new/presentation/screens/add_vendor.dart';
@@ -7,9 +11,6 @@ import 'package:fog_gen_new/presentation/screens/signup.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
 import 'package:fog_gen_new/utils/snackbar_helper.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../constants/urls.dart';
 import '../../core/data/repo_impl/vendor_repo_impl.dart';
@@ -32,12 +33,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscureText = true;
 
-  void _handleLogin(BuildContext context) {
+  void _handleLogin(BuildContext context) async {
     final mobile = _mobileController.text.trim();
     final pass = _passwordController.text.trim();
 
     if (mobile.isNotEmpty && pass.isNotEmpty) {
-      context.read<UserCubit>().login(mobile, pass);
+      // can show temp loading indicator
+      String? fcmToken;
+      try {
+        // get the token
+        FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+        // request permission (Required for iOS)
+        NotificationSettings settings = await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+          fcmToken = await messaging.getToken();
+          debugPrint("FCM token: $fcmToken");
+        } else {
+          debugPrint("User declined or has not accepted permission");
+        }
+      } catch (e) {
+        debugPrint("Failed to get FCM token: $e");
+      }
+      if (mounted) {
+        context.read<UserCubit>().login(mobile, pass, fcmToken ?? "");
+      }
     } else {
       SnackBarHelper.showSnackBar(context, 'Please enter credentials');
     }

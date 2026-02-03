@@ -75,7 +75,7 @@ class PanelRepositoryImpl implements PanelRepo {
         'pass': password,
         'is_ip_panel': is_ip_panel ? 1 : 0,
         'is_ip_gsm_panel': is_ip_gsm_panel ? 1 : 0,
-        'pnl_acc_no' :panel_acc_no,
+        'pnl_acc_no': panel_acc_no,
         'pnl_mac': mac_id,
         'pnl_ver': version,
       });
@@ -148,7 +148,6 @@ class PanelRepositoryImpl implements PanelRepo {
       String key,
       String value,
       ) async {
-    // Standard key directly as provided (must match API server keys)
     final formData = FormData.fromMap({
       'pnl_id': panelId,
       'usr_id': userId,
@@ -160,6 +159,17 @@ class PanelRepositoryImpl implements PanelRepo {
         WebUrlConstants.updatePanel,
         data: formData,
       );
+
+      // --- FIX: Handle API returning null data despite success ---
+      if (response.data != null && response.data is Map) {
+        final map = response.data as Map<String, dynamic>;
+        // If status is true but panelData is null/missing
+        if (map['status'] == true && map['panelData'] == null) {
+          // Throw specific error to be handled by Cubit as "Success"
+          throw const FormatException("SERVER_UPDATED_BUT_NO_DATA");
+        }
+      }
+      // -----------------------------------------------------------
 
       return UpdatePanelResponse.fromJson(response.data);
     } catch (e) {
@@ -183,7 +193,6 @@ class PanelRepositoryImpl implements PanelRepo {
     };
 
     for (int i = 0; i < keys.length; i++) {
-      // Keys are used directly as provided (must match API server keys)
       formMap[keys[i]] = values[i];
     }
 
@@ -194,6 +203,15 @@ class PanelRepositoryImpl implements PanelRepo {
         WebUrlConstants.updatePanel,
         data: formData,
       );
+
+      // --- FIX: Handle API returning null data despite success ---
+      if (response.data != null && response.data is Map) {
+        final map = response.data as Map<String, dynamic>;
+        if (map['status'] == true && map['panelData'] == null) {
+          throw const FormatException("SERVER_UPDATED_BUT_NO_DATA");
+        }
+      }
+      // -----------------------------------------------------------
 
       return UpdatePanelResponse.fromJson(response.data);
     } catch (e) {
@@ -209,8 +227,7 @@ class PanelRepositoryImpl implements PanelRepo {
       String userId,
       int panelId,
       String address,
-      ) async =>
-      updatePanelData(userId, panelId, 'site_address', address);
+      ) async => updatePanelData(userId, panelId, 'site_address', address);
 
   @override
   Future<UpdatePanelResponse> updateAdminCode(
@@ -241,8 +258,7 @@ class PanelRepositoryImpl implements PanelRepo {
       String userId,
       int panelId,
       String siteName,
-      ) async =>
-      updatePanelData(userId, panelId, 'site_name', siteName);
+      ) async => updatePanelData(userId, panelId, 'site_name', siteName);
 
   @override
   Future<UpdatePanelResponse> updateSolitareMobileNumber(

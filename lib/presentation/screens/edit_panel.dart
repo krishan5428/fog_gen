@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
 import 'package:fog_gen_new/utils/snackbar_helper.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../utils/responsive.dart';
 import '../cubit/mappings/panel_sim_number_cubit.dart';
@@ -39,8 +39,7 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
         widget.panelData.panelSimNumber;
     formControllers.ipAddressController.text = widget.panelData.ipAdd;
     formControllers.portNumberController.text = widget.panelData.portNo;
-    formControllers.staticIpController.text =
-        widget.panelData.staticIp;
+    formControllers.staticIpController.text = widget.panelData.staticIp;
     formControllers.staticPortController.text = widget.panelData.staticPort;
     formControllers.passwordController.text = widget.panelData.pass;
   }
@@ -135,13 +134,13 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
         userId: widget.panelData.usrId,
         panelId: widget.panelData.pnlId,
         keys: [
-          'site',
+          'site_name',
           'panel_sim_number',
-          'ip_address',
+          'ip_add',
           'port_no',
-          'static_ip_address',
-          'static_port_no',
-          'password',
+          'static_ip',
+          'static_port',
+          'pass',
         ],
         values: [
           formControllers.siteNameController.text.trim(),

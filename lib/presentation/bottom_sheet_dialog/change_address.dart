@@ -1,7 +1,7 @@
-import 'package:fog_gen_new/utils/navigation.dart';
-import 'package:fog_gen_new/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fog_gen_new/utils/navigation.dart';
+import 'package:fog_gen_new/utils/snackbar_helper.dart';
 
 import '../../constants/app_colors.dart';
 import '../../core/data/pojo/panel_data.dart';
@@ -146,10 +146,9 @@ Future<PanelData?> showChangeAddressBottomSheet(
                               return;
                             }
 
-                            try {
-                              /// Handle IP or IP+GPRS panels
-                              if (panelData.isIpPanel ||
-                                  panelData.isIpGsmPanel) {
+                            /// 1. Handle IP or IP+GSM Panels
+                            if (panelData.isIpPanel || panelData.isIpGsmPanel) {
+                              try {
                                 final socketRepository = SocketRepository();
                                 final app = Application();
                                 app.mIPAddress = panelData.ipAdd;
@@ -167,44 +166,33 @@ Future<PanelData?> showChangeAddressBottomSheet(
                                     );
 
                                 if (response == "S*007#0*E") {
+                                  // Success via IP
                                   context.read<PanelCubit>().updatePanelData(
                                     userId: panelData.usrId,
                                     panelId: panelData.pnlId,
-                                    key: 'address',
+                                    key: 'site_address',
                                     value: newAddress,
                                   );
                                 } else {
-                                  if (panelData.isIpGsmPanel) {
-                                    final confirm = await showConfirmationDialog(
-                                      context: context,
-                                      message:
-                                          'Unable to send IP Command!\nDo you want to send SMS command?',
-                                    );
-                                    if (confirm == true) {
-                                      _sendSMSCommand(
-                                        newAddress,
-                                        panelData,
-                                        context,
-                                      );
-                                    }
-                                  }
-                                  if (panelData.isIpPanel) {
-                                    showInfoDialog(
-                                      context: context,
-                                      message:
-                                          'Seems like Panel is not connected!\nPlease check the Panel and try again!',
-                                    );
-                                  }
+                                  // IP connected but returned invalid response
+                                  await _handleIpFailure(
+                                    context,
+                                    panelData,
+                                    newAddress,
+                                  );
                                 }
-                              } else {
-                                _sendSMSCommand(newAddress, panelData, context);
+                              } catch (e) {
+                                // IP Connection Failed (Socket Error) -> Attempt Fallback
+                                await _handleIpFailure(
+                                  context,
+                                  panelData,
+                                  newAddress,
+                                );
                               }
-                            } catch (e) {
-                              SnackBarHelper.showSnackBar(
-                                context,
-                                'Operation failed: $e',
-                              );
                             }
+
+                            /// 2. Handle GSM Only Panels else {
+                            _sendSMSCommand(newAddress, panelData, context);
                           },
                           child: const Text("Submit"),
                         ),
@@ -220,6 +208,29 @@ Future<PanelData?> showChangeAddressBottomSheet(
       );
     },
   );
+}
+
+/// Helper to handle fallback logic when IP fails (either via Exception or Bad Response)
+Future<void> _handleIpFailure(
+  BuildContext context,
+  PanelData panelData,
+  String newAddress,
+) async {
+  if (panelData.isIpGsmPanel) {
+    final confirm = await showConfirmationDialog(
+      context: context,
+      message: 'Unable to connect via IP!\nDo you want to send SMS command?',
+    );
+    if (confirm == true) {
+      _sendSMSCommand(newAddress, panelData, context);
+    }
+  } else if (panelData.isIpPanel) {
+    showInfoDialog(
+      context: context,
+      message:
+          'Seems like Panel is not connected!\nPlease check the Panel and try again!',
+    );
+  }
 }
 
 void _sendSMSCommand(
@@ -252,7 +263,7 @@ void _sendSMSCommand(
     context.read<PanelCubit>().updatePanelData(
       userId: panelData.usrId,
       panelId: panelData.pnlId,
-      key: 'address',
+      key: 'site_address',
       value: newAddress,
     );
   }
