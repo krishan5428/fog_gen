@@ -226,6 +226,8 @@ class PanelCubit extends Cubit<PanelState> {
         version: version,
       );
 
+
+
       if (response.status) {
         emit(AddPanelSuccess(message: response.msg));
         getPanel(userId: userId);
