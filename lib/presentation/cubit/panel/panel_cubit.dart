@@ -236,7 +236,7 @@ class PanelCubit extends Cubit<PanelState> {
       final tempPanel = PanelData(
         pnlId: -DateTime.now().millisecondsSinceEpoch,
         usrId: userId,
-        appType: 'FogShield',
+        appType: 'fogshield',
         panelType: panelType,
         panelName: panelName,
         siteName: site,
