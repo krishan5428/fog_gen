@@ -44,13 +44,14 @@ class LogsViewModel extends ChangeNotifier {
       final rawList = await _logsService.fetchLogs(
         pnlId: _panelData.pnlId.toString(),
         usrId: _panelData.usrId.toString(),
-        ipAdd: _panelData.ipAdd,
-        port: _panelData.portNo,
-        rcvrNo: _panelData.pnlRcvrNo,
-        accNo: _panelData.pnlAccNo,
-        lineNo: _panelData.pnlLineNo,
-        mac: _panelData.pnlMac,
-        ver: _panelData.pnlVer,
+        // Ensure these fields exist in your PanelData model
+        ipAdd: _panelData.ipAdd ?? "",
+        port: _panelData.portNo ?? "",
+        rcvrNo: _panelData.pnlRcvrNo ?? "",
+        accNo: _panelData.pnlAccNo ?? "",
+        lineNo: _panelData.pnlLineNo ?? "",
+        mac: _panelData.pnlMac ?? "",
+        ver: _panelData.pnlVer ?? "",
       );
 
       if (rawList.isEmpty) {

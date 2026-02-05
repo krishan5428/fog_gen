@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -75,22 +73,22 @@ Future<void> main() async {
 
     // For iOS, the system handles foreground heads-up alerts if set in Info.plist
     // For Android, we manually show it.
-    if (notification != null && android != null) {
-      flutterLocalNotificationsPlugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            channelDescription: channel.description,
-            icon: '@mipmap/ic_launcher',
-          ),
-          // iOS automatically handles heads-up notifications if foreground presentation options are set
-        ),
-      );
-    }
+    // if (notification != null && android != null) {
+    //   flutterLocalNotificationsPlugin.show(
+    //     notification.hashCode,
+    //     notification.title,
+    //     notification.body,
+    //     NotificationDetails(
+    //       android: AndroidNotificationDetails(
+    //         channel.id,
+    //         channel.name,
+    //         channelDescription: channel.description,
+    //         icon: '@mipmap/ic_launcher',
+    //       ),
+    //       // iOS automatically handles heads-up notifications if foreground presentation options are set
+    //     ),
+    //   );
+    // }
   });
 
   runApp(const FogShieldApp());

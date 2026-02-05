@@ -12,18 +12,13 @@ import 'logs_viewmodel.dart';
 class LogsScreen extends StatelessWidget {
   final PanelData panelData;
 
-  const LogsScreen({
-    super.key,
-    required this.panelData,
-  });
+  const LogsScreen({super.key, required this.panelData});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => LogsViewModel(
-        logsService: LogsService(),
-        panelData: panelData,
-      ),
+      create: (_) =>
+          LogsViewModel(logsService: LogsService(), panelData: panelData),
       child: const _LogsView(),
     );
   }
@@ -37,7 +32,7 @@ class _LogsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        pageName: "Panel Logs",
+        pageName: "Logs",
         isFilter: false,
         isDash: false,
         isProfile: false,
@@ -69,8 +64,8 @@ class _LogsView extends StatelessWidget {
           switch (vm.state) {
             case LogsState.loading:
               return const Center(
-                  child:
-                      CircularProgressIndicator(color: AppColors.colorPrimary));
+                child: CircularProgressIndicator(color: AppColors.colorPrimary),
+              );
             case LogsState.error:
               return _errorState(vm);
             case LogsState.empty:
@@ -105,7 +100,7 @@ class _LogsView extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 40, color: Colors.red),
           const Text("Failed to fetch logs"),
-          ElevatedButton(onPressed: vm.fetchLogs, child: const Text("Retry"))
+          ElevatedButton(onPressed: vm.fetchLogs, child: const Text("Retry")),
         ],
       ),
     );
@@ -126,33 +121,61 @@ class _LogsView extends StatelessWidget {
           horizontalMargin: 10,
           columns: const [
             DataColumn(
-                label: Text('Alert Name',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Time',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Date',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-          rows: logs.map((log) {
-            return DataRow(cells: [
-              DataCell(
-                SizedBox(
-                  width: 120, // Constrain width for long alert names
-                  child: Text(
-                    log.message,
-                    style: const TextStyle(fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
+              label: Text(
+                'Alert Name',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              DataCell(Text(timeFormat.format(log.timestamp),
-                  style: const TextStyle(fontSize: 11))),
-              DataCell(Text(dateFormat.format(log.timestamp),
-                  style: const TextStyle(fontSize: 11))),
-            ]);
+            ),
+            DataColumn(
+              label: Text(
+                'Time',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Date',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+            ),
+          ],
+          rows: logs.map((log) {
+            return DataRow(
+              cells: [
+                DataCell(
+                  SizedBox(
+                    width: 120, // Constrain width for long alert names
+                    child: Text(
+                      log.message,
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    timeFormat.format(log.timestamp),
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    dateFormat.format(log.timestamp),
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ],
+            );
           }).toList(),
         ),
       ),

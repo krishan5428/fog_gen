@@ -984,21 +984,24 @@ Widget _buildButtons(
   MainViewModel viewModel,
   PanelData panelData,
 ) {
-  return Row(
-    children: [
-      Expanded(
-        child: _CommandButton(
-          icon: Icons.history,
-          label: "LOGS",
-          onTap: () {
-            CustomNavigation.instance.push(
-              context: context,
-              screen: LogsScreen(panelData: panelData),
-            );
-          },
+  return Padding(
+    padding: EdgeInsets.all(10),
+    child: Row(
+      children: [
+        Expanded(
+          child: _CommandButton(
+            icon: Icons.history,
+            label: "LOGS",
+            onTap: () {
+              CustomNavigation.instance.push(
+                context: context,
+                screen: LogsScreen(panelData: panelData),
+              );
+            },
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 
@@ -1029,7 +1032,7 @@ class _CommandButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.colorPrimary,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         elevation: 2,
       ),
     );

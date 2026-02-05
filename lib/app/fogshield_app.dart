@@ -1,7 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart'; // 1. Import this
+
 import '../core/repo/user_repo.dart';
 import '../presentation/screens/splash.dart';
 import '../presentation/cubit/user/user_cubit.dart';
@@ -24,50 +27,95 @@ class FogShieldApp extends StatefulWidget {
 }
 
 class _FogShieldAppState extends State<FogShieldApp> {
-  // 1. Create a GlobalKey to allow navigation from the notification listener
+  // GlobalKey allows us to access Context from anywhere (even inside listeners)
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
     _setupInteractedMessage();
+    _setupForegroundToast(); // 2. Call the new setup method
 
-    // 🆕 LISTEN FOR TOKEN REFRESHES
+    // Listen for Token Refreshes
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       debugPrint("⚠️ FCM Token Refreshed automatically!");
-      // Save to server immediately using your Repo/Cubit
       _updateTokenOnServer(newToken);
     });
   }
 
   void _updateTokenOnServer(String token) async {
-    // You might need a way to get userId here directly since context might be tricky in streams
-    // Or just save it to SharedPrefs and let the next Splash screen handle it.
-    await SharedPreferenceHelper.saveDeviceToken(""); // Clear old token so Splash forces an update next time
+    await SharedPreferenceHelper.saveDeviceToken("");
   }
 
-  // 2. Setup listeners for when the user taps a notification
+  // 3. LISTEN FOR NOTIFICATIONS WHILE APP IS OPEN
+  // 3. LISTEN FOR NOTIFICATIONS WHILE APP IS OPEN
+  void _setupForegroundToast() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint("☀️ Foreground Notification Data: ${message.data}");
+
+      // 1. Format the Body & Title based on your requirement
+      final String body = message.data.isNotEmpty
+          ? "Site: ${message.data["site_name"] ?? 'N/A'}\n"
+                "Event: ${message.data["event_name"] ?? 'N/A'}\n"
+                "Time: ${message.data["event_time"] ?? 'N/A'}"
+          : message.notification?.body ?? "New Alert";
+
+      final String title = message.notification?.title ?? "Security Alert";
+
+      // We use the Navigator Key to get the current context safely
+      final context = _navigatorKey.currentContext;
+
+      if (context != null) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.info,
+          style: ToastificationStyle.flat,
+          // 2. Use the formatted variables here
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          description: Text(
+            body,
+            maxLines: 4,
+          ), // Allow more lines for the details
+          alignment: Alignment.topCenter,
+          autoCloseDuration: const Duration(seconds: 5),
+          animationDuration: const Duration(milliseconds: 300),
+          icon: const Icon(
+            Icons.info_outline,
+            color: AppColors.colorPrimary,
+          ),
+          primaryColor: AppColors.colorPrimary,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          borderRadius: BorderRadius.circular(12),
+          showProgressBar: true,
+          closeButtonShowType: CloseButtonShowType.onHover,
+          callbacks: ToastificationCallbacks(
+            onTap: (toastItem) {
+              debugPrint("Toast clicked!");
+              // Add navigation logic here if needed
+            },
+          ),
+        );
+      }
+    });
+  }
+
   Future<void> _setupInteractedMessage() async {
-    // Case A: App is Terminated (Killed)
-    RemoteMessage? initialMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance
+        .getInitialMessage();
     if (initialMessage != null) {
       _handleMessage(initialMessage);
     }
-
-    // Case B: App is in Background (Running but minimized)
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
 
   void _handleMessage(RemoteMessage message) {
     debugPrint("🔔 Notification Clicked: ${message.data}");
-
-    // Example Navigation logic using the GlobalKey:
-    // if (message.data['type'] == 'alert') {
-    //   _navigatorKey.currentState?.push(
-    //     MaterialPageRoute(builder: (_) => const YourAlertScreen()),
-    //   );
-    // }
   }
 
   @override
@@ -90,13 +138,15 @@ class _FogShieldAppState extends State<FogShieldApp> {
             create: (_) => PanelSimNumberCubit(),
           ),
         ],
-        child: MaterialApp(
-          // 3. Attach the navigatorKey here
-          navigatorKey: _navigatorKey,
-          debugShowCheckedModeBanner: false,
-          title: 'FogShield',
-          theme: AppTheme.lightTheme,
-          home: const SplashScreen(),
+        // 4. Wrap MaterialApp with ToastificationWrapper
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            navigatorKey: _navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: 'FogShield',
+            theme: AppTheme.lightTheme,
+            home: const SplashScreen(),
+          ),
         ),
       ),
     );
