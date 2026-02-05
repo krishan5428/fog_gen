@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
+import 'package:fog_gen_new/presentation/screens/logs/logs_screen.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_fragment.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_viewmodel.dart';
 import 'package:fog_gen_new/presentation/screens/main/widgets/input_controls_widget.dart';
@@ -125,7 +126,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Connection Failed',
           description:
-          'Could not connect to the panel. Please check the network and try again.',
+              'Could not connect to the panel. Please check the network and try again.',
         );
         break;
       case MainViewEvent.dismissInactivityDialog:
@@ -176,7 +177,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Command Failed',
           description:
-          'The panel did not respond as expected. Please try again.',
+              'The panel did not respond as expected. Please try again.',
           alignment: Alignment.center,
         );
         break;
@@ -231,9 +232,7 @@ class _MainViewState extends State<_MainView> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              25,
-                            ),
+                            borderRadius: BorderRadius.circular(25),
                           ),
                           backgroundColor: AppColors.colorPrimary,
                           foregroundColor: AppColors.white,
@@ -287,7 +286,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Connection Lost',
           description:
-          'No response from panel for over 1 minute. Please check network or power.',
+              'No response from panel for over 1 minute. Please check network or power.',
           alignment: Alignment.center,
           primaryColor: AppColors.colorAccent,
           icon: Icons.wifi_off,
@@ -394,7 +393,7 @@ class _MainViewState extends State<_MainView> {
           type: ToastificationType.error,
           title: 'Command Failed',
           description:
-          'The panel did not respond as expected. Please try again.',
+              'The panel did not respond as expected. Please try again.',
           alignment: Alignment.center,
         );
         break;
@@ -552,7 +551,7 @@ class _MainViewState extends State<_MainView> {
                 const SizedBox(height: 12),
                 Text(
                   "You were inactive for 3 minutes.\n\n"
-                      "You will be disconnected in 1 minute unless you stay connected.",
+                  "You will be disconnected in 1 minute unless you stay connected.",
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 20),
@@ -570,9 +569,7 @@ class _MainViewState extends State<_MainView> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              25,
-                            ),
+                            borderRadius: BorderRadius.circular(25),
                           ),
                           backgroundColor: AppColors.colorPrimary,
                           foregroundColor: AppColors.white,
@@ -644,7 +641,9 @@ class _MainViewState extends State<_MainView> {
             },
           ),
           body: Column(
-            children: [Expanded(child: _buildMainContentWrapper(viewModel))],
+            children: [
+              Expanded(child: _buildMainContentWrapper(viewModel, context)),
+            ],
           ),
         ),
       ),
@@ -681,13 +680,16 @@ class _MainViewState extends State<_MainView> {
     );
   }
 
-  Widget _buildMainContentWrapper(MainViewModel viewModel) {
+  Widget _buildMainContentWrapper(
+    MainViewModel viewModel,
+    BuildContext context,
+  ) {
     if (viewModel.isConnected && viewModel.isInitializing) {
       return _buildInitializingState();
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        Widget content = _buildFullContent(viewModel);
+        Widget content = _buildFullContent(viewModel, context);
         return SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 110),
           child: ConstrainedBox(
@@ -699,7 +701,7 @@ class _MainViewState extends State<_MainView> {
     );
   }
 
-  Widget _buildFullContent(MainViewModel viewModel) {
+  Widget _buildFullContent(MainViewModel viewModel, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -710,7 +712,7 @@ class _MainViewState extends State<_MainView> {
           ],
         ),
         viewModel.isConnected
-            ? _buildControlCentre(viewModel)
+            ? _buildControlCentre(viewModel, context)
             : _buildDisconnectedControlCentre(),
       ],
     );
@@ -891,22 +893,22 @@ Widget _buildActionButtons(MainViewModel viewModel) {
       onPressed: viewModel.isConnecting || viewModel.isForceCooldownActive
           ? null
           : () {
-        if (viewModel.isConnected) {
-          viewModel.disconnect();
-          viewModel.socketRepository.stopAllActivity();
-        } else {
-          viewModel.connect();
-        }
-      },
+              if (viewModel.isConnected) {
+                viewModel.disconnect();
+                viewModel.socketRepository.stopAllActivity();
+              } else {
+                viewModel.connect();
+              }
+            },
       icon: viewModel.isConnecting
           ? const SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Colors.white,
-        ),
-      )
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
           : Icon(viewModel.isConnected ? Icons.link_off : Icons.link),
       label: Text(
         viewModel.isForceCooldownActive
@@ -961,16 +963,77 @@ Widget _buildConnectionStatus(MainViewModel viewModel) {
   );
 }
 
-Widget _buildControlCentre(MainViewModel viewModel) {
+Widget _buildControlCentre(MainViewModel viewModel, BuildContext context) {
   // Using .value ensures we use the existing connected VM, not a new disconnected one
   return ChangeNotifierProvider.value(
     value: viewModel.panelSR1ViewModel!,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [InputControlsWidget(), OutputControlsWidget()],
+      children: [
+        InputControlsWidget(),
+        OutputControlsWidget(),
+        _buildButtons(context, viewModel, viewModel.panel),
+      ],
     ),
   );
+}
+
+Widget _buildButtons(
+  BuildContext context,
+  MainViewModel viewModel,
+  PanelData panelData,
+) {
+  return Row(
+    children: [
+      Expanded(
+        child: _CommandButton(
+          icon: Icons.history,
+          label: "LOGS",
+          onTap: () {
+            CustomNavigation.instance.push(
+              context: context,
+              screen: LogsScreen(panelData: panelData),
+            );
+          },
+        ),
+      ),
+    ],
+  );
+}
+
+class _CommandButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _CommandButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18, color: Colors.white),
+      label: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.colorPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 2,
+      ),
+    );
+  }
 }
 
 Widget _buildDisconnectedControlCentre() {

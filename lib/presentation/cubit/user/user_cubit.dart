@@ -15,7 +15,7 @@ class UserCubit extends Cubit<UserState> {
   void login(String mobile, String pass, String? deviceToken) async {
     emit(UserLoading());
     try {
-      final response = await userRepo.login(mobile, pass, deviceToken!);
+      final response = await userRepo.login(mobile, pass, deviceToken ?? "");
       if (kDebugMode) {
         print("Login response: status=${response.status}, msg=${response.msg}");
       }

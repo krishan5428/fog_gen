@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:fog_gen_new/utils/auth_helper.dart';
 
 import '../../api/api_client.dart';
 import '../../api/web_url_constants.dart';
@@ -19,6 +20,7 @@ class UserRepoImpl implements UserRepo {
     String fcmToken,
   ) async {
     print("Hitting URL: ${WebUrlConstants.loginUser}");
+    final deviceOs = await SharedPreferenceHelper.getDeviceType();
     try {
       final response = await _dio.post(
         WebUrlConstants.loginUser,
@@ -29,8 +31,9 @@ class UserRepoImpl implements UserRepo {
           'lat': '',
           'tkn': '',
           'l_add': '',
-          'os': '',
-          'dev_id': '',
+          'os': deviceOs,
+          'dev_id': fcmToken,
+          'device_id': fcmToken,
         }),
       );
 
@@ -57,6 +60,7 @@ class UserRepoImpl implements UserRepo {
     }
   }
 
+  // ... (rest of the class remains the same)
   @override
   Future<SignupResponse> signUp(
     String name,
@@ -75,11 +79,13 @@ class UserRepoImpl implements UserRepo {
         'password': password,
         'dev_info': dev_info,
         'device_id': device_id,
+        // This was already correct
       }),
     );
     return SignupResponse.fromJson(response.data);
   }
 
+  // ... (forgotPass, updateValue, deleteUser remain unchanged)
   @override
   Future<ForgotPassResponse> forgotPass(String mobile) async {
     final response = await _dio.post(

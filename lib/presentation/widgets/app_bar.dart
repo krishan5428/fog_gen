@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../constants/app_colors.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -9,6 +10,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onFilterTap;
   final VoidCallback? onMoreTaps;
   final bool isProfile;
+  final List<Widget>?
+  extraActions; // Added to support custom actions like Network Badge
 
   const CustomAppBar({
     super.key,
@@ -19,6 +22,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onFilterTap,
     this.onMoreTaps,
     this.isProfile = false,
+    this.extraActions, // Added constructor parameter
   });
 
   @override
@@ -27,49 +31,76 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      titleSpacing: 0,
-      toolbarHeight: kToolbarHeight,
-      automaticallyImplyLeading: true,
+      iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: AppColors.colorPrimary,
       elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: AppColors.greyDark,
-      iconTheme: const IconThemeData(
-        color: AppColors.white, // This makes the hamburger icon white
+      centerTitle: false, // Ensure title stays left aligned
+      automaticallyImplyLeading: false,
+
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark, // iOS
       ),
+
       leading: isDash
-          ? null
+          ? IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              tooltip: 'Menu',
+            )
           : IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.white),
-              onPressed: onBack,
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: onBack ?? () => Navigator.pop(context),
+              color: Colors.white,
+              tooltip: 'Back',
             ),
       title: Row(
+        mainAxisSize: MainAxisSize.min, // Wrap content
         children: [
-          Image.asset('assets/images/logo.png', width: 80, height: 40),
+          Image.asset(
+            'assets/images/logo.png',
+            width: 70,
+            height: 35,
+            fit: BoxFit.contain,
+          ),
           const SizedBox(width: 10),
-          Container(width: 1, height: 30, color: AppColors.white),
+          Container(width: 1, height: 25, color: Colors.white24),
           const SizedBox(width: 10),
-          Text(
-            pageName,
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.7,
+          Flexible(
+            child: Text(
+              pageName,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 16,
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
       ),
+
       actions: [
-        // if (isFilter)
-        //   IconButton(
-        //     onPressed: onFilterTap,
-        //     icon: const Icon(Icons.filter_list, color: AppColors.white),
-        //   ),
+        if (isFilter)
+          IconButton(
+            onPressed: onFilterTap,
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            tooltip: 'Filter',
+          ),
         if (isProfile)
           IconButton(
             onPressed: onMoreTaps,
-            icon: const Icon(Icons.more_vert, color: AppColors.white),
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            tooltip: 'More',
           ),
+        // Insert extra actions here (like the network badge)
+        if (extraActions != null) ...extraActions!,
       ],
     );
   }

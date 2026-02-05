@@ -100,7 +100,6 @@ class PanelDetailsViewModel extends ChangeNotifier {
       } catch (e) {
         ProgressDialog.dismiss(context);
 
-        // Check for offline/connection errors
         final msg = e.toString().toLowerCase();
         final connectionFailed =
             msg.contains('socket') ||

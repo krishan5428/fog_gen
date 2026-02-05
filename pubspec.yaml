@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: 'none'
 
-version: 1.0.8+11
+version: 1.0.8+12
 
 environment:
   sdk: ^3.9.2
@@ -33,6 +33,11 @@ dependencies:
   video_player: ^2.10.1
   firebase_core: ^4.4.0
   firebase_messaging: ^16.1.1
+  device_info_plus: ^12.3.0
+  open_filex: ^4.7.0
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  flutter_local_notifications: ^19.5.0
 
 dev_dependencies:
   flutter_test:

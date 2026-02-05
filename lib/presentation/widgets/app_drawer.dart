@@ -40,9 +40,7 @@ class _AddDrawerState extends State<AppDrawer> {
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: AppColors.greyDark,
-            ),
+            decoration: BoxDecoration(color: AppColors.greyDark),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

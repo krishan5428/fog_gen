@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
 import 'package:fog_gen_new/presentation/screens/main/panel_sr1/panel_sr1_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
@@ -527,6 +528,8 @@ class _PanelSR1ViewState extends State<_PanelSR1View> {
         );
     }
   }
+
+
 }
 
 class _SystemErrorIndicator extends StatefulWidget {
@@ -643,4 +646,30 @@ class _SignalDisplayData {
     required this.color,
     required this.text,
   });
+}
+
+class _CommandButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _CommandButton(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18, color: Colors.white),
+      label: Text(label,
+          style: const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.colorPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 2,
+      ),
+    );
+  }
 }

@@ -14,7 +14,7 @@ class SharedPreferenceHelper {
   static const _keyUser = "user_data";
   static const _keyPass = 'user_pass';
   static const _keyVendor = "vendor_data";
-
+  static const String userTokenKey = "fcm_device_token";
   static const _intruKeyPrefix = 'intruId_';
   static const _fireKeyPrefix = 'fireId_';
 
@@ -227,5 +227,17 @@ class SharedPreferenceHelper {
         print("Error setting string for key $key: $e");
       }
     }
+  }
+
+
+  static Future<bool> saveDeviceToken(String token) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return await prefs.setString(userTokenKey, token);
+  }
+
+  /// 3. Get the saved FCM Token (to compare)
+  static Future<String?> getDeviceToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userTokenKey);
   }
 }

@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
+import '../../main.dart';
 import '../../utils/app_info.dart';
+import '../cubit/user/user_cubit.dart';
 import 'login.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -24,6 +28,15 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+
+    // 1. Initialize Firebase Listeners and Notification Channels
+    // initializeFirebaseAndNotifications(
+    //   onForegroundMessage: (title, body) {
+    //     // Logic for when a notification arrives while app is open
+    //     logger.i("Foreground notification received: $title");
+    //     // You could use a global key to show a dialog or snackbar here
+    //   },
+    // );
 
     _controller = VideoPlayerController.asset('assets/images/logo_video.mp4')
       ..initialize().then((_) {
@@ -44,12 +57,41 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateNext() async {
     bool isLoggedIn = await SharedPreferenceHelper.getLoginState();
 
+    // 🆕 NEW: Sync Token if already logged in
+    if (isLoggedIn) {
+      _syncTokenInBackground();
+    }
+
     if (!mounted) return;
 
     CustomNavigation.instance.pushReplace(
       context: context,
       screen: isLoggedIn ? const PanelListPage() : const LoginScreen(),
     );
+  }
+
+  Future<void> _syncTokenInBackground() async {
+    try {
+      String? freshToken = await FirebaseMessaging.instance.getToken();
+      String? lastSavedToken = await SharedPreferenceHelper.getDeviceToken();
+      int? userId = (await SharedPreferenceHelper.getUserData())?.usrId;
+
+      if (freshToken != null && userId != null && freshToken != lastSavedToken) {
+        debugPrint("🔄 Token changed. Syncing with server...");
+
+        if (mounted) {
+          context.read<UserCubit>().updateUser(
+            userId: userId.toString(),
+            key: "device_id", // Must match the DB column name exactly
+            value: freshToken,
+          );
+
+          await SharedPreferenceHelper.saveDeviceToken(freshToken);
+        }
+      }
+    } catch (e) {
+      debugPrint("Token Sync Failed: $e");
+    }
   }
 
   @override

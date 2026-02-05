@@ -55,7 +55,9 @@ class InputControlsWidget extends StatelessWidget {
               },
             ),
             TextButton(
-              style: TextButton.styleFrom(foregroundColor: AppColors.colorAccent),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.colorAccent,
+              ),
               child: const Text(
                 "Confirm",
                 style: TextStyle(
@@ -214,10 +216,7 @@ class InputControlsWidget extends StatelessWidget {
     return SizedBox(
       width: itemWidth,
       height: 36,
-      child: Align(
-        alignment: Alignment.center,
-        child: child,
-      ),
+      child: Align(alignment: Alignment.center, child: child),
     );
   }
 }

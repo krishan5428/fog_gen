@@ -20,6 +20,7 @@ class PanelListViewModel extends ChangeNotifier {
   Future<void> initialLoad(BuildContext context) async {
     final fetchedId = await SharedPreferenceHelper.getUserId();
     if (fetchedId != null) {
+      debugPrint("used userId: $fetchedId");
       userId = fetchedId;
       fetchPanels(context);
     }
@@ -27,6 +28,7 @@ class PanelListViewModel extends ChangeNotifier {
 
   void fetchPanels(BuildContext context) {
     if (userId != null) {
+
       context.read<PanelCubit>().getPanel(userId: userId.toString());
     }
   }

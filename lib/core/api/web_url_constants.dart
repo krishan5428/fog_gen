@@ -30,6 +30,8 @@ class WebUrlConstants {
   static const String updateFireNo = 'update_fire_nos.php';
   static const String deleteFireNo = 'del_fire_nos.php';
 
+  static const String fetchLogs = "fetch_logs.php";
+
   // Error Messages
   static const String networkError = 'Please check your internet connection.';
   static const String unknownError = 'Something went wrong. Please try again.';
