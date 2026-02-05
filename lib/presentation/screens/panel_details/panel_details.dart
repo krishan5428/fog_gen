@@ -70,7 +70,7 @@ class PanelDetailsContent extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: const CustomAppBar(pageName: 'Panel Details', isFilter: false),
+        appBar: const CustomAppBar(pageName: 'Panel Details', isFilter: false, isDash: false,),
         backgroundColor: Colors.white,
         body: Stack(
           children: [

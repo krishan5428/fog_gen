@@ -137,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: CustomAppBar(
         pageName: 'Profile',
         isFilter: false,
-        isProfile: true,
+        isProfile: true,isDash: false,
         onMoreTaps: _showMoreOptions,
       ),
       body:

@@ -62,7 +62,7 @@ class _MoreSettingsContent extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(pageName: 'More Settings', isFilter: false),
+      appBar: CustomAppBar(pageName: 'More Settings', isFilter: false,isDash: false,),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: GridView.builder(

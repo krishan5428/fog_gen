@@ -17,7 +17,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.pageName,
     required this.isFilter,
-    this.isDash = true,
+    required this.isDash,
     this.onBack,
     this.onFilterTap,
     this.onMoreTaps,
@@ -87,12 +87,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
 
       actions: [
-        if (isFilter)
-          IconButton(
-            onPressed: onFilterTap,
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            tooltip: 'Filter',
-          ),
+        // if (isFilter)
+        //   IconButton(
+        //     onPressed: onFilterTap,
+        //     icon: const Icon(Icons.filter_list, color: Colors.white),
+        //     tooltip: 'Filter',
+        //   ),
         if (isProfile)
           IconButton(
             onPressed: onMoreTaps,

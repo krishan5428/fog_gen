@@ -72,7 +72,7 @@ class _PanelListUIState extends State<PanelListUI> {
       drawer: const AppDrawer(),
       appBar: CustomAppBar(
         pageName: 'Home',
-        isFilter: true,
+        isFilter: false,
         isDash: true,
         isProfile: false,
         onFilterTap: () => _showFilterDialog(context),

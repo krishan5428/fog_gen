@@ -22,7 +22,7 @@ class VendorProfilePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: const CustomAppBar(
+      appBar: const CustomAppBar(isDash: false,
         pageName: 'Vendor Profile',
         isFilter: false,
         isProfile: false,

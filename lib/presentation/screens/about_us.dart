@@ -11,7 +11,7 @@ class AboutUsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(pageName: 'About Us', isFilter: false),
+      appBar: CustomAppBar(pageName: 'About Us', isFilter: false,isDash: false,),
       body: Column(
         children: [
           Container(

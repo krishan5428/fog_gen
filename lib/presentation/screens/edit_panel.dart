@@ -187,7 +187,7 @@ class _EditPanelScreenState extends State<EditPanelScreen> {
         }
       },
       child: Scaffold(
-        appBar: const CustomAppBar(pageName: 'Edit Panel', isFilter: false),
+        appBar: const CustomAppBar(pageName: 'Edit Panel', isFilter: false,isDash: false,),
         backgroundColor: AppColors.white,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

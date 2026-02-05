@@ -167,7 +167,7 @@ class _TelephoneNoSettingsViewState extends State<_TelephoneNoSettingsView> {
       builder: (_, vm, __) {
         return Scaffold(
           backgroundColor: Colors.grey.shade100,
-          appBar: CustomAppBar(pageName: 'Telephone Numbers', isFilter: false),
+          appBar: CustomAppBar(pageName: 'Telephone Numbers', isFilter: false,isDash: false,),
           body:
               vm.isLoading && _controllers[0].text.isEmpty
                   ? const Center(child: CircularProgressIndicator())
