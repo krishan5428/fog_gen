@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fog_gen_new/app/app_theme.dart';
@@ -105,6 +106,7 @@ Future<void> setUpHarness() async {
     'user_id': 3,
     'user_data': '{"usr_id":3,"name":"Tester","email":"t@t.t","mobile":"9999999999"}',
   });
+  FlutterSecureStorage.setMockInitialValues({'user_pass': 'secret'});
   PackageInfo.setMockInitialValues(
     appName: 'FogShield',
     packageName: 'com.securico.fogshield',

@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fog_gen_new/core/data/pojo/user_data.dart';
 import 'package:fog_gen_new/core/data/pojo/vendor_data.dart';
@@ -6,7 +7,10 @@ import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+  });
 
   test('login state, user id and device type round-trip', () async {
     expect(await SharedPreferenceHelper.getLoginState(), isFalse);
@@ -78,4 +82,19 @@ void main() {
     expect(await SharedPreferenceHelper.getDeviceToken(), 'tok');
   });
 
+  test('password is kept in secure storage, never in plain prefs', () async {
+    await SharedPreferenceHelper.setPass('secret');
+    expect(await SharedPreferenceHelper.getPass(), 'secret');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('user_pass'), isNull);
+  });
+
+  test('an old plain-text password is moved to secure storage on first read',
+      () async {
+    SharedPreferences.setMockInitialValues({'user_pass': 'old'});
+    expect(await SharedPreferenceHelper.getPass(), 'old');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('user_pass'), isNull);
+    expect(await SharedPreferenceHelper.getPass(), 'old');
+  });
 }

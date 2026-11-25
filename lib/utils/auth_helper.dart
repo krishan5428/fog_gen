@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/data/pojo/user_data.dart';
@@ -108,6 +109,7 @@ class SharedPreferenceHelper {
     await prefs.remove(_keyIsDialogShown);
     await prefs.remove(_keyUser);
     await prefs.remove(_keyPass);
+    await _deletePass();
     await prefs.remove(_keyVendor);
     for (final key in prefs.getKeys().toList()) {
       if (_userCacheKeys.contains(key) || key.startsWith('logs_cache_')) {
@@ -141,19 +143,44 @@ class SharedPreferenceHelper {
     return null;
   }
 
+  // The login password is needed later (profile: change password / delete
+  // account), so it is kept — in the Keychain/Keystore, not plain prefs.
+  static const _secure = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
   static Future<void> setPass(String pass) async {
+    await _secure.write(key: _keyPass, value: pass);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyPass, pass);
+    await prefs.remove(_keyPass); // plain copy from older app versions
   }
 
   static Future<String?> getPass() async {
     try {
+      final stored = await _secure.read(key: _keyPass);
+      if (stored != null) return stored;
+
+      // Older versions kept it in plain SharedPreferences: move it.
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_keyPass);
+      final legacy = prefs.getString(_keyPass);
+      if (legacy != null) {
+        await _secure.write(key: _keyPass, value: legacy);
+        await prefs.remove(_keyPass);
+      }
+      return legacy;
     } catch (e) {
-      print("Error reading pass: $e");
+      AppLogger.d("Error reading pass: $e");
     }
     return null;
+  }
+
+  static Future<void> _deletePass() async {
+    try {
+      await _secure.delete(key: _keyPass);
+    } catch (e) {
+      AppLogger.d("Error deleting pass: $e");
+    }
   }
 
   // --- Vendor Data ---
