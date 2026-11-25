@@ -595,8 +595,10 @@ class _MainViewState extends State<_MainView> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<MainViewModel>();
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
         final vm = Provider.of<MainViewModel>(context, listen: false);
 
         if (viewModel.isConnected) {
@@ -612,8 +614,6 @@ class _MainViewState extends State<_MainView> {
           context: context,
           screen: PanelListPage(),
         );
-
-        return false;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -746,7 +746,7 @@ class _MainViewState extends State<_MainView> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 2,
             blurRadius: 5,
             offset: const Offset(0, 2),
@@ -803,7 +803,7 @@ class _MainViewState extends State<_MainView> {
       border: Border.all(color: Colors.grey.shade200),
       boxShadow: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
           spreadRadius: 2,
           blurRadius: 5,
           offset: const Offset(0, 2),
@@ -844,7 +844,7 @@ class _MainViewState extends State<_MainView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
       decoration: BoxDecoration(
-        color: AppColors.colorAccent.withOpacity(0.2),
+        color: AppColors.colorAccent.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8.0),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -934,7 +934,7 @@ Widget _buildActionButtons(MainViewModel viewModel) {
 Widget _buildConnectionStatus(MainViewModel viewModel) {
   final statusColor = viewModel.isConnected
       ? AppColors.connectionGreen
-      : AppColors.red.withOpacity(0.5);
+      : AppColors.red.withValues(alpha: 0.5);
 
   return Row(
     children: [
@@ -945,7 +945,7 @@ Widget _buildConnectionStatus(MainViewModel viewModel) {
           shape: BoxShape.circle,
           color: statusColor,
           boxShadow: [
-            BoxShadow(color: statusColor.withOpacity(0.5), blurRadius: 8.0),
+            BoxShadow(color: statusColor.withValues(alpha: 0.5), blurRadius: 8.0),
           ],
         ),
       ),

@@ -97,7 +97,9 @@ class _FogShieldAppState extends State<FogShieldApp> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           borderRadius: BorderRadius.circular(12),
           showProgressBar: true,
-          closeButtonShowType: CloseButtonShowType.onHover,
+          closeButton: const ToastCloseButton(
+            showType: CloseButtonShowType.onHover,
+          ),
           callbacks: ToastificationCallbacks(
             onTap: (toastItem) {
               debugPrint("Toast clicked!");

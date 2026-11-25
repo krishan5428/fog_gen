@@ -29,7 +29,7 @@ class ProgressDialogWithMessage {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(message, style: const TextStyle(fontSize: 14)),
@@ -96,8 +96,8 @@ class ProgressDialogWithMessage {
             ).start();
           }
 
-          return WillPopScope(
-            onWillPop: () async => false,
+          return PopScope(
+            canPop: false,
             child: Dialog(
               backgroundColor: Colors.grey[200],
               insetPadding: const EdgeInsets.all(20),

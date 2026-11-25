@@ -89,7 +89,7 @@ class InputControlsWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.18),
+              color: Colors.grey.withValues(alpha: 0.18),
               spreadRadius: 1,
               blurRadius: 4,
             ),
@@ -143,7 +143,7 @@ class InputControlsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.18),
+            color: Colors.grey.withValues(alpha: 0.18),
             spreadRadius: 1,
             blurRadius: 4,
           ),
@@ -353,7 +353,7 @@ class _SystemErrorIndicatorState extends State<_SystemErrorIndicator>
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: Colors.redAccent.withOpacity(0.6),
+                    color: Colors.redAccent.withValues(alpha: 0.6),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -452,7 +452,7 @@ class _BlinkingStatusIndicatorState extends State<_BlinkingStatusIndicator>
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.colorAccent.withOpacity(0.5),
+                    color: AppColors.colorAccent.withValues(alpha: 0.5),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/data/pojo/user_data.dart';
 import '../core/data/pojo/vendor_data.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
 
 class SharedPreferenceHelper {
   static const _keyIsLoggedIn = 'is_logged_in';
@@ -39,7 +40,7 @@ class SharedPreferenceHelper {
       return prefs.getBool(_keyIsLoggedIn) ?? false;
     } catch (e) {
       if (kDebugMode) {
-        print("Error reading login state: $e");
+        AppLogger.d("Error reading login state: $e");
       }
       return false;
     }
@@ -49,10 +50,10 @@ class SharedPreferenceHelper {
   static Future<bool> setSmsDialogShown(bool value) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.setBool(_keyIsDialogShown, value);
+      return await prefs.setBool(_keyIsDialogShown, value);
     } catch (e) {
       if (kDebugMode) {
-        print("Error setting SMS DIALOG: $e");
+        AppLogger.d("Error setting SMS DIALOG: $e");
       }
       return false;
     }
@@ -64,7 +65,7 @@ class SharedPreferenceHelper {
       return prefs.getBool(_keyIsDialogShown) ?? false;
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting SMS DIALOG: $e");
+        AppLogger.d("Error getting SMS DIALOG: $e");
       }
       return false;
     }
@@ -76,7 +77,7 @@ class SharedPreferenceHelper {
       return prefs.getString(_keyDeviceType) ?? '';
     } catch (e) {
       if (kDebugMode) {
-        print("Error reading login state: $e");
+        AppLogger.d("Error reading login state: $e");
       }
       return '';
     }
@@ -88,7 +89,7 @@ class SharedPreferenceHelper {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_keyUserId);
     } catch (e) {
-      print("Error reading userId: $e");
+      AppLogger.d("Error reading userId: $e");
     }
     return null;
   }
@@ -232,7 +233,7 @@ class SharedPreferenceHelper {
       return prefs.getString(key);
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting string for key $key: $e");
+        AppLogger.d("Error getting string for key $key: $e");
       }
       return null;
     }
@@ -245,7 +246,7 @@ class SharedPreferenceHelper {
       await prefs.setString(key, value);
     } catch (e) {
       if (kDebugMode) {
-        print("Error setting string for key $key: $e");
+        AppLogger.d("Error setting string for key $key: $e");
       }
     }
   }

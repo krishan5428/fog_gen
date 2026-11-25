@@ -1166,7 +1166,7 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -1546,10 +1546,10 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                           mainsStatus == "MAINS ON"
                                               ? const Color(
                                                 0xFF27AE60,
-                                              ).withOpacity(0.28)
+                                              ).withValues(alpha: 0.28)
                                               : const Color(
                                                 0xFFF2994A,
-                                              ).withOpacity(0.28),
+                                              ).withValues(alpha: 0.28),
                                       size: 30,
                                     ),
                                   ),
@@ -1565,7 +1565,7 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                         mainsStatus == "MAINS ON"
                                             ? Icons.power
                                             : Icons.battery_alert,
-                                        color: Colors.black.withOpacity(0.18),
+                                        color: Colors.black.withValues(alpha: 0.18),
                                         size: 30,
                                       ),
                                     ),
@@ -2048,7 +2048,7 @@ class _MqttControlScreenState extends State<MqttControlScreen>
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.03),
+          color: Colors.black.withValues(alpha: 0.03),
           blurRadius: 8,
           offset: const Offset(0, 3),
         ),
@@ -2074,13 +2074,13 @@ class _MqttControlScreenState extends State<MqttControlScreen>
   //           borderRadius: BorderRadius.circular(3),
   //           boxShadow: [
   //             BoxShadow(
-  //               color: Colors.black.withOpacity(0.08),
+  //               color: Colors.black.withValues(alpha: 0.08),
   //               offset: const Offset(0, 2),
   //               blurRadius: 4,
   //             ),
   //             if (index < signalValue)
   //               BoxShadow(
-  //                 color: const Color(0xFF27AE60).withOpacity(0.18),
+  //                 color: const Color(0xFF27AE60).withValues(alpha: 0.18),
   //                 offset: Offset.zero,
   //                 blurRadius: 6,
   //                 spreadRadius: 0.5,
@@ -2114,13 +2114,13 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                 borderRadius: BorderRadius.circular(3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     offset: const Offset(0, 2),
                     blurRadius: 4,
                   ),
                   if (index < signalValue)
                     BoxShadow(
-                      color: const Color(0xFF27AE60).withOpacity(0.18),
+                      color: const Color(0xFF27AE60).withValues(alpha: 0.18),
                       offset: Offset.zero,
                       blurRadius: 6,
                       spreadRadius: 0.5,
@@ -2258,7 +2258,7 @@ class _PulsingStatusDotState extends State<PulsingStatusDot>
                 height: 8 + (_controller.value * 12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: color.withOpacity(0.35 * (1.0 - _controller.value)),
+                  color: color.withValues(alpha: 0.35 * (1.0 - _controller.value)),
                 ),
               ),
               // Inner glowing status dot
@@ -2270,7 +2270,7 @@ class _PulsingStatusDotState extends State<PulsingStatusDot>
                   color: color,
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.6),
+                      color: color.withValues(alpha: 0.6),
                       blurRadius: 4,
                       spreadRadius: 1,
                     ),

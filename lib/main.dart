@@ -71,9 +71,6 @@ Future<void> main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     debugPrint("☀️ Foreground Message: ${message.notification?.title}");
 
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-
     // For iOS, the system handles foreground heads-up alerts if set in Info.plist
     // For Android, we manually show it.
     // if (notification != null && android != null) {

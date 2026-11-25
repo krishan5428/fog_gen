@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/data/pojo/user_data.dart';
 import '../../../core/repo/user_repo.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
 
 part 'user_state.dart';
 
@@ -17,7 +18,7 @@ class UserCubit extends Cubit<UserState> {
     try {
       final response = await userRepo.login(mobile, pass, deviceToken ?? "");
       if (kDebugMode) {
-        print("Login response: status=${response.status}, msg=${response.msg}");
+        AppLogger.d("Login response: status=${response.status}, msg=${response.msg}");
       }
 
       if (response.status && response.data != null) {
@@ -53,7 +54,7 @@ class UserCubit extends Cubit<UserState> {
         deviceId,
       );
       if (kDebugMode) {
-        print(
+        AppLogger.d(
           'Signup response : status=${response.status}, msg =${response.msg}',
         );
       }
@@ -92,7 +93,7 @@ class UserCubit extends Cubit<UserState> {
     required String value,
     required String key,
   }) async {
-    print('waiting for updateUser response');
+    AppLogger.d('waiting for updateUser response');
     emit(UserLoading());
     try {
       final response = await userRepo.updateValue(userId, value, key);

@@ -9,6 +9,7 @@ import '../../responses/forgot_pass_response.dart';
 import '../../responses/login_response.dart';
 import '../../responses/signup_response.dart';
 import '../../responses/update_user_response.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
 
 class UserRepoImpl implements UserRepo {
   final Dio _dio = ApiClient.dio;
@@ -19,7 +20,7 @@ class UserRepoImpl implements UserRepo {
     String pass,
     String fcmToken,
   ) async {
-    print("Hitting URL: ${WebUrlConstants.loginUser}");
+    AppLogger.d("Hitting URL: ${WebUrlConstants.loginUser}");
     final deviceOs = await SharedPreferenceHelper.getDeviceType();
     try {
       final response = await _dio.post(
@@ -37,7 +38,7 @@ class UserRepoImpl implements UserRepo {
         }),
       );
 
-      print("RAW Login Response: ${response.data}");
+      AppLogger.d("RAW Login Response: ${response.data}");
 
       if (response.data is! Map<String, dynamic>) {
         return LoginResponse(
@@ -49,8 +50,8 @@ class UserRepoImpl implements UserRepo {
 
       return LoginResponse.fromJson(response.data);
     } on DioException catch (e) {
-      print("Dio Error: ${e.message}");
-      print("Body: ${e.response?.data}");
+      AppLogger.d("Dio Error: ${e.message}");
+      AppLogger.d("Body: ${e.response?.data}");
 
       return LoginResponse(
         status: false,

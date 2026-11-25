@@ -529,6 +529,7 @@ class PanelCard extends StatelessWidget {
       message: confirmationMessage,
     );
 
+    if (!context.mounted) return;
     if (confirm != true) {
       SnackBarHelper.showSnackBar(context, 'Cancelled!');
       return;
@@ -557,7 +558,9 @@ class PanelCard extends StatelessWidget {
           ),
         );
 
+        // ignore: use_build_context_synchronously — dismiss() checks mounted itself and must run so the spinner never stays up
         ProgressDialog.dismiss(context);
+        if (!context.mounted) return;
 
         if (response == "S*007#0*E") {
           SnackBarHelper.showSnackBar(context, 'Successful');
@@ -565,7 +568,9 @@ class PanelCard extends StatelessWidget {
           await _handleFailedIPCommand(context, outputNumber);
         }
       } catch (e) {
+        // ignore: use_build_context_synchronously — dismiss() checks mounted itself and must run so the spinner never stays up
         ProgressDialog.dismiss(context);
+        if (!context.mounted) return;
         final errorText = e.toString().toLowerCase();
         final isConnectionFailed =
             errorText.contains('socketexception') ||
@@ -582,7 +587,7 @@ class PanelCard extends StatelessWidget {
               message:
                   'We couldn’t reach the device through IP.\n Would you like to try sending the command by SMS?',
             );
-            if (confirm == true) {
+            if (confirm == true && context.mounted) {
               _sendCommandSMS(outputNumber, context);
             }
           } else {
@@ -611,7 +616,7 @@ class PanelCard extends StatelessWidget {
         message:
             'Unable to send IP Command!\nDo you want to send the SMS command instead?',
       );
-      if (confirm == true) {
+      if (confirm == true && context.mounted) {
         _sendCommandSMS(outputNumber, context);
       }
     } else {
@@ -639,6 +644,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: sim,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Done');
     } else {
@@ -661,6 +667,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: simNumber,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
@@ -683,6 +690,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: simNumber,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
@@ -705,6 +713,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: simNumber,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
@@ -723,6 +732,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: simNumber,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {
@@ -741,6 +751,7 @@ class PanelCard extends StatelessWidget {
       panelSimNumber: simNumber,
     );
 
+    if (!context.mounted) return;
     if (isSend == true) {
       SnackBarHelper.showSnackBar(context, 'Send!');
     } else {

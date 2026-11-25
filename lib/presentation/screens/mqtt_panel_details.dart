@@ -40,7 +40,7 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
   int daysRemaining = 365;
   double progress = 0.0;
 
-  String _userRole = 'customer';
+  final String _userRole = 'customer';
 
   @override
   void initState() {
