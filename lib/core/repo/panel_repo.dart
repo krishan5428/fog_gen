@@ -35,6 +35,7 @@ abstract class PanelRepo {
     required String panel_acc_no,
     required String mac_id,
     required String version,
+    String imei = '',
   });
 
   Future<PanelResponse> getPanels(String userId);

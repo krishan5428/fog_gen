@@ -83,6 +83,11 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
   TelephoneSettingsEvent _event = TelephoneSettingsEvent.none;
   TelephoneSettingsEvent get event => _event;
 
+  // True only after a complete 018 read. Saving writes all 10 slots, so
+  // saving the blank defaults after a failed read would wipe the panel.
+  bool _hasLoadedFromPanel = false;
+  bool get hasLoadedFromPanel => _hasLoadedFromPanel;
+
   String _lastUpdateMessage = "";
   String get lastUpdateMessage => _lastUpdateMessage;
 
@@ -95,6 +100,21 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
 
     // Fetch initial telephone numbers
     fetchTelephoneNumbers();
+  }
+
+  // The panel read can finish after the user has left the screen; notifying
+  // a disposed ChangeNotifier throws. Same guard as the SR1/Main view models.
+  bool _isDisposed = false;
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   void _initializePanelConnection() {
@@ -132,7 +152,9 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
         Packets.getPacket(isReadPacket: true, args: ["018"]),
         isPriority: true,
       );
-      _parseReadResponse(response);
+      if (!_parseReadResponse(response)) {
+        _setEvent(TelephoneSettingsEvent.showFetchFailedToast);
+      }
     } catch (e) {
       log.e("Failed to fetch telephone numbers: $e");
       _setEvent(TelephoneSettingsEvent.showFetchFailedToast);
@@ -142,17 +164,18 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
     }
   }
 
-  void _parseReadResponse(String data) {
+  /// Returns false when [data] isn't a complete 018 read reply.
+  bool _parseReadResponse(String data) {
     debugPrint("telephone number response: $data");
     if (!data.startsWith("S*018#") || !data.endsWith("*E")) {
       log.w("Invalid telephone data format: $data");
-      return;
+      return false;
     }
 
     final parts = data.substring(6, data.length - 2).split('#');
     if (parts.length < 20) {
       log.w("Incomplete response. Expected 20 parts, got ${parts.length}");
-      return;
+      return false;
     }
 
     List<TelephoneNumberSetting> newSettings = [];
@@ -170,8 +193,10 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
 
     _fetchedSettings = _deepCopySettings(newSettings);
     _localSettings = _deepCopySettings(newSettings);
+    _hasLoadedFromPanel = true;
 
     log.i("Telephone settings loaded successfully.");
+    return true;
   }
 
   void updateLocalSetting(int index, {String? number, AlertType? type}) {
@@ -201,6 +226,13 @@ class TelephoneNoSettingsViewModel extends ChangeNotifier {
   Future<void> submitAllChanges() async {
     if (_isUpdating) {
       log.w("Update already in progress.");
+      return;
+    }
+    if (!_hasLoadedFromPanel) {
+      log.w("Refusing to save: numbers were never read from the panel.");
+      _lastUpdateMessage =
+          "Could not read the panel's numbers. Refresh before saving.";
+      _setEvent(TelephoneSettingsEvent.showUpdateFailedToast);
       return;
     }
 

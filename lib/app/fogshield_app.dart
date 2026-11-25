@@ -1,7 +1,11 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/core/repo/mqtt_repository.dart';
+import 'package:fog_gen_new/features/mqtt/repository/fourg_repository.dart';
+import 'package:fog_gen_new/features/mqtt/services/fourg_mqtt_service.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart'; // 1. Import this
 
@@ -93,7 +97,9 @@ class _FogShieldAppState extends State<FogShieldApp> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           borderRadius: BorderRadius.circular(12),
           showProgressBar: true,
-          closeButtonShowType: CloseButtonShowType.onHover,
+          closeButton: const ToastCloseButton(
+            showType: CloseButtonShowType.onHover,
+          ),
           callbacks: ToastificationCallbacks(
             onTap: (toastItem) {
               debugPrint("Toast clicked!");
@@ -128,7 +134,11 @@ class _FogShieldAppState extends State<FogShieldApp> {
             create: (context) => UserCubit(context.read<UserRepo>()),
           ),
           BlocProvider<PanelCubit>(
-            create: (_) => PanelCubit(PanelRepositoryImpl()),
+            create: (_) => PanelCubit(
+              PanelRepositoryImpl(),
+              // G4 (4GCOM) provisioning during Add Device.
+              FourGRepository(FourGMqttService(MqttRepository())),
+            ),
           ),
           BlocProvider<VendorCubit>(
             create: (_) => VendorCubit(VendorRepoImpl()),
@@ -140,12 +150,18 @@ class _FogShieldAppState extends State<FogShieldApp> {
         ],
         // 4. Wrap MaterialApp with ToastificationWrapper
         child: ToastificationWrapper(
-          child: MaterialApp(
-            navigatorKey: _navigatorKey,
-            debugShowCheckedModeBanner: false,
-            title: 'FogShield',
-            theme: AppTheme.lightTheme,
-            home: const SplashScreen(),
+          // Required by the G4 (4GCOM) screens, which size with .sp/.w/.h.
+          // Same design size as FireNex; other screens are unaffected.
+          child: ScreenUtilInit(
+            designSize: const Size(400, 850),
+            minTextAdapt: true,
+            builder: (context, _) => MaterialApp(
+              navigatorKey: _navigatorKey,
+              debugShowCheckedModeBanner: false,
+              title: 'FogShield',
+              theme: AppTheme.lightTheme,
+              home: const SplashScreen(),
+            ),
           ),
         ),
       ),

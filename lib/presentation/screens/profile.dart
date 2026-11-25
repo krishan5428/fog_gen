@@ -1,3 +1,4 @@
+import 'package:fog_gen_new/presentation/cubit/panel/panel_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -368,6 +369,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 void _handlingDelete(context) async {
   await Future.delayed(const Duration(seconds: 1));
+  BlocProvider.of<PanelCubit>(context).resetState();
   await SharedPreferenceHelper.clearLoginState();
   CustomNavigation.instance.pop(context);
   CustomNavigation.instance.pushAndRemove(

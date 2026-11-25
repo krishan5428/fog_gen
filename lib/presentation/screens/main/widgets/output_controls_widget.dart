@@ -121,7 +121,7 @@ class OutputControlsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.18),
+            color: Colors.grey.withValues(alpha: 0.18),
             spreadRadius: 1,
             blurRadius: 4,
           ),

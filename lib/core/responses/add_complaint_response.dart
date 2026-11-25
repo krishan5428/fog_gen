@@ -5,6 +5,9 @@ class AddComplaintResponse {
   AddComplaintResponse({required this.status, required this.message});
 
   factory AddComplaintResponse.fromJson(Map<String, dynamic> json) {
-    return AddComplaintResponse(status: json['status'], message: json['msg']);
+    return AddComplaintResponse(
+      status: json['status'] == true,
+      message: json['msg']?.toString() ?? '',
+    );
   }
 }

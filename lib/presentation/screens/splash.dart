@@ -8,7 +8,6 @@ import 'package:video_player/video_player.dart';
 import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
-import '../../main.dart';
 import '../../utils/app_info.dart';
 import '../cubit/user/user_cubit.dart';
 import 'login.dart';

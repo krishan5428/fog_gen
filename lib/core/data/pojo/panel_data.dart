@@ -37,6 +37,11 @@ class PanelData {
   final String mobileNumber10;
   final bool isIpPanel;
   final bool isIpGsmPanel;
+  // G4 (4GCOM) panels: 15-digit IMEI. Empty for every other panel type.
+  final String panelImei;
+  // 'owner' for the account's own panels; 'accepted' for a shared (guest) panel.
+  final String shareStatus;
+  final String sharedBy;
 
   PanelData({
     required this.pnlId,
@@ -77,6 +82,9 @@ class PanelData {
     required this.mobileNumber10,
     required this.isIpPanel,
     required this.isIpGsmPanel,
+    this.panelImei = '',
+    this.shareStatus = 'owner',
+    this.sharedBy = '',
   });
 
   factory PanelData.fromJson(Map<String, dynamic> json) {
@@ -128,6 +136,11 @@ class PanelData {
       mobileNumber10: json['mobile_number10']?.toString() ?? '',
       isIpPanel: parseBool(json['is_ip_panel']),
       isIpGsmPanel: parseBool(json['is_ip_gsm_panel']),
+      panelImei: json['panel_imei']?.toString() ?? '',
+      shareStatus: (json['share_status']?.toString().isEmpty ?? true)
+          ? 'owner'
+          : json['share_status'].toString(),
+      sharedBy: json['shared_by']?.toString() ?? '',
     );
   }
 
@@ -171,6 +184,99 @@ class PanelData {
       'mobile_number10': mobileNumber10,
       'is_ip_panel': isIpPanel,
       'is_ip_gsm_panel': isIpGsmPanel,
+      'panel_imei': panelImei,
+      'share_status': shareStatus,
+      'shared_by': sharedBy,
     };
+  }
+}
+
+extension PanelDataCopyWith on PanelData {
+  PanelData copyWith({
+    int? pnlId,
+    String? usrId,
+    String? appType,
+    String? pnlAccNo,
+    String? panelName,
+    String? panelType,
+    String? siteName,
+    String? siteAddress,
+    String? pnlMac,
+    String? pnlVer,
+    String? pnlLineNo,
+    String? pnlRcvrNo,
+    String? ipAdd,
+    String? portNo,
+    String? staticIp,
+    String? staticPort,
+    String? pass,
+    String? adminCode,
+    String? cOn,
+    String? usr1,
+    String? usr2,
+    String? usr3,
+    String? usr4,
+    String? panelSimNumber,
+    String? adminMobileNumber,
+    String? mobileNumberSubId,
+    String? mobileNumber1,
+    String? mobileNumber2,
+    String? mobileNumber3,
+    String? mobileNumber4,
+    String? mobileNumber5,
+    String? mobileNumber6,
+    String? mobileNumber7,
+    String? mobileNumber8,
+    String? mobileNumber9,
+    String? mobileNumber10,
+    bool? isIpPanel,
+    String? panelImei,
+    bool? isIpGsmPanel,
+    String? shareStatus,
+    String? sharedBy,
+  }) {
+    return PanelData(
+      pnlId: pnlId ?? this.pnlId,
+      usrId: usrId ?? this.usrId,
+      appType: appType ?? this.appType,
+      pnlAccNo: pnlAccNo ?? this.pnlAccNo,
+      panelName: panelName ?? this.panelName,
+      panelType: panelType ?? this.panelType,
+      siteName: siteName ?? this.siteName,
+      siteAddress: siteAddress ?? this.siteAddress,
+      pnlMac: pnlMac ?? this.pnlMac,
+      pnlVer: pnlVer ?? this.pnlVer,
+      pnlLineNo: pnlLineNo ?? this.pnlLineNo,
+      pnlRcvrNo: pnlRcvrNo ?? this.pnlRcvrNo,
+      ipAdd: ipAdd ?? this.ipAdd,
+      portNo: portNo ?? this.portNo,
+      staticIp: staticIp ?? this.staticIp,
+      staticPort: staticPort ?? this.staticPort,
+      pass: pass ?? this.pass,
+      adminCode: adminCode ?? this.adminCode,
+      cOn: cOn ?? this.cOn,
+      usr1: usr1 ?? this.usr1,
+      usr2: usr2 ?? this.usr2,
+      usr3: usr3 ?? this.usr3,
+      usr4: usr4 ?? this.usr4,
+      panelSimNumber: panelSimNumber ?? this.panelSimNumber,
+      panelImei: panelImei ?? this.panelImei,
+      adminMobileNumber: adminMobileNumber ?? this.adminMobileNumber,
+      mobileNumberSubId: mobileNumberSubId ?? this.mobileNumberSubId,
+      mobileNumber1: mobileNumber1 ?? this.mobileNumber1,
+      mobileNumber2: mobileNumber2 ?? this.mobileNumber2,
+      mobileNumber3: mobileNumber3 ?? this.mobileNumber3,
+      mobileNumber4: mobileNumber4 ?? this.mobileNumber4,
+      mobileNumber5: mobileNumber5 ?? this.mobileNumber5,
+      mobileNumber6: mobileNumber6 ?? this.mobileNumber6,
+      mobileNumber7: mobileNumber7 ?? this.mobileNumber7,
+      mobileNumber8: mobileNumber8 ?? this.mobileNumber8,
+      mobileNumber9: mobileNumber9 ?? this.mobileNumber9,
+      mobileNumber10: mobileNumber10 ?? this.mobileNumber10,
+      isIpPanel: isIpPanel ?? this.isIpPanel,
+      isIpGsmPanel: isIpGsmPanel ?? this.isIpGsmPanel,
+      shareStatus: shareStatus ?? this.shareStatus,
+      sharedBy: sharedBy ?? this.sharedBy,
+    );
   }
 }

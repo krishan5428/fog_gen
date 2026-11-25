@@ -23,8 +23,8 @@ class GridBox extends StatelessWidget {
       child: InkWell(
         onTap: option.onTap,
         borderRadius: BorderRadius.circular(12),
-        splashColor: AppColors.colorPrimary.withOpacity(0.2),
-        highlightColor: AppColors.colorPrimary.withOpacity(0.1),
+        splashColor: AppColors.colorPrimary.withValues(alpha: 0.2),
+        highlightColor: AppColors.colorPrimary.withValues(alpha: 0.1),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300, width: 1),

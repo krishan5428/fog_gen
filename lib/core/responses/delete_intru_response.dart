@@ -7,7 +7,7 @@ class DeleteIntruResponse {
   factory DeleteIntruResponse.fromJson(Map<String, dynamic> json) {
     return DeleteIntruResponse(
       status: json['status'] == true,
-      msg: json['msg'],
+      msg: json['msg']?.toString() ?? '',
     );
   }
 }

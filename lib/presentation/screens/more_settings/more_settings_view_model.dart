@@ -6,19 +6,19 @@ import 'package:fog_gen_new/core/utils/packets.dart';
 import 'package:fog_gen_new/presentation/bottom_sheet_dialog/local_ip_settings.dart';
 import 'package:fog_gen_new/presentation/bottom_sheet_dialog/panel_id.dart';
 import 'package:fog_gen_new/presentation/bottom_sheet_dialog/update_destination_ip_data.dart';
-import 'package:fog_gen_new/presentation/dialog/confirmation_dialog.dart';
 import 'package:fog_gen_new/presentation/dialog/ok_dialog.dart';
 import 'package:fog_gen_new/presentation/dialog/progress.dart';
-import 'package:fog_gen_new/presentation/dialog/progress_with_message.dart';
-import 'package:fog_gen_new/presentation/screens/panel_list/panel_list.dart';
 import 'package:fog_gen_new/utils/navigation.dart';
 import 'package:fog_gen_new/utils/snackbar_helper.dart';
 
 class MoreSettingsViewModel extends ChangeNotifier {
   final PanelData panelData;
-  final SocketRepository _socketRepository = SocketRepository();
+  final SocketRepository _socketRepository;
 
-  MoreSettingsViewModel({required this.panelData});
+  MoreSettingsViewModel({
+    required this.panelData,
+    SocketRepository? socketRepository,
+  }) : _socketRepository = socketRepository ?? SocketRepository();
 
   void _setupPanelConnection() {
     final app = Application();
@@ -48,7 +48,7 @@ class MoreSettingsViewModel extends ChangeNotifier {
       if (response.contains('001')) {
         showPanelIdDialog(context, response, _socketRepository);
       } else {
-        await _handleConnectionFailure(context, "newAddress");
+        await _handleConnectionFailure(context);
       }
     } catch (e) {
       // Check mounted in catch block too
@@ -125,52 +125,16 @@ class MoreSettingsViewModel extends ChangeNotifier {
 
   // --- HELPERS ---
 
-  Future<void> _handleConnectionFailure(
-    BuildContext context,
-    String smsCommandType,
-  ) async {
-    if (panelData.isIpGsmPanel) {
-      if (!context.mounted) return;
-
-      final confirm = await showConfirmationDialog(
-        context: context,
-        message: 'Unable to send IP Command!\nDo you want to send SMS command?',
-      );
-
-      if (!context.mounted) return;
-
-      if (confirm == true) {
-        _sendSMSCommand(smsCommandType, context);
-      }
-    } else if (panelData.isIpPanel) {
-      if (!context.mounted) return;
-
-      showInfoDialog(
-        context: context,
-        message:
-            'Seems like Panel is not connected!\nPlease check the Panel and try again!',
-      );
-    }
-  }
-
-  Future<void> _sendSMSCommand(String commandType, BuildContext context) async {
-    final simNumber = panelData.panelSimNumber.trim();
-
-    // Note: ProgressDialogWithMessage.show is likely async internally
-    final isSent = await ProgressDialogWithMessage.show(
-      context,
-      messages: ["message"],
-      panelSimNumber: simNumber,
-    );
-
+  // The Panel ID can only be read over IP: an SMS cannot bring the panel's
+  // answer back into the app. (This used to offer an SMS fallback that sent
+  // the literal text "message" and then reported "Address updated".)
+  Future<void> _handleConnectionFailure(BuildContext context) async {
     if (!context.mounted) return;
-
-    if (isSent == true) {
-      SnackBarHelper.showSnackBar(context, 'Address updated successfully.');
-      CustomNavigation.instance.pushReplace(
-        context: context,
-        screen: const PanelListPage(),
-      );
-    }
+    await showInfoDialog(
+      context: context,
+      message:
+          'Panel not reachable over IP.\nThe Panel ID can only be read over IP. '
+          'Please check the network and try again.',
+    );
   }
 }

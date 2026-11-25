@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:fog_gen_new/core/mqtt/certificate_store.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -68,9 +71,6 @@ Future<void> main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     debugPrint("☀️ Foreground Message: ${message.notification?.title}");
 
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
-
     // For iOS, the system handles foreground heads-up alerts if set in Info.plist
     // For Android, we manually show it.
     // if (notification != null && android != null) {
@@ -90,6 +90,11 @@ Future<void> main() async {
     //   );
     // }
   });
+
+  // MQTT client certificates for G4 (4GCOM) panels: memory → secure storage
+  // → API, with a background version check. Not awaited so startup isn't
+  // blocked; MqttRepository waits for them on connect.
+  unawaited(CertificateStore.instance.initialize());
 
   runApp(const FogShieldApp());
 }

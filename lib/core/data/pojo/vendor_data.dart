@@ -18,7 +18,7 @@ class VendorData {
   factory VendorData.fromJson(Map<String, dynamic> json) {
     return VendorData(
       // vendor_id: json['vendor_id'],
-      user_id: json['user_id'],
+      user_id: json['user_id']?.toString() ?? '',
       vendor_name: json['vendor_name'] ?? '',
       vendor_email: json['vendor_email'] ?? '',
       vendor_mobile: json['vendor_mobile'] ?? '',

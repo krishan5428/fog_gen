@@ -6,7 +6,7 @@ class UpdateNoResponse {
 
   factory UpdateNoResponse.fromJson(Map<String, dynamic> json) {
     return UpdateNoResponse(
-      status: json['status'] ?? '',
+      status: json['status'] == true,
       msg: json['msg'] ?? '',
     );
   }

@@ -7,7 +7,7 @@ class DeletePanelResponse {
   factory DeletePanelResponse.fromJson(Map<String, dynamic> json) {
     return DeletePanelResponse(
       status: json['status'] == true,
-      msg: json['msg'],
+      msg: (json['msg'] ?? json['message'])?.toString() ?? '',
     );
   }
 }

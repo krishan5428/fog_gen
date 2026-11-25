@@ -11,7 +11,8 @@ class PanelLoading extends PanelState {}
 
 class AddPanelSuccess extends PanelState {
   final String message;
-  AddPanelSuccess({required this.message});
+  final String? panelAccNo;
+  AddPanelSuccess({required this.message, this.panelAccNo});
 
   @override
   List<Object?> get props => [message];

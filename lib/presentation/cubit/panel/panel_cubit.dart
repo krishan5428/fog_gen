@@ -1,23 +1,38 @@
 import 'dart:convert';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:fog_gen_new/constants/strings.dart';
 import 'package:fog_gen_new/core/data/pojo/panel_data.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
+import 'package:fog_gen_new/features/mqtt/repository/fourg_repository.dart';
 import 'package:fog_gen_new/core/repo/panel_repo.dart';
+import 'package:fog_gen_new/core/responses/add_panel_response.dart';
 import 'package:fog_gen_new/utils/auth_helper.dart';
 
 part 'panel_state.dart';
 
 class PanelCubit extends Cubit<PanelState> {
   final PanelRepo panelRepo;
+  // Only needed for G4 (4GCOM) provisioning. See docs/G4_MQTT_FLOW.md.
+  final FourGRepository? fourGRepository;
+
+  /// Wait after each G4 provisioning write before reading it back.
+  @visibleForTesting
+  Duration fourGWriteSettle = const Duration(seconds: 3);
 
   static const String CACHED_PANELS_KEY = 'cached_panel_list';
   static const String PENDING_ADDS_KEY = 'pending_panels_list';
   static const String PENDING_UPDATES_KEY = 'pending_updates_list';
   static const String PENDING_DELETES_KEY = 'pending_deletes_list';
 
-  PanelCubit(this.panelRepo) : super(PanelInitial());
+  PanelCubit(this.panelRepo, [this.fourGRepository]) : super(PanelInitial());
+
+  /// Forgets the panel list held in memory. PanelCubit lives for the whole
+  /// app, so call this on logout; otherwise the next user briefly sees the
+  /// previous user's panels.
+  void resetState() => emit(PanelInitial());
 
   // ... [getPanel, _emitCachedData, _loadFromCacheFallback omitted for brevity, keep them as they were] ...
   // Please ensure you keep the getPanel() methods and others as they were in your original file.
@@ -31,7 +46,7 @@ class PanelCubit extends Cubit<PanelState> {
     }
 
     try {
-      await _syncAllPendingActions(userId);
+      await _syncPendingOnce(userId);
       final response = await panelRepo.getPanels(userId);
 
       if (response.status) {
@@ -190,7 +205,25 @@ class PanelCubit extends Cubit<PanelState> {
     required String panel_acc_no,
     required String mac_id,
     required String version,
+    String imei = '',
   }) async {
+    if (fourGComPanels.contains(panelName)) {
+      await _addFourGPanel(
+        userId: userId,
+        panelType: panelType,
+        panelName: panelName,
+        site: site,
+        imei: imei,
+        panelSimNumber: panelSimNumber,
+        adminCode: adminCode,
+        adminMobileNumber: adminMobileNumber,
+        address: address,
+        cOn: cOn,
+        password: password,
+      );
+      return;
+    }
+
     emit(PanelLoading());
     try {
       final response = await panelRepo.addPanel(
@@ -282,6 +315,217 @@ class PanelCubit extends Cubit<PanelState> {
     }
   }
 
+  // ===========================================================================
+  // G4 (4GCOM) ADD + PROVISIONING
+  // ===========================================================================
+  // Order (docs/G4_MQTT_FLOW.md → "Add Device Details → Save device"):
+  //   1. MQTT handshake (000)        – nothing saved on failure
+  //   2. Server addPanel (4GCOM)     – returns panelAccNo + pnlId
+  //   3. Write + read back Device ID (013/01)
+  //   4. Write + read back Admin number (008)
+  //   5. Write + read back Destination IP (013/02)
+  // Any failure after step 2 deletes the server record (rollback).
+  // Unlike other panels, a G4 panel is never saved offline.
+  Future<void> _addFourGPanel({
+    required String userId,
+    required String panelType,
+    required String panelName,
+    required String site,
+    required String imei,
+    required String panelSimNumber,
+    required String adminCode,
+    required String adminMobileNumber,
+    required String address,
+    required String cOn,
+    required String password,
+  }) async {
+    emit(PanelLoading());
+    final formattedPassword =
+        password.startsWith("00") ? password : "00$password";
+    final repo = fourGRepository;
+    if (repo == null) {
+      emit(AddPanelFailure(message: "MQTT service not available"));
+      return;
+    }
+
+    // 1. Handshake
+    bool mqttConnected = false;
+    try {
+      AppLogger.d("🚀 Starting MQTT handshake");
+      mqttConnected = await repo.connectPanel(
+        imei: imei,
+        passcode: formattedPassword,
+      );
+    } catch (e) {
+      AppLogger.d("MQTT handshake error: $e");
+    }
+    AppLogger.d("MQTT Result: $mqttConnected");
+    if (!mqttConnected) {
+      emit(AddPanelFailure(message: "Device MQTT handshake failed"));
+      return;
+    }
+
+    // 2. Server record
+    final AddPanelResponse response;
+    try {
+      response = await panelRepo.addPanel(
+        userId: userId,
+        panelType: panelType,
+        panelName: panelName,
+        site: site,
+        panelSimNumber: panelSimNumber,
+        adminCode: adminCode,
+        adminMobileNumber: adminMobileNumber,
+        mobileNumberSubId: "0",
+        mobileNumber1: "0000000000",
+        mobileNumber2: "0000000000",
+        mobileNumber3: "0000000000",
+        mobileNumber4: "0000000000",
+        mobileNumber5: "0000000000",
+        mobileNumber6: "0000000000",
+        mobileNumber7: "0000000000",
+        mobileNumber8: "0000000000",
+        mobileNumber9: "0000000000",
+        mobileNumber10: "0000000000",
+        address: address,
+        cOn: cOn,
+        ip_address: "",
+        port_no: "",
+        static_ip_address: "",
+        static_port_no: "",
+        password: formattedPassword,
+        is_ip_panel: false,
+        is_ip_gsm_panel: false,
+        panel_acc_no: "",
+        mac_id: "",
+        version: "",
+        imei: imei,
+      );
+    } catch (e) {
+      emit(AddPanelFailure(message: e.toString()));
+      return;
+    }
+
+    if (!response.status) {
+      emit(
+        AddPanelFailure(
+          message: response.msg.isNotEmpty ? response.msg : "Add Device failed",
+        ),
+      );
+      return;
+    }
+    AppLogger.d("PANEL ACC NO: ${response.panelAccNo}");
+    AppLogger.d("PANEL DB ID: ${response.pnlId}");
+
+    Future<void> rollback(String message) async {
+      try {
+        final pnlId = response.pnlId ?? await _findPanelIdByImei(userId, imei);
+        if (pnlId != null) {
+          await panelRepo.deletePanel(userId, pnlId);
+          AppLogger.d("✅ Rollback completed");
+        } else {
+          AppLogger.w("⚠️ Rollback skipped: pnl_id not found for IMEI $imei");
+        }
+      } catch (e) {
+        AppLogger.w("⚠️ Rollback failed: $e");
+      }
+      emit(AddPanelFailure(message: message));
+    }
+
+    final panelAccNo = response.panelAccNo ?? '';
+    if (panelAccNo.isEmpty) {
+      await rollback("Server did not return a Device ID. Device removed.");
+      return;
+    }
+
+    try {
+      // 3. Device ID
+      AppLogger.d("📤 Assigning Panel ID: $panelAccNo");
+      await repo.assignPanelId(
+        imei: imei,
+        passcode: formattedPassword,
+        panelId: panelAccNo,
+      );
+      await Future.delayed(fourGWriteSettle);
+      final readBackId = await repo.readPanelId(
+        imei: imei,
+        passcode: formattedPassword,
+      );
+      AppLogger.d("READ BACK PANEL ID: $readBackId");
+      String parsedId = readBackId ?? "";
+      if (parsedId.contains('\$')) {
+        final parts = parsedId.split('\$');
+        if (parts.length >= 7) parsedId = parts[6];
+      }
+      if (parsedId != panelAccNo) {
+        await rollback("Device ID verification failed. Device removed.");
+        return;
+      }
+
+      // 4. Admin number
+      AppLogger.d("📤 Assigning Admin Number...");
+      await repo.assignAdminNumber(
+        imei: imei,
+        passcode: formattedPassword,
+        adminNumber: adminMobileNumber,
+      );
+      await Future.delayed(fourGWriteSettle);
+      final telephoneResponse = await repo.readTelephoneSettings(
+        imei: imei,
+        passcode: formattedPassword,
+      );
+      if (telephoneResponse == null) {
+        await rollback("Unable to verify Admin Number. Device removed.");
+        return;
+      }
+      if (!telephoneResponse.contains(adminMobileNumber.trim())) {
+        AppLogger.d("❌ Admin Number Verification Failed: $telephoneResponse");
+        await rollback("Admin Number verification failed. Device removed.");
+        return;
+      }
+
+      // 5. Destination IP
+      await repo.assignDestinationSettings(
+        imei: imei,
+        passcode: formattedPassword,
+      );
+      await Future.delayed(fourGWriteSettle);
+      final destinationResponse = await repo.readDestinationSettings(
+        imei: imei,
+        passcode: formattedPassword,
+      );
+      if (destinationResponse == null) {
+        await rollback(
+          "Unable to verify destination settings. Device removed.",
+        );
+        return;
+      }
+      const expectedIp = "182.73.129.27";
+      const expectedPort = "05600";
+      if (!destinationResponse.contains(expectedIp) ||
+          !destinationResponse.contains(expectedPort)) {
+        await rollback("Destination verification failed. Device removed.");
+        return;
+      }
+      AppLogger.d("✅ Destination Verified");
+    } catch (e) {
+      await rollback(e.toString());
+      return;
+    }
+
+    emit(AddPanelSuccess(message: response.msg, panelAccNo: panelAccNo));
+    getPanel(userId: userId);
+  }
+
+  Future<int?> _findPanelIdByImei(String userId, String imei) async {
+    final panels = await panelRepo.getPanels(userId);
+    if (!panels.status) return null;
+    for (final p in panels.panelsData) {
+      if (p.panelImei.trim() == imei.trim()) return p.pnlId;
+    }
+    return null;
+  }
+
   void deletePanel({required String userId, required int panelId}) async {
     emit(PanelLoading());
     try {
@@ -367,6 +611,18 @@ class PanelCubit extends Cubit<PanelState> {
   }
 
   // ... [Rest of the file remains unchanged: _syncAllPendingActions, _updateLocalPanel, etc.] ...
+  // Two refreshes at once (e.g. the list screen + the refresh after an
+  // offline add) must not both replay the offline queue: each would read the
+  // same pending items and send them twice (duplicate panels on the server).
+  // A second caller waits for the sync already running instead.
+  Future<void>? _syncInFlight;
+
+  Future<void> _syncPendingOnce(String userId) {
+    return _syncInFlight ??= _syncAllPendingActions(
+      userId,
+    ).whenComplete(() => _syncInFlight = null);
+  }
+
   Future<void> _syncAllPendingActions(String userId) async {
     // 1. Sync Adds
     final adds = await _getPendingList(PENDING_ADDS_KEY);

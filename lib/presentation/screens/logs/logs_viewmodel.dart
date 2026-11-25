@@ -44,14 +44,13 @@ class LogsViewModel extends ChangeNotifier {
       final rawList = await _logsService.fetchLogs(
         pnlId: _panelData.pnlId.toString(),
         usrId: _panelData.usrId.toString(),
-        // Ensure these fields exist in your PanelData model
-        ipAdd: _panelData.ipAdd ?? "",
-        port: _panelData.portNo ?? "",
-        rcvrNo: _panelData.pnlRcvrNo ?? "",
-        accNo: _panelData.pnlAccNo ?? "",
-        lineNo: _panelData.pnlLineNo ?? "",
-        mac: _panelData.pnlMac ?? "",
-        ver: _panelData.pnlVer ?? "",
+        ipAdd: _panelData.ipAdd,
+        port: _panelData.portNo,
+        rcvrNo: _panelData.pnlRcvrNo,
+        accNo: _panelData.pnlAccNo,
+        lineNo: _panelData.pnlLineNo,
+        mac: _panelData.pnlMac,
+        ver: _panelData.pnlVer,
       );
 
       if (rawList.isEmpty) {
@@ -108,7 +107,7 @@ class LogsViewModel extends ChangeNotifier {
           theme: pw.ThemeData.withFont(base: font, bold: fontBold),
           build: (pw.Context context) => [
             pw.Header(level: 0, child: pw.Text("Panel Logs")),
-            pw.Table.fromTextArray(
+            pw.TableHelper.fromTextArray(
               headers: ['Alert Name', 'Time', 'Date'],
               data: _logs
                   .map((log) => [

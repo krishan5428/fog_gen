@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/data/pojo/user_data.dart';
 import '../core/data/pojo/vendor_data.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
 
 class SharedPreferenceHelper {
   static const _keyIsLoggedIn = 'is_logged_in';
@@ -39,7 +41,7 @@ class SharedPreferenceHelper {
       return prefs.getBool(_keyIsLoggedIn) ?? false;
     } catch (e) {
       if (kDebugMode) {
-        print("Error reading login state: $e");
+        AppLogger.d("Error reading login state: $e");
       }
       return false;
     }
@@ -49,10 +51,10 @@ class SharedPreferenceHelper {
   static Future<bool> setSmsDialogShown(bool value) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.setBool(_keyIsDialogShown, value);
+      return await prefs.setBool(_keyIsDialogShown, value);
     } catch (e) {
       if (kDebugMode) {
-        print("Error setting SMS DIALOG: $e");
+        AppLogger.d("Error setting SMS DIALOG: $e");
       }
       return false;
     }
@@ -64,7 +66,7 @@ class SharedPreferenceHelper {
       return prefs.getBool(_keyIsDialogShown) ?? false;
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting SMS DIALOG: $e");
+        AppLogger.d("Error getting SMS DIALOG: $e");
       }
       return false;
     }
@@ -76,7 +78,7 @@ class SharedPreferenceHelper {
       return prefs.getString(_keyDeviceType) ?? '';
     } catch (e) {
       if (kDebugMode) {
-        print("Error reading login state: $e");
+        AppLogger.d("Error reading login state: $e");
       }
       return '';
     }
@@ -88,19 +90,41 @@ class SharedPreferenceHelper {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_keyUserId);
     } catch (e) {
-      print("Error reading userId: $e");
+      AppLogger.d("Error reading userId: $e");
     }
     return null;
   }
 
   // --- Clear State ---
+  // Removes everything that belongs to the user who is logging out, so the
+  // next user on this device never sees their profile, password or panel
+  // list, and their unsynced offline actions are never replayed under the
+  // next user's id. (Unsynced offline actions of the old user are dropped.)
+  // The FCM device token stays: it belongs to the device, not the user.
   static Future<void> clearLoginState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyDeviceType);
     await prefs.remove(_keyIsDialogShown);
+    await prefs.remove(_keyUser);
+    await prefs.remove(_keyPass);
+    await _deletePass();
+    await prefs.remove(_keyVendor);
+    for (final key in prefs.getKeys().toList()) {
+      if (_userCacheKeys.contains(key) || key.startsWith('logs_cache_')) {
+        await prefs.remove(key);
+      }
+    }
   }
+
+  // Panel list cache + offline queues (PanelCubit keys).
+  static const _userCacheKeys = {
+    _keyCachedPanels,
+    'pending_panels_list',
+    'pending_updates_list',
+    'pending_deletes_list',
+  };
 
   // --- User Data ---
   static Future<void> saveUserData(UserData user) async {
@@ -119,19 +143,44 @@ class SharedPreferenceHelper {
     return null;
   }
 
+  // The login password is needed later (profile: change password / delete
+  // account), so it is kept — in the Keychain/Keystore, not plain prefs.
+  static const _secure = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
   static Future<void> setPass(String pass) async {
+    await _secure.write(key: _keyPass, value: pass);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyPass, pass);
+    await prefs.remove(_keyPass); // plain copy from older app versions
   }
 
   static Future<String?> getPass() async {
     try {
+      final stored = await _secure.read(key: _keyPass);
+      if (stored != null) return stored;
+
+      // Older versions kept it in plain SharedPreferences: move it.
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_keyPass);
+      final legacy = prefs.getString(_keyPass);
+      if (legacy != null) {
+        await _secure.write(key: _keyPass, value: legacy);
+        await prefs.remove(_keyPass);
+      }
+      return legacy;
     } catch (e) {
-      print("Error reading pass: $e");
+      AppLogger.d("Error reading pass: $e");
     }
     return null;
+  }
+
+  static Future<void> _deletePass() async {
+    try {
+      await _secure.delete(key: _keyPass);
+    } catch (e) {
+      AppLogger.d("Error deleting pass: $e");
+    }
   }
 
   // --- Vendor Data ---
@@ -211,7 +260,7 @@ class SharedPreferenceHelper {
       return prefs.getString(key);
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting string for key $key: $e");
+        AppLogger.d("Error getting string for key $key: $e");
       }
       return null;
     }
@@ -224,7 +273,7 @@ class SharedPreferenceHelper {
       await prefs.setString(key, value);
     } catch (e) {
       if (kDebugMode) {
-        print("Error setting string for key $key: $e");
+        AppLogger.d("Error setting string for key $key: $e");
       }
     }
   }

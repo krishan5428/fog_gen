@@ -11,6 +11,7 @@ import '../dialog/progress.dart';
 import '../screens/login.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/vertical_gap.dart';
+import 'package:fog_gen_new/core/logging/app_logger.dart';
 
 class ChangeUserMobileBottomSheet extends StatefulWidget {
   final String userId;
@@ -62,7 +63,7 @@ class _ChangeUserMobileBottomSheetState
             confirmText: 'OK',
           );
 
-          print("Dialog result: $confirmed");
+          AppLogger.d("Dialog result: $confirmed");
 
           if (confirmed == true && context.mounted) {
             final navContext = context;

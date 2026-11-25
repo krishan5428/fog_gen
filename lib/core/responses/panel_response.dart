@@ -20,7 +20,7 @@ class PanelResponse {
                 json['panels'].map((e) => PanelData.fromJson(e)),
               )
               : [],
-      msg: json['msg'],
+      msg: (json['msg'] ?? json['message'])?.toString() ?? '',
     );
   }
 }

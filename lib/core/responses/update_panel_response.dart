@@ -15,7 +15,9 @@ class UpdatePanelResponse {
     return UpdatePanelResponse(
       status: json['status'] == true,
       msg: json['msg'] ?? '',
-      panelData: PanelData.fromJson(json['data']),
+      panelData: json['data'] is Map<String, dynamic>
+          ? PanelData.fromJson(json['data'])
+          : null,
     );
   }
 }

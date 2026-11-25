@@ -8,7 +8,7 @@ class GetVendorResponse {
 
   factory GetVendorResponse.fromJson(Map<String, dynamic> json) {
     return GetVendorResponse(
-      status: json['status'],
+      status: json['status'] == true,
       vendorData:
           json['vendors'] != null
               ? List<VendorData>.from(

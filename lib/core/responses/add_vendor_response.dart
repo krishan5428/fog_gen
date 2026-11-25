@@ -11,9 +11,11 @@ class AddVendorResponse {
 
   factory AddVendorResponse.fromJson(Map<String, dynamic> json) {
     return AddVendorResponse(
-      status: json['status'],
-      msg: json['msg'],
-      vendorId: json['vendor_id'],
+      status: json['status'] == true,
+      msg: json['msg']?.toString() ?? '',
+      vendorId: json['vendor_id'] is int
+          ? json['vendor_id']
+          : int.tryParse(json['vendor_id']?.toString() ?? '') ?? 0,
     );
   }
 }

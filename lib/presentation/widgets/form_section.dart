@@ -7,6 +7,9 @@ class FormSection extends StatelessWidget {
   final TextEditingController? controller;
   final int? maxLength;
   final String? Function(String?)? validator;
+  final Widget? suffixIcon;
+  final IconData? prefixIcon;
+  final bool readOnly;
 
   const FormSection({
     super.key,
@@ -15,6 +18,9 @@ class FormSection extends StatelessWidget {
     this.controller,
     this.maxLength,
     this.validator,
+    this.suffixIcon,
+    this.prefixIcon,
+    this.readOnly = false,
   });
 
   @override
@@ -24,9 +30,13 @@ class FormSection extends StatelessWidget {
       keyboardType: keyboardType,
       maxLength: maxLength,
       validator: validator,
+      readOnly: readOnly,
+      showCursor: !readOnly,
       decoration: InputDecoration(
         labelText: label,
-        fillColor: AppColors.white,
+        suffixIcon: suffixIcon,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+        fillColor: readOnly ? const Color(0xFFF0F1F3) : AppColors.white,
         labelStyle: TextStyle(color: AppColors.colorPrimary),
         border: OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.colorAccent),
