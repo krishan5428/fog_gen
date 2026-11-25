@@ -23,15 +23,17 @@ class UserData {
 
   factory UserData.fromJson(Map<String, dynamic> json) {
     return UserData(
-      usrId: json['usr_id'],
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      mobile: json['mobile'] ?? '',
-      enrolledOn: json['enrolled_on'] ?? '',
-      devInfo: json['dev_info'] ?? '',
-      deviceId: json['device_id'] ?? '',
-      status: json['status'] ?? '',
-      cOn: json['c_on'] ?? '',
+      usrId: json['usr_id'] is int
+          ? json['usr_id']
+          : int.tryParse(json['usr_id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      mobile: json['mobile']?.toString() ?? '',
+      enrolledOn: json['enrolled_on']?.toString() ?? '',
+      devInfo: json['dev_info']?.toString() ?? '',
+      deviceId: json['device_id']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      cOn: json['c_on']?.toString() ?? '',
     );
   }
 

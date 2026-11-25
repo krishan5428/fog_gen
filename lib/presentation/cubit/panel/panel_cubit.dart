@@ -29,6 +29,10 @@ class PanelCubit extends Cubit<PanelState> {
 
   PanelCubit(this.panelRepo, [this.fourGRepository]) : super(PanelInitial());
 
+  /// Forgets the panel list held in memory. PanelCubit lives for the whole
+  /// app, so call this on logout; otherwise the next user briefly sees the
+  /// previous user's panels.
+  void resetState() => emit(PanelInitial());
 
   // ... [getPanel, _emitCachedData, _loadFromCacheFallback omitted for brevity, keep them as they were] ...
   // Please ensure you keep the getPanel() methods and others as they were in your original file.
@@ -42,7 +46,7 @@ class PanelCubit extends Cubit<PanelState> {
     }
 
     try {
-      await _syncAllPendingActions(userId);
+      await _syncPendingOnce(userId);
       final response = await panelRepo.getPanels(userId);
 
       if (response.status) {
@@ -607,6 +611,18 @@ class PanelCubit extends Cubit<PanelState> {
   }
 
   // ... [Rest of the file remains unchanged: _syncAllPendingActions, _updateLocalPanel, etc.] ...
+  // Two refreshes at once (e.g. the list screen + the refresh after an
+  // offline add) must not both replay the offline queue: each would read the
+  // same pending items and send them twice (duplicate panels on the server).
+  // A second caller waits for the sync already running instead.
+  Future<void>? _syncInFlight;
+
+  Future<void> _syncPendingOnce(String userId) {
+    return _syncInFlight ??= _syncAllPendingActions(
+      userId,
+    ).whenComplete(() => _syncInFlight = null);
+  }
+
   Future<void> _syncAllPendingActions(String userId) async {
     // 1. Sync Adds
     final adds = await _getPendingList(PENDING_ADDS_KEY);

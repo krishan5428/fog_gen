@@ -1,3 +1,5 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fog_gen_new/presentation/cubit/panel/panel_cubit.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
 import 'package:fog_gen_new/constants/urls.dart';
 import 'package:fog_gen_new/presentation/dialog/url_dialog.dart';
@@ -205,6 +207,7 @@ class _AddDrawerState extends State<AppDrawer> {
 
 void _logout(BuildContext context) async {
   ProgressDialog.show(context, message: 'Logging you out!');
+  context.read<PanelCubit>().resetState();
   await SharedPreferenceHelper.clearLoginState();
 
   if (!context.mounted) return;

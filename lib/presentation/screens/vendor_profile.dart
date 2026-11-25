@@ -1,3 +1,4 @@
+import 'package:fog_gen_new/presentation/cubit/panel/panel_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -213,6 +214,7 @@ class VendorProfilePage extends StatelessWidget {
 
 void _handlingDelete(context) async {
   await Future.delayed(const Duration(seconds: 1));
+  BlocProvider.of<PanelCubit>(context).resetState();
   await SharedPreferenceHelper.clearLoginState();
   await SharedPreferenceHelper.clearVendorData();
   CustomNavigation.instance.pop(context);

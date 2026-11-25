@@ -5,6 +5,9 @@ class ForgotPassResponse {
   ForgotPassResponse({required this.status, required this.msg});
 
   factory ForgotPassResponse.fromJson(Map<String, dynamic> json) {
-    return ForgotPassResponse(status: json['status'], msg: json['msg']);
+    return ForgotPassResponse(
+      status: json['status'] == true,
+      msg: json['msg']?.toString() ?? '',
+    );
   }
 }

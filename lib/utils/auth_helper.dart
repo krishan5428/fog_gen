@@ -94,13 +94,34 @@ class SharedPreferenceHelper {
   }
 
   // --- Clear State ---
+  // Removes everything that belongs to the user who is logging out, so the
+  // next user on this device never sees their profile, password or panel
+  // list, and their unsynced offline actions are never replayed under the
+  // next user's id. (Unsynced offline actions of the old user are dropped.)
+  // The FCM device token stays: it belongs to the device, not the user.
   static Future<void> clearLoginState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyDeviceType);
     await prefs.remove(_keyIsDialogShown);
+    await prefs.remove(_keyUser);
+    await prefs.remove(_keyPass);
+    await prefs.remove(_keyVendor);
+    for (final key in prefs.getKeys().toList()) {
+      if (_userCacheKeys.contains(key) || key.startsWith('logs_cache_')) {
+        await prefs.remove(key);
+      }
+    }
   }
+
+  // Panel list cache + offline queues (PanelCubit keys).
+  static const _userCacheKeys = {
+    _keyCachedPanels,
+    'pending_panels_list',
+    'pending_updates_list',
+    'pending_deletes_list',
+  };
 
   // --- User Data ---
   static Future<void> saveUserData(UserData user) async {

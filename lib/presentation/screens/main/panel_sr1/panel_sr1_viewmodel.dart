@@ -298,15 +298,14 @@ class PanelSR1ViewModel extends ChangeNotifier {
   void _processReadResponse(String data) {
     if (_isDisposed) return;
 
-    // Basic Validation
-    final isValidPacket =
-        data.startsWith("S*") &&
-        data.endsWith("*E") &&
-        (data.contains("007") ||
-            data.contains("008") ||
-            data.contains("009") ||
-            data.contains("011") ||
-            data.contains("020"));
+    // Classify by the reply's packet id ("S*<id>#...*E"), not by whether the
+    // text contains it anywhere: an 008 reply with mains code 9 ("…009") or
+    // an 011 time of 10:09 ("100915…") also contains "009" and used to be
+    // parsed as the user-status reply.
+    final packetId =
+        data.startsWith("S*") && data.length >= 5 ? data.substring(2, 5) : "";
+    const knownIds = {"007", "008", "009", "011", "020"};
+    final isValidPacket = data.endsWith("*E") && knownIds.contains(packetId);
 
     if (isValidPacket) {
       _lastResponseTime = DateTime.now(); // Reset Watchdog
@@ -317,16 +316,16 @@ class PanelSR1ViewModel extends ChangeNotifier {
     }
 
     try {
-      if (data.contains("009")) {
+      if (packetId == "009") {
         final splitData = Packets.splitPacket(data);
         if (splitData.isNotEmpty) _updateUserStatus(splitData[0].split(''));
-      } else if (data.contains("007")) {
+      } else if (packetId == "007") {
         final splitData = Packets.splitOutputPacket(data);
         if (splitData.isNotEmpty) _updateOutputStatus(splitData);
-      } else if (data.contains("011")) {
+      } else if (packetId == "011") {
         final splitData = Packets.splitOutputPacket(data);
         if (splitData.isNotEmpty) _extractDateAndTime(splitData.join());
-      } else if (data.contains("008")) {
+      } else if (packetId == "008") {
         final splitData = Packets.splitPacket(data);
         if (splitData.isNotEmpty && splitData[0].length >= 4) {
           final statusString = splitData[0];
@@ -345,7 +344,7 @@ class PanelSR1ViewModel extends ChangeNotifier {
             _isMainsOk = statusString[5] == '1' || statusString[5] == '9';
           }
         }
-      } else if (data.contains("020")) {
+      } else if (packetId == "020") {
         final splitData = Packets.splitPacket(data);
         if (splitData.isNotEmpty && splitData[0].length == 1) {
           final level = int.tryParse(splitData[0]) ?? 0;

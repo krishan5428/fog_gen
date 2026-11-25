@@ -126,7 +126,6 @@ class SocketRepository {
     final packetId = Packets.getPacketId(packet);
     Socket? socket;
     Timer? timeoutTimer;
-    final completer = Completer<String>();
 
     // Prepare connection targets (Static IP first, then Local IP)
     final targets = <_ConnectionTarget>[
@@ -142,6 +141,10 @@ class SocketRepository {
     ];
 
     for (final t in targets) {
+      // One completer per target: if the static IP times out, its completer
+      // is already failed, and a shared one would make the local IP's reply
+      // be ignored (the fallback would never work).
+      final completer = Completer<String>();
       try {
         _logger.i("🌐 CONNECT → ${t.ip}:${t.port} | packetId=$packetId");
 
