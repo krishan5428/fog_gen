@@ -43,6 +43,18 @@ class Packets {
     return "$start$packetSplitChar${_app.mPassword}$splitChar$write$splitChar$disconnectionCode$packetSplitChar$end";
   }
 
+  static String buildMqttMessage({
+    required String passcode,
+    required bool isReadPacket,
+    required String packetId,
+    String? data,
+  }) {
+    final packetType = isReadPacket ? "01" : "02";
+    final passcodePadded = passcode.padLeft(6, '0');
+    final dataPart = (data != null && data.isNotEmpty) ? "\$$data" : "";
+    return "$passcodePadded\$$packetType\$$packetId$dataPart*ED";
+  }
+
   static String getPacketId(String packet) {
     try {
       final parts = packet.split('*');

@@ -32,6 +32,11 @@ class WebUrlConstants {
 
   static const String fetchLogs = "fetch_logs.php";
 
+  // G4 (4GCOM) MQTT client certificates. Absolute URL — served from a
+  // different app_services path than [baseUrl], so Dio uses it as-is.
+  static const String mqttCertificatesUrl =
+      'https://securicoconnect.com/cms/apps/Securico/app_services/mqtt_certificates/get_mqtt_certificates.php';
+
   // Error Messages
   static const String networkError = 'Please check your internet connection.';
   static const String unknownError = 'Something went wrong. Please try again.';

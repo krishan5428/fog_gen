@@ -44,6 +44,7 @@ class PanelRepositoryImpl implements PanelRepo {
     required String panel_acc_no,
     required String mac_id,
     required String version,
+    String imei = '',
   }) async {
     try {
       final formData = FormData.fromMap({
@@ -78,6 +79,8 @@ class PanelRepositoryImpl implements PanelRepo {
         'pnl_acc_no': panel_acc_no,
         'pnl_mac': mac_id,
         'pnl_ver': version,
+        // G4 (4GCOM) panels only.
+        if (imei.isNotEmpty) 'panel_imei': imei,
       });
 
       final response = await _dio.post(

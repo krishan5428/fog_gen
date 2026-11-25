@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
+import '../../constants/strings.dart';
+import '../../features/mqtt/screens/add_mqtt_panel.dart';
 import '../../utils/navigation.dart';
 import '../screens/add_panel/add_ip_gprs_panel.dart';
 import '../widgets/vertical_gap.dart';
@@ -87,6 +89,20 @@ class PanelTypeDialog extends StatelessWidget {
                       );
                     },
                   ),
+                  // G4 (4GCOM) models: MQTT flow, see docs/G4_MQTT_FLOW.md.
+                  const SizedBox(height: 6),
+                  Text(
+                    '4G (MQTT) DEVICES',
+                    style: TextStyle(
+                      color: AppColors.colorPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final name in fourGComPanels)
+                    _buildFourGTile(context, name),
                 ],
               ),
             ),
@@ -116,6 +132,45 @@ class PanelTypeDialog extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFourGTile(BuildContext context, String panelName) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black12,
+        color: Colors.white,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: Colors.grey.shade300),
+        ),
+        child: ListTile(
+          dense: true,
+          leading: const Icon(Icons.cell_tower, color: AppColors.colorPrimary),
+          title: Text(
+            panelName,
+            style: const TextStyle(
+              color: AppColors.colorPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            CustomNavigation.instance.pop(context);
+            CustomNavigation.instance.push(
+              context: context,
+              screen: AddMqttPanelPage(
+                panelType: 'FIRE PANEL',
+                panelName: panelName,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

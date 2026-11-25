@@ -11,6 +11,8 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.icon,
     this.buttonTextSize = 14.0,
+    this.borderRadius,
+    this.height,
   });
 
   final String buttonText;
@@ -19,16 +21,25 @@ class CustomButton extends StatelessWidget {
   final Color foregroundColor;
   final VoidCallback? onPressed;
   final IconData? icon;
+  // Optional; null keeps the default ElevatedButton shape/height.
+  final double? borderRadius;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: height,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           elevation: 2,
+          shape: borderRadius == null
+              ? null
+              : RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(borderRadius!),
+                ),
         ),
         onPressed: onPressed,
         child:

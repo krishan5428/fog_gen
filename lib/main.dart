@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:fog_gen_new/core/mqtt/certificate_store.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -90,6 +93,11 @@ Future<void> main() async {
     //   );
     // }
   });
+
+  // MQTT client certificates for G4 (4GCOM) panels: memory → secure storage
+  // → API, with a background version check. Not awaited so startup isn't
+  // blocked; MqttRepository waits for them on connect.
+  unawaited(CertificateStore.instance.initialize());
 
   runApp(const FogShieldApp());
 }
