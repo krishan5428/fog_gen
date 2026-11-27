@@ -9,6 +9,9 @@ All notable changes to the FogShield app. Newest first. Dates are commit dates.
 - Test suite (unit, view-model, screen smoke tests) and a manual test checklist.
 - README.
 
+### Changed
+- G4 "Add device" and "Device details" screens are now the FireNex files as they are (only import paths differ). The user model carries FireNex's `role` (default `customer`; FogShield's login sends none), so every FogShield user still sees "Delete device".
+
 ### Changed (backend)
 - The app now talks only to FogShield's own backend folder `app_services/fogshield/` (panels, logs, users, vendors), built like FireNex, with its own tables (`tbl_panel_fogshield`, `tbl_fogshield_users`, …). Fresh start: accounts made on the old shared backend are not carried over — sign up again.
 - The backend code `app_services/fogshield/` and its tests `app_services/fogshield_tests/` are now in this repo, so the server is deployed from committed code. The rest of `app_services/` and `common/` stay out of git.

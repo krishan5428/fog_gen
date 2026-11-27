@@ -18,6 +18,7 @@ import 'package:fog_gen_new/utils/auth_helper.dart';
 import 'panel_list/panel_list.dart';
 import '../cubit/mappings/panel_sim_number_cubit.dart';
 import '../cubit/mappings/site_cubit.dart';
+import '../../core/data/pojo/user_data.dart';
 
 class MqttPanelDetailsScreen extends StatefulWidget {
   final PanelData panelData;
@@ -40,7 +41,7 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
   int daysRemaining = 365;
   double progress = 0.0;
 
-  final String _userRole = 'customer';
+  String _userRole = 'customer';
 
   @override
   void initState() {
@@ -61,12 +62,14 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
     _loadUserRole();
   }
 
-  // FogShield has no user roles yet; every user is a 'customer', so the
-  // FireNex factory-worker "Release to market" variant never shows.
-  void _loadUserRole() {}
-
-  bool get _isFactoryWorker =>
-      _userRole == 'factory_worker' || _userRole == 'tester';
+  void _loadUserRole() async {
+    final user = await SharedPreferenceHelper.getUserData();
+    if (user != null && mounted) {
+      setState(() {
+        _userRole = user.role;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -371,7 +374,7 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
   Future<void> _deletePanel() async {
     final firstConfirm = await showConfirmationDialog(
       context: context,
-      message: _isFactoryWorker
+      message: UserData.isFactoryWorkerRole(_userRole)
           ? 'Are you sure you want to release this device to market?'
           : 'Are you sure you want to delete this device?',
     );
@@ -379,7 +382,7 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
 
     final secondConfirm = await showConfirmationDialog(
       context: context,
-      message: _isFactoryWorker
+      message: UserData.isFactoryWorkerRole(_userRole)
           ? 'After releasing the Device, you will no longer have access to it.\nSure?'
           : 'After deleting the Device, you will not configure the device.\nSure?',
     );
@@ -626,12 +629,14 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: _isFactoryWorker
+                    foregroundColor: UserData.isFactoryWorkerRole(_userRole)
                         ? Colors.blue
                         : Colors.red,
                     elevation: 0,
                     side: BorderSide(
-                      color: _isFactoryWorker ? Colors.blue : Colors.red,
+                      color: UserData.isFactoryWorkerRole(_userRole)
+                          ? Colors.blue
+                          : Colors.red,
                       width: 1.0,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -641,11 +646,15 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
                   ),
                   onPressed: _deletePanel,
                   icon: Icon(
-                    _isFactoryWorker ? Icons.send : Icons.delete,
+                    UserData.isFactoryWorkerRole(_userRole)
+                        ? Icons.send
+                        : Icons.delete,
                     size: 18,
                   ),
                   label: Text(
-                    _isFactoryWorker ? "RELEASE TO MARKET" : "DELETE DEVICE",
+                    UserData.isFactoryWorkerRole(_userRole)
+                        ? "RELEASE TO MARKET"
+                        : "DELETE DEVICE",
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w800,
