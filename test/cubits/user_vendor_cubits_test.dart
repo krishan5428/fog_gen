@@ -84,7 +84,11 @@ class FakeVendorRepo extends Fake implements VendorRepo {
   @override
   Future<AddVendorResponse> addVendor(a, b, c, d, e, f) async {
     if (fail) throw Exception('x');
-    return AddVendorResponse(status: ok, msg: ok ? 'added' : 'dup', vendorId: 1);
+    return AddVendorResponse(
+      status: ok,
+      msg: ok ? 'added' : 'dup',
+      vendorId: 1,
+    );
   }
 
   @override
@@ -125,7 +129,20 @@ void main() {
       final s = await states(cubit.stream, () => cubit.login('9', 'p', null));
       expect(s[0], isA<UserLoading>());
       expect((s[1] as UserLoginSuccess).user.usrId, 5);
+      expect((s[1] as UserLoginSuccess).vendorAdded, isFalse);
       expect(repo.lastFcm, '');
+    });
+
+    test('login passes vendor_added on to the screen', () async {
+      repo.login_ = LoginResponse(
+        status: true,
+        token: 't',
+        msg: 'ok',
+        data: user(),
+        vendorAdded: true,
+      );
+      final s = await states(cubit.stream, () => cubit.login('9', 'p', 'x'));
+      expect((s[1] as UserLoginSuccess).vendorAdded, isTrue);
     });
 
     test('login: status true but no user data → failure', () async {
@@ -209,7 +226,10 @@ void main() {
       final repo = FakeUserRepo()..fail = true;
       final c = ForgetPswdCubit(repository: repo);
       await c.forgetPassword(mobile: '');
-      expect(c.state, const ForgetPswdStateError(error: 'Mobile cannot be empty'));
+      expect(
+        c.state,
+        const ForgetPswdStateError(error: 'Mobile cannot be empty'),
+      );
       await c.close();
     });
 

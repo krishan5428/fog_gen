@@ -101,39 +101,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
             debugPrint('loginUserId: ${user.usrId}');
 
-            final vendorRepo = VendorRepoImpl();
-            final vendorResponse = await vendorRepo.getVendor(
-              user.usrId.toString(),
-            );
-
-            if (vendorResponse.status) {
-              debugPrint(
-                'Vendor List Fetched: ${vendorResponse.vendorData.length}',
-              );
-              if (vendorResponse.vendorData.isEmpty) {
-                ProgressDialog.dismiss(context);
-                CustomNavigation.instance.pushAndRemove(
-                  context: context,
-                  screen: const AddVendorPage(),
-                );
-              } else {
-                final lastVendor = vendorResponse.vendorData.last;
-                await SharedPreferenceHelper.saveVendorData(lastVendor);
-                ProgressDialog.dismiss(context);
-                CustomNavigation.instance.pushAndRemove(
-                  context: context,
-                  screen: const PanelListPage(),
-                );
-              }
-            } else {
+            // As FireNex: no vendor yet → vendor setup first. With a vendor,
+            // cache it for the vendor profile screen, then the panel list.
+            if (!state.vendorAdded) {
               ProgressDialog.dismiss(context);
               CustomNavigation.instance.pushAndRemove(
                 context: context,
-                screen: const PanelListPage(),
+                screen: const AddVendorPage(),
               );
+              return;
             }
+            try {
+              final vendorResponse = await VendorRepoImpl().getVendor(
+                user.usrId.toString(),
+              );
+              if (vendorResponse.vendorData.isNotEmpty) {
+                await SharedPreferenceHelper.saveVendorData(
+                  vendorResponse.vendorData.last,
+                );
+              }
+            } catch (e) {
+              debugPrint('Vendor fetch after login failed: $e');
+            }
+            if (!context.mounted) return;
+            ProgressDialog.dismiss(context);
+            CustomNavigation.instance.pushAndRemove(
+              context: context,
+              screen: const PanelListPage(),
+            );
           } else if (state is UserLoginFailure) {
-            SnackBarHelper.showSnackBar(context, "Something went wrong!");
+            // Show the server's reason ("User not registered", "Invalid
+            // mobile or password", …) instead of a generic error.
+            final reason = state.message.trim();
+            SnackBarHelper.showSnackBar(
+              context,
+              reason.isNotEmpty ? reason : "Something went wrong!",
+            );
           }
         }
       },

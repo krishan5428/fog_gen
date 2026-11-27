@@ -11,11 +11,12 @@ class UserLoading extends UserState {}
 
 class UserLoginSuccess extends UserState {
   final UserData user;
+  final bool vendorAdded;
 
-  UserLoginSuccess({required this.user});
+  UserLoginSuccess({required this.user, this.vendorAdded = false});
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, vendorAdded];
 }
 
 class UserLoginFailure extends UserState {

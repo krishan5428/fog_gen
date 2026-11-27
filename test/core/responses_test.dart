@@ -34,6 +34,18 @@ void main() {
       expect(r.status, isTrue);
       expect(r.token, 't');
       expect(r.data!.usrId, 5);
+      expect(r.vendorAdded, isFalse);
+    });
+
+    test('login: vendor_added (decides the vendor setup screen)', () {
+      final r = LoginResponse.fromJson({
+        'status': true,
+        'msg': 'ok',
+        'token': 't',
+        'vendor_added': true,
+        'data': {'usr_id': 5},
+      });
+      expect(r.vendorAdded, isTrue);
     });
 
     test('panels list', () {

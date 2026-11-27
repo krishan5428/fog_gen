@@ -6,11 +6,15 @@ class LoginResponse {
   final String token;
   final String msg;
 
+  /// Whether the user already has vendor details (login.php, as FireNex).
+  final bool vendorAdded;
+
   LoginResponse({
     required this.status,
     this.data,
     required this.token,
     required this.msg,
+    this.vendorAdded = false,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -19,6 +23,7 @@ class LoginResponse {
       data: json['data'] != null ? UserData.fromJson(json['data']) : null,
       token: json['token'] ?? '',
       msg: json['msg'] ?? '',
+      vendorAdded: json['vendor_added'] == true,
     );
   }
 }

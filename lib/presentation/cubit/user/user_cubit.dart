@@ -18,11 +18,18 @@ class UserCubit extends Cubit<UserState> {
     try {
       final response = await userRepo.login(mobile, pass, deviceToken ?? "");
       if (kDebugMode) {
-        AppLogger.d("Login response: status=${response.status}, msg=${response.msg}");
+        AppLogger.d(
+          "Login response: status=${response.status}, msg=${response.msg}",
+        );
       }
 
       if (response.status && response.data != null) {
-        emit(UserLoginSuccess(user: response.data!));
+        emit(
+          UserLoginSuccess(
+            user: response.data!,
+            vendorAdded: response.vendorAdded,
+          ),
+        );
       } else {
         emit(
           UserLoginFailure(
