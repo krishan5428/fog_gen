@@ -1,6 +1,3 @@
-/// FogShield's backend: its own folder `app_services/fogshield/`
-/// (same layout as FireNex's `app_services/firenex/`).
-/// Server code and tables: docs/PLAN_FOGSHIELD_BACKEND.md.
 class WebUrlConstants {
   static const String baseUrl =
       'https://securicoconnect.com/cms/apps/Securico/app_services/fogshield/';
@@ -22,7 +19,6 @@ class WebUrlConstants {
   static const String updateUser = 'update_user.php';
   static const String delUser = 'del_user.php';
 
-  // Vendor (stored in the user's row)
   static const String addVendor = 'add_vendor.php';
   static const String getVendor = 'get_vendors.php';
   static const String delVendor = 'del_vendor.php';
