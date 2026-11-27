@@ -15,14 +15,17 @@ class LoginRepo extends Fake implements UserRepo {
   final bool vendorAdded;
 
   @override
-  Future<LoginResponse> login(String mobile, String password, String fcm) async =>
-      LoginResponse(
-        status: true,
-        msg: 'Login successful',
-        token: 'jwt',
-        vendorAdded: vendorAdded,
-        data: UserData.fromJson({'usr_id': 1, 'name': 'Test', 'mobile': mobile}),
-      );
+  Future<LoginResponse> login(
+    String mobile,
+    String password,
+    String fcm,
+  ) async => LoginResponse(
+    status: true,
+    msg: 'Login successful',
+    token: 'jwt',
+    vendorAdded: vendorAdded,
+    data: UserData.fromJson({'usr_id': 1, 'name': 'Test', 'mobile': mobile}),
+  );
 }
 
 Future<void> logIn(WidgetTester tester, {required bool vendorAdded}) async {
@@ -52,7 +55,9 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
   });
 
-  testWidgets('vendor already added → straight to the panel list', (tester) async {
+  testWidgets('vendor already added → straight to the panel list', (
+    tester,
+  ) async {
     await logIn(tester, vendorAdded: true);
     expect(find.byType(PanelListPage), findsOneWidget);
     expect(find.byType(AddVendorPage), findsNothing);

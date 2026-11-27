@@ -48,7 +48,15 @@ app.*.map.json
 android/build/
 ios/build/
 
-# Backend copies kept next to the app for reference — never commit.
+# Backend: only FogShield's own folder and its tests are tracked (the server
+# copy is deployed from here). Everything else under app_services/ is a
+# reference copy of other products — never commit.
 # common/ holds DB credentials and Firebase service-account keys.
-/app_services/
+/app_services/*
+!/app_services/fogshield/
+!/app_services/fogshield_tests/
+# Credentials live only in config.php (template: config.example.php).
+/app_services/fogshield/config.php
+/app_services/fogshield/logs/
+/app_services/fogshield/backup_*/
 /common/

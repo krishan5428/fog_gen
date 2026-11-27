@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fog_gen_new/constants/app_colors.dart';
+import 'package:fog_gen_new/utils/push_notification.dart';
 import 'package:fog_gen_new/core/repo/mqtt_repository.dart';
 import 'package:fog_gen_new/features/mqtt/repository/fourg_repository.dart';
 import 'package:fog_gen_new/features/mqtt/services/fourg_mqtt_service.dart';
@@ -57,14 +58,16 @@ class _FogShieldAppState extends State<FogShieldApp> {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint("☀️ Foreground Notification Data: ${message.data}");
 
-      // 1. Format the Body & Title based on your requirement
-      final String body = message.data.isNotEmpty
-          ? "Site: ${message.data["site_name"] ?? 'N/A'}\n"
-                "Event: ${message.data["event_name"] ?? 'N/A'}\n"
-                "Time: ${message.data["event_time"] ?? 'N/A'}"
-          : message.notification?.body ?? "New Alert";
-
-      final String title = message.notification?.title ?? "Security Alert";
+      // The server puts the final title/body in the data payload (SR1 and
+      // G4 alike); fall back to the SR1 fields / notification block.
+      final String body = PushNotification.bodyOf(
+        message.data,
+        notificationBody: message.notification?.body,
+      );
+      final String title = PushNotification.titleOf(
+        message.data,
+        notificationTitle: message.notification?.title,
+      );
 
       // We use the Navigator Key to get the current context safely
       final context = _navigatorKey.currentContext;

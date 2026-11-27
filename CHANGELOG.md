@@ -11,8 +11,14 @@ All notable changes to the FogShield app. Newest first. Dates are commit dates.
 
 ### Changed (backend)
 - The app now talks only to FogShield's own backend folder `app_services/fogshield/` (panels, logs, users, vendors), built like FireNex, with its own tables (`tbl_panel_fogshield`, `tbl_fogshield_users`, …). Fresh start: accounts made on the old shared backend are not carried over — sign up again.
+- The backend code `app_services/fogshield/` and its tests `app_services/fogshield_tests/` are now in this repo, so the server is deployed from committed code. The rest of `app_services/` and `common/` stay out of git.
+- Every backend credential (AMS auth, mailer password, G4 secret) moved out of the code into `fogshield/config.php`, which is not in git; `config.example.php` is the template. A direct G4 call is refused when no secret is set, and forgot password returns an error when no mailer is set.
+- Backend logs are private: `fogshield/web.config` turns off folder listing and hides `logs/`, `sql/` and `4gcom_events.xml` from the web (they were all browsable). The G4 log masks the shared secret (`"secret":"***"`) instead of writing it.
+- New logs: forgot password (`logs/forgot_password/`: mobile and outcome, never the password) and vendor lookup errors (`logs/vendor_get/`).
 
 ### Fixed
+- Android: alert pushes never appeared while the app was in the background or closed. The backend sends Android pushes as data-only, and the app didn't show them itself; it now puts them in the notification tray (as FireNex does). The in-app alert toast shows the server's text (G4 alerts used to show "Event: N/A").
+- A login saved by an older app version is no longer trusted after the move to the FogShield backend: it is cleared on start (user logs in again), so an old user id can never read another user's panels.
 - Login failure now shows the server's reason ("User not registered", "Invalid mobile or password") instead of "Something went wrong!".
 - A panel update or delete rejected by the server was shown as "Updated/Deleted Offline" and queued, because a reply with a missing or differently named key crashed the parser.
 - A panel added offline could be sent to the server twice when two list refreshes ran at once.

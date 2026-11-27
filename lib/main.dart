@@ -7,16 +7,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'app/fogshield_app.dart';
 import 'utils/app_info.dart';
+import 'utils/push_notification.dart';
 
 // 1. Define Local Notifications Plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-// 2. Background Handler
+// 2. Background Handler — app in background or killed.
+// Android pushes are data-only (common/fcm.php), so the app must show them
+// itself or the alert never appears. iOS shows them via APNs.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint("🌙 Background Message: ${message.messageId}");
+  await PushNotification.showOnAndroid(
+    flutterLocalNotificationsPlugin,
+    message,
+  );
 }
 
 Future<void> main() async {

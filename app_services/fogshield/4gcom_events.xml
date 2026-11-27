@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<events>
+
+    <!-- Packet 000 = Connect/Disconnect — silent -->
+    <packet id="000" name="Connect">
+        <function_id code="00" notify="false" title="" body=""/>
+        <function_id code="01" notify="false" title="" body=""/>
+    </packet>
+
+    <!-- Packet 001 = Dashboard — state-diff alerts + Application Login Alert trigger -->
+    <!-- body = description line shown in notification (no {site} — site goes in title) -->
+    <!-- Same ST* protocol as connect; copied from firenex/4gcom_events.xml for FogShield G4 devices. -->
+    <packet id="001" name="Dashboard">
+
+        <!-- Panel Security State transitions -->
+        <security_state code="0" notify="false" title="" body=""/>
+        <security_state code="1" notify="false" title="" body=""/>
+        <security_state code="2" notify="false" title="" body=""/>
+        <security_state code="3" notify="false" title="" body=""/>
+        <security_state code="4" notify="true"  title="Armed"          body="Armed"/>
+        <security_state code="5" notify="true"  title="Disarmed"       body="Disarmed"/>
+        <security_state code="6" notify="true"  title="Auto Armed"     body="Auto Armed"/>
+        <security_state code="7" notify="true"  title="Auto Disarmed"  body="Auto Disarmed"/>
+        <security_state code="8" notify="false" title="" body=""/>
+        <security_state code="9" notify="false" title="" body=""/>
+        <security_state code="a" notify="true"  title="Night Armed"     body="Night Armed"/>
+        <security_state code="b" notify="true"  title="Force Armed"     body="Force Armed"/>
+        <security_state code="c" notify="true"  title="Silent Armed"    body="Silent Armed"/>
+        <security_state code="e" notify="true"  title="Extended Disarm" body="Extended Disarm"/>
+        <security_state code="p" notify="true"  title="Part Armed"      body="Part Armed"/>
+
+        <!-- Panic -->
+        <panic_state code="1" notify="true"  title="Panic Alarm"    body="Panic triggered"/>
+        <panic_state code="0" notify="true"  title="Panic Restored" body="Panic restored"/>
+
+        <!-- Mains power -->
+        <power_status code="1" notify="true" title="Power Failure"  body="Mains power failure"/>
+        <power_status code="0" notify="true" title="Power Restored" body="Mains power restored"/>
+
+        <!-- Battery -->
+        <battery_status code="1" notify="true" title="Low Battery"      body="Battery low"/>
+        <battery_status code="0" notify="true" title="Battery Restored" body="Battery restored"/>
+
+        <!-- Per-input zone alerts: {input} = input name from state-diff (sent inline by the panel) -->
+        <input_state code="1" notify="true" title="Zone Alarm"    body="{input} triggered"/>
+        <input_state code="0" notify="true" title="Zone Restored" body="{input} restored"/>
+    </packet>
+
+    <!-- Packet 002 = Device Settings (write response) -->
+    <packet id="002" name="DeviceSettings">
+        <write_response notify="true" title="Device Settings" body="Device settings updated"/>
+    </packet>
+
+    <!-- Packet 003 = Health Settings (write response, split by function_id) -->
+    <packet id="003" name="HealthSettings">
+        <function_id code="00" notify="true" title="Health Settings" body="Health settings updated"/>
+        <function_id code="01" notify="true" title="Health Settings" body="Health URL updated"/>
+    </packet>
+
+    <!-- Packet 004 = General Settings (write response) -->
+    <packet id="004" name="GeneralSettings">
+        <write_response notify="true" title="General Settings" body="General settings updated"/>
+    </packet>
+
+    <!-- Packet 006 = Device Reset (write response, split by reset type) -->
+    <packet id="006" name="DeviceReset">
+        <function_id code="01" notify="true" title="Device Reset" body="Modem reset initiated"/>
+        <function_id code="02" notify="true" title="Device Reset" body="Factory reset initiated"/>
+        <function_id code="03" notify="true" title="Device Reset" body="Factory reset (no IP) initiated"/>
+    </packet>
+
+    <!-- Packet 007 = Passcode Settings (write response) -->
+    <packet id="007" name="PasscodeSettings">
+        <write_response notify="true" title="Security" body="Device passcode changed"/>
+    </packet>
+
+    <!-- Packet 008 = Telephone Number Settings (write response) -->
+    <packet id="008" name="TelephoneSettings">
+        <write_response notify="true" title="Phone Numbers" body="Phone numbers updated"/>
+    </packet>
+
+    <!-- Packet 009 = Audio List Settings (write response, split by function_id) -->
+    <packet id="009" name="AudioSettings">
+        <function_id code="01" notify="true" title="Audio" body="Audio download started"/>
+        <function_id code="02" notify="true" title="Audio" body="Audio files deleted"/>
+        <function_id code="03" notify="true" title="Audio" body="Audio file deleted"/>
+        <function_id code="04" notify="true" title="Audio" body="Audio playing"/>
+        <function_id code="05" notify="true" title="Audio" body="Audio stopped"/>
+    </packet>
+
+    <!-- Packet 010 = Input Settings (write response) -->
+    <packet id="010" name="InputSettings">
+        <write_response notify="true" title="Input Settings" body="Input {input_no} settings updated"/>
+    </packet>
+
+    <!-- Packet 011 = Output Settings (write response, dedup 30s in code) -->
+    <packet id="011" name="OutputSettings">
+        <write_response notify="true" title="Output Settings" body="Output settings updated"/>
+    </packet>
+
+    <!-- Packet 012 = Output Control (write response — per toggle) -->
+    <packet id="012" name="OutputControl">
+        <!-- Per-output wording for the app's pulse buttons; dedup 12s in code so the automatic OFF doesn't push again -->
+        <output code="1" notify="true" title="Evacuation" body="Evacuation triggered"/>
+        <output code="2" notify="true" title="Alarm Reset" body="Alarm reset"/>
+        <output code="3" notify="true" title="Sounder Off" body="Sounder silenced"/>
+        <!-- Fallback for any output without its own node above -->
+        <write_response notify="true" title="Output Control" body="Output {output_no} state changed"/>
+    </packet>
+
+    <!-- Packet 013 = Hub Settings (write response, split by function_id) -->
+    <packet id="013" name="HubSettings">
+        <function_id code="01" notify="true" title="Hub Settings" body="Hub device ID updated"/>
+        <function_id code="02" notify="true" title="Hub Settings" body="Hub target IP updated"/>
+    </packet>
+
+    <!-- Packet 014 = Report Status — clear pending queue (write response) -->
+    <packet id="014" name="ReportStatus">
+        <pending_source code="0" notify="true" title="Report Status" body="CMS1 pending queue cleared"/>
+        <pending_source code="1" notify="true" title="Report Status" body="CMS2 pending queue cleared"/>
+        <pending_source code="2" notify="true" title="Report Status" body="Failover pending queue cleared"/>
+    </packet>
+
+    <!-- Packet 015 = Alarm Log — clear only (write response FID 02) -->
+    <packet id="015" name="AlarmLog">
+        <function_id code="02" notify="true" title="Alarm Log" body="Alarm log cleared"/>
+    </packet>
+
+    <!-- Packet 016 = Event Log — clear only (write response FID 02) -->
+    <packet id="016" name="EventLog">
+        <function_id code="02" notify="true" title="Event Log" body="Event log cleared"/>
+    </packet>
+
+    <!-- Packet 017 = Report Settings (write response) -->
+    <packet id="017" name="ReportSettings">
+        <write_response notify="true" title="Report Settings" body="Report settings updated"/>
+    </packet>
+
+    <!-- Packet 018 = Power Settings (write response) -->
+    <packet id="018" name="PowerSettings">
+        <write_response notify="true" title="Power Settings" body="Power settings updated"/>
+    </packet>
+
+    <!-- Packet 019 = Panel Settings (write response) -->
+    <packet id="019" name="PanelSettings">
+        <write_response notify="true" title="Panel Settings" body="Panel settings updated"/>
+    </packet>
+
+    <!-- Packet 020 = Group-2 List (write response) -->
+    <packet id="020" name="Group2List">
+        <write_response notify="true" title="Group-2 Settings" body="Group-2 list updated"/>
+    </packet>
+
+    <!-- Packet 021 = Group-2 Alert Settings (write response, per SIA alert ref) -->
+    <packet id="021" name="Group2Settings">
+        <write_response notify="true" title="Group-2 Settings" body="Group-2 alert {alert_ref} settings updated"/>
+    </packet>
+
+</events>
