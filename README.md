@@ -50,6 +50,17 @@ The tests never reach the backend or a real device: HTTP is replaced by a failin
 
 Screens that need real hardware are checked by hand with [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
 
+## Backend
+
+FogShield's PHP backend lives in [app_services/fogshield/](app_services/fogshield/) (endpoints, SR1/G4 alert handlers, SQL scripts in `sql/`). Only this folder and its tests are in git; the rest of `app_services/` and `common/` (DB and Firebase credentials) are ignored.
+
+```sh
+php app_services/fogshield_tests/run_tests.php           # endpoints, no DB needed
+php app_services/fogshield_tests/run_handler_tests.php   # alert handlers; needs app_services/firenex/ next to it
+```
+
+Deploy: copy the committed `app_services/fogshield/` to the server's `app_services/fogshield/`. Credentials are never in the code: on the server, `fogshield/config.php` holds them (copy [config.example.php](app_services/fogshield/config.example.php) and fill it in). Never commit `config.php`.
+
 ## Build and release
 
 ```sh
