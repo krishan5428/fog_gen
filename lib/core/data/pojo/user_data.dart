@@ -8,6 +8,7 @@ class UserData {
   final String deviceId;
   final String status;
   final String cOn;
+  final String role;
 
   UserData({
     required this.usrId,
@@ -19,7 +20,14 @@ class UserData {
     required this.deviceId,
     required this.status,
     required this.cOn,
+    this.role = 'customer',
   });
+
+  /// 'tester' and 'factory_worker' are the same operational role — some
+  /// accounts are seeded with one literal, some with the other — so any
+  /// check gating factory-worker-only behavior must treat both as equal.
+  static bool isFactoryWorkerRole(String role) =>
+      role == 'factory_worker' || role == 'tester';
 
   factory UserData.fromJson(Map<String, dynamic> json) {
     return UserData(
@@ -34,6 +42,7 @@ class UserData {
       deviceId: json['device_id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
       cOn: json['c_on']?.toString() ?? '',
+      role: json['role'] ?? 'customer',
     );
   }
 
@@ -48,6 +57,7 @@ class UserData {
       'device_id': deviceId,
       'status': status,
       'c_on': cOn,
+      'role': role,
     };
   }
 }

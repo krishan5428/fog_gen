@@ -87,6 +87,19 @@ void main() {
       expect(u.usrId, 17);
       expect(u.status, '1');
     });
+
+    test('role as FireNex: "customer" when the server sends none '
+        '(FogShield login has no role), kept through JSON', () {
+      expect(UserData.fromJson({'usr_id': 1}).role, 'customer');
+      final w = UserData.fromJson({'usr_id': 1, 'role': 'factory_worker'});
+      expect(UserData.fromJson(w.toJson()).role, 'factory_worker');
+    });
+
+    test('isFactoryWorkerRole: factory_worker and tester only', () {
+      expect(UserData.isFactoryWorkerRole('factory_worker'), isTrue);
+      expect(UserData.isFactoryWorkerRole('tester'), isTrue);
+      expect(UserData.isFactoryWorkerRole('customer'), isFalse);
+    });
   });
 
   group('PanelData', () {
