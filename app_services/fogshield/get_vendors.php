@@ -43,6 +43,8 @@ if ($stmt && sqlsrv_has_rows($stmt)) {
 } else {
     if ($stmt === false) {
         error_log("get_vendors.php SQL error: " . print_r(sqlsrv_errors(), true));
+        require_once(__DIR__ . '/log_helper.php');
+        fogshield_log('vendor_get', "ERROR: query failed", ['usr_id' => $usr_id ?? null, 'error' => sqlsrv_errors()]);
     }
     echo json_encode([
         "status" => false,
