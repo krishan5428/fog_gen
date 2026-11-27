@@ -378,6 +378,53 @@ foreach (glob(__DIR__ . '/../fogshield/*.php') as $file) {
     if (preg_match('/->Password\s*=\s*[\'"]|fourg_secret_|Basic [A-Za-z0-9+\/]{8,}={0,2}[\'"]/', $src)) $leaks[] = basename($file);
 }
 check('No password, G4 secret or Basic auth hardcoded in fogshield/*.php', $leaks === [], implode(', ', $leaks));
+echo "logs: what is written, and that logs stay private\n";
+
+function fresh_log_dir() {
+    $d = sys_get_temp_dir() . '/fs_logcheck_' . uniqid();
+    mkdir($d, 0777, true);
+    return $d;
+}
+function read_logs($dir) {
+    $all = '';
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+    foreach ($it as $f) if ($f->isFile() && $f->getFilename() !== '.last_purge') $all .= file_get_contents($f->getPathname());
+    return $all;
+}
+
+$ld = fresh_log_dir();
+run_endpoint('mqtt_4gcom_alert.php', [], [], ['FS_RAW_INPUT' => $g4body('test-g4-secret'), 'FOGSHIELD_LOG_DIR' => $ld]);
+run_endpoint('mqtt_4gcom_alert.php', [], [], ['FS_RAW_INPUT' => $g4body('test-g4-secret-typo'), 'FOGSHIELD_LOG_DIR' => $ld]);
+$logText = read_logs($ld);
+check('G4 log: raw body still logged, but the secret is masked',
+    str_contains($logText, 'Raw: ') && str_contains($logText, '861919084418721')
+    && !str_contains($logText, 'test-g4-secret') && str_contains($logText, '"secret":"***"'), $logText);
+
+$ld = fresh_log_dir();
+$ml = tempnam(sys_get_temp_dir(), 'fsm');
+run_endpoint('forgot_password.php', ['mobile' => '9000000001'], [
+    ['match' => 'SELECT email, password FROM tbl_fogshield_users', 'rows' => [['email' => 'a@x.in', 'password' => 'SuperSecretPw9']]],
+], ['FOGSHIELD_LOG_DIR' => $ld, 'FS_MAIL_LOG' => $ml]);
+run_endpoint('forgot_password.php', ['mobile' => '9000000002'], [], ['FOGSHIELD_LOG_DIR' => $ld]);
+unlink($ml);
+$logText = read_logs($ld);
+check('Forgot password: logged (mobile + outcome), password never in the log',
+    is_dir("$ld/forgot_password") && str_contains($logText, '9000000001') && str_contains($logText, 'Password email sent')
+    && str_contains($logText, '9000000002') && str_contains($logText, 'User not found')
+    && !str_contains($logText, 'SuperSecretPw9'), $logText);
+
+$ld = fresh_log_dir();
+run_endpoint('get_vendors.php', ['usr_id' => '7'], [['match' => 'SELECT', 'fail' => true]], ['FOGSHIELD_LOG_DIR' => $ld]);
+check('Get vendor: DB error is written to the vendor_get log', str_contains(read_logs($ld), 'ERROR'), read_logs($ld));
+
+// IIS: no folder listing, and logs/, sql/ and the event XML never served.
+$wc = @simplexml_load_file(__DIR__ . '/../fogshield/web.config');
+$hidden = $wc ? array_map('strval', $wc->xpath('//hiddenSegments/add/@segment')) : [];
+check('web.config: valid XML, folder listing off',
+    $wc && (string)($wc->xpath('//directoryBrowse/@enabled')[0] ?? '') === 'false');
+check('web.config: logs, sql and 4gcom_events.xml hidden from the web',
+    !array_diff(['logs', 'sql', '4gcom_events.xml'], $hidden), implode(',', $hidden));
+
 $example = include __DIR__ . '/../fogshield/config.example.php';
 check('config.example.php lists every key, all values blank',
     is_array($example) && array_keys($example) === array_keys(include __DIR__ . '/fx/config.test.php')
