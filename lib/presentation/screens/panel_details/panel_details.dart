@@ -60,7 +60,6 @@ class PanelDetailsContent extends StatelessWidget {
             'Delete Panel failed: ${state.message}',
           );
         }
-
         // Handle Update (Sync UI immediately for offline updates)
         else if (state is UpdatePanelsSuccess) {
           // If the update matches our current panel, refresh the view model
@@ -70,7 +69,11 @@ class PanelDetailsContent extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: const CustomAppBar(pageName: 'Panel Details', isFilter: false, isDash: false,),
+        appBar: const CustomAppBar(
+          pageName: 'Panel Details',
+          isFilter: false,
+          isDash: false,
+        ),
         backgroundColor: Colors.white,
         body: Stack(
           children: [
@@ -131,11 +134,26 @@ class PanelDetailsContent extends StatelessWidget {
                                     SingleChildScrollView(
                                       child: Column(
                                         children: [
-                                          _infoRow("PANEL NAME", panelData.panelName),
-                                          _infoRow("SITE NAME", panelData.siteName.toUpperCase()),
-                                          _infoRow("PANEL SIM NO.", panelData.panelSimNumber),
-                                          _infoRow("ADMIN MOBILE NO.", panelData.adminMobileNumber),
-                                          _infoRow("ADDRESS", panelData.siteAddress),
+                                          _infoRow(
+                                            "PANEL NAME",
+                                            panelData.panelName,
+                                          ),
+                                          _infoRow(
+                                            "SITE NAME",
+                                            panelData.siteName.toUpperCase(),
+                                          ),
+                                          _infoRow(
+                                            "PANEL SIM NO.",
+                                            panelData.panelSimNumber,
+                                          ),
+                                          _infoRow(
+                                            "ADMIN MOBILE NO.",
+                                            panelData.adminMobileNumber,
+                                          ),
+                                          _infoRow(
+                                            "ADDRESS",
+                                            panelData.siteAddress,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -143,12 +161,27 @@ class PanelDetailsContent extends StatelessWidget {
                                     SingleChildScrollView(
                                       child: Column(
                                         children: [
-                                          _infoRow("IP ADDRESS", panelData.ipAdd),
-                                          _infoRow("PORT NUMBER", panelData.portNo),
-                                          _infoRow("STATIC IP ADDRESS", panelData.staticIp),
-                                          _infoRow("STATIC PORT NUMBER", panelData.staticPort),
+                                          _infoRow(
+                                            "IP ADDRESS",
+                                            panelData.ipAdd,
+                                          ),
+                                          _infoRow(
+                                            "PORT NUMBER",
+                                            panelData.portNo,
+                                          ),
+                                          _infoRow(
+                                            "STATIC IP ADDRESS",
+                                            panelData.staticIp,
+                                          ),
+                                          _infoRow(
+                                            "STATIC PORT NUMBER",
+                                            panelData.staticPort,
+                                          ),
                                           _infoRow("PASSWORD", panelData.pass),
-                                          _infoRow("ADDRESS", panelData.siteAddress),
+                                          _infoRow(
+                                            "ADDRESS",
+                                            panelData.siteAddress,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -169,7 +202,8 @@ class PanelDetailsContent extends StatelessWidget {
                         if (!panelData.isIpPanel) const SizedBox(height: 10),
 
                         CustomButton(
-                          onPressed: () => _showAdminMobileNumberChangeSheet(context, vm),
+                          onPressed: () =>
+                              _showAdminMobileNumberChangeSheet(context, vm),
                           buttonText: "Update Admin Mobile Number",
                         ),
 
@@ -191,7 +225,8 @@ class PanelDetailsContent extends StatelessWidget {
                           children: [
                             Expanded(
                               child: CustomButton(
-                                onPressed: () => CustomNavigation.instance.pop(context),
+                                onPressed: () =>
+                                    CustomNavigation.instance.pop(context),
                                 buttonText: "BACK",
                                 backgroundColor: AppColors.litePrimary,
                                 foregroundColor: AppColors.colorPrimary,
@@ -221,7 +256,10 @@ class PanelDetailsContent extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => vm.initiateDeletePanel(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 5,
+                    horizontal: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.colorPrimary,
                     borderRadius: BorderRadius.circular(4),
@@ -230,7 +268,11 @@ class PanelDetailsContent extends StatelessWidget {
                     children: [
                       Text(
                         "DELETE",
-                        style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(width: 5),
                       Icon(Icons.delete, size: 14, color: Colors.white),
@@ -276,8 +318,14 @@ class PanelDetailsContent extends StatelessWidget {
     );
   }
 
-  Future<void> _showAdminMobileNumberChangeSheet(BuildContext context, PanelDetailsViewModel vm) async {
-    final updated = await showAdminMobileNumberChangeBottomSheet(context, vm.panelData);
+  Future<void> _showAdminMobileNumberChangeSheet(
+    BuildContext context,
+    PanelDetailsViewModel vm,
+  ) async {
+    final updated = await showAdminMobileNumberChangeBottomSheet(
+      context,
+      vm.panelData,
+    );
     if (updated != null) {
       // The bottom sheet typically calls the Cubit.
       // If it returns the updated object, we update the view.
@@ -285,14 +333,20 @@ class PanelDetailsContent extends StatelessWidget {
     }
   }
 
-  Future<void> _showAddressChangeSheet(BuildContext context, PanelDetailsViewModel vm) async {
+  Future<void> _showAddressChangeSheet(
+    BuildContext context,
+    PanelDetailsViewModel vm,
+  ) async {
     final updated = await showChangeAddressBottomSheet(context, vm.panelData);
     if (updated != null) {
       vm.updatePanelData(updated);
     }
   }
 
-  Future<void> _navigateToEdit(BuildContext context, PanelDetailsViewModel vm) async {
+  Future<void> _navigateToEdit(
+    BuildContext context,
+    PanelDetailsViewModel vm,
+  ) async {
     final updatedPanel = await CustomNavigation.instance.push(
       context: context,
       screen: EditPanelScreen(panelData: vm.panelData),

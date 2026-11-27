@@ -133,13 +133,13 @@ class _UpdateUserFieldBottomSheetState
                 _loading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.colorPrimary,
-                        foregroundColor: AppColors.white,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.colorPrimary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        onPressed: _save,
+                        child: const Text("Save"),
                       ),
-                      onPressed: _save,
-                      child: const Text("Save"),
-                    ),
               ],
             ),
           ),

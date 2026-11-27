@@ -222,7 +222,11 @@ class _AddNumberSolitarePageState extends State<AddNumberSolitarePage> {
         }
       },
       child: Scaffold(
-        appBar: const CustomAppBar(pageName: 'Add Number', isFilter: false,isDash: false,),
+        appBar: const CustomAppBar(
+          pageName: 'Add Number',
+          isFilter: false,
+          isDash: false,
+        ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(8),
           child: Column(

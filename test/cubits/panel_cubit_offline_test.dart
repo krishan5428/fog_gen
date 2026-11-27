@@ -131,10 +131,10 @@ void addFog(PanelCubit c, String site) => c.addPanel(
   version: 'V1',
 );
 
-Future<T> next<T>(PanelCubit c) =>
-    c.stream.firstWhere((s) => s is T).then((s) => s as T).timeout(
-      const Duration(seconds: 3),
-    );
+Future<T> next<T>(PanelCubit c) => c.stream
+    .firstWhere((s) => s is T)
+    .then((s) => s as T)
+    .timeout(const Duration(seconds: 3));
 
 /// Waits until the list shown contains exactly [sites].
 Future<void> shows(PanelCubit c, List<String> sites) => c.stream
@@ -192,74 +192,80 @@ void main() {
     await f;
   });
 
-  test('add offline → "Saved Offline.", queued, sent on next online refresh',
-      () async {
-    server.online = false;
-    final ok = next<AddPanelSuccess>(cubit);
-    addFog(cubit, 'Off');
-    expect((await ok).message, 'Saved Offline.');
-    await fetches(server, 1);
-    expect(await pending(PanelCubit.PENDING_ADDS_KEY), hasLength(1));
+  test(
+    'add offline → "Saved Offline.", queued, sent on next online refresh',
+    () async {
+      server.online = false;
+      final ok = next<AddPanelSuccess>(cubit);
+      addFog(cubit, 'Off');
+      expect((await ok).message, 'Saved Offline.');
+      await fetches(server, 1);
+      expect(await pending(PanelCubit.PENDING_ADDS_KEY), hasLength(1));
 
-    server.online = true;
-    final f = shows(cubit, ['One', 'Off']);
-    cubit.getPanel(userId: '3');
-    await f;
-    // 1 offline add + 1 failed offline sync + 1 successful sync.
-    expect(server.calls.where((c) => c == 'add Off'), hasLength(3));
-    expect(server.panels.where((p) => p.siteName == 'Off'), hasLength(1));
-    expect(await pending(PanelCubit.PENDING_ADDS_KEY), isEmpty);
-  });
+      server.online = true;
+      final f = shows(cubit, ['One', 'Off']);
+      cubit.getPanel(userId: '3');
+      await f;
+      // 1 offline add + 1 failed offline sync + 1 successful sync.
+      expect(server.calls.where((c) => c == 'add Off'), hasLength(3));
+      expect(server.panels.where((p) => p.siteName == 'Off'), hasLength(1));
+      expect(await pending(PanelCubit.PENDING_ADDS_KEY), isEmpty);
+    },
+  );
 
-  test('delete offline → removed from cache, queued, sent when online',
-      () async {
-    var f = shows(cubit, ['One']);
-    cubit.getPanel(userId: '3');
-    await f;
+  test(
+    'delete offline → removed from cache, queued, sent when online',
+    () async {
+      var f = shows(cubit, ['One']);
+      cubit.getPanel(userId: '3');
+      await f;
 
-    server.online = false;
-    final ok = next<DeletePanelsSuccess>(cubit);
-    cubit.deletePanel(userId: '3', panelId: 1);
-    expect((await ok).msg, 'Deleted Offline');
-    await fetches(server, 2);
-    expect(await pending(PanelCubit.PENDING_DELETES_KEY), [
-      {'id': 1},
-    ]);
+      server.online = false;
+      final ok = next<DeletePanelsSuccess>(cubit);
+      cubit.deletePanel(userId: '3', panelId: 1);
+      expect((await ok).msg, 'Deleted Offline');
+      await fetches(server, 2);
+      expect(await pending(PanelCubit.PENDING_DELETES_KEY), [
+        {'id': 1},
+      ]);
 
-    server.online = true;
-    cubit.getPanel(userId: '3');
-    await fetches(server, 3);
-    expect(server.panels, isEmpty);
-    expect(await pending(PanelCubit.PENDING_DELETES_KEY), isEmpty);
-  });
+      server.online = true;
+      cubit.getPanel(userId: '3');
+      await fetches(server, 3);
+      expect(server.panels, isEmpty);
+      expect(await pending(PanelCubit.PENDING_DELETES_KEY), isEmpty);
+    },
+  );
 
-  test('update offline → local cache changed, queued, sent when online',
-      () async {
-    var f = shows(cubit, ['One']);
-    cubit.getPanel(userId: '3');
-    await f;
+  test(
+    'update offline → local cache changed, queued, sent when online',
+    () async {
+      var f = shows(cubit, ['One']);
+      cubit.getPanel(userId: '3');
+      await f;
 
-    server.online = false;
-    final ok = next<UpdatePanelsSuccess>(cubit);
-    cubit.updatePanelData(
-      userId: '3',
-      panelId: 1,
-      key: 'site_name',
-      value: 'Renamed',
-    );
-    final s = await ok;
-    expect(s.msg, 'Updated Offline');
-    expect(s.panelData.siteName, 'Renamed');
-    expect(await pending(PanelCubit.PENDING_UPDATES_KEY), hasLength(1));
+      server.online = false;
+      final ok = next<UpdatePanelsSuccess>(cubit);
+      cubit.updatePanelData(
+        userId: '3',
+        panelId: 1,
+        key: 'site_name',
+        value: 'Renamed',
+      );
+      final s = await ok;
+      expect(s.msg, 'Updated Offline');
+      expect(s.panelData.siteName, 'Renamed');
+      expect(await pending(PanelCubit.PENDING_UPDATES_KEY), hasLength(1));
 
-    server.online = true;
-    final synced = cubit.stream.firstWhere((s) => s is GetPanelsSuccess);
-    cubit.getPanel(userId: '3');
-    await synced;
-    await Future<void>.delayed(Duration.zero);
-    expect(server.calls, contains('update 1 site_name=Renamed'));
-    expect(await pending(PanelCubit.PENDING_UPDATES_KEY), isEmpty);
-  });
+      server.online = true;
+      final synced = cubit.stream.firstWhere((s) => s is GetPanelsSuccess);
+      cubit.getPanel(userId: '3');
+      await synced;
+      await Future<void>.delayed(Duration.zero);
+      expect(server.calls, contains('update 1 site_name=Renamed'));
+      expect(await pending(PanelCubit.PENDING_UPDATES_KEY), isEmpty);
+    },
+  );
 
   test('server saved but returned no data → success, not queued', () async {
     var f = shows(cubit, ['One']);

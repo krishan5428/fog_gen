@@ -34,7 +34,8 @@ class AddPanelResponse {
 
     final status = json['status'];
     return AddPanelResponse(
-      status: status == true || status == 1 || status == '1' || status == 'true',
+      status:
+          status == true || status == 1 || status == '1' || status == 'true',
       msg: (json['message'] ?? json['msg'] ?? '').toString(),
       panelAccNo:
           json['panel_acc_no']?.toString() ??

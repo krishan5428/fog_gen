@@ -75,7 +75,12 @@ void main() {
 
   test('input statuses, system error and mains flags', () async {
     final vm = await load(FakeSr1(panel(inputs: '134911')));
-    expect(vm.inputStatuses.take(4), ['ARM ALERT', 'DISARM ALERT', 'LONG OPEN', 'DISABLE']);
+    expect(vm.inputStatuses.take(4), [
+      'ARM ALERT',
+      'DISARM ALERT',
+      'LONG OPEN',
+      'DISABLE',
+    ]);
     expect(vm.isSystemErrorDetected, isTrue);
     expect(vm.isMainsOk, isTrue);
     vm.dispose();
@@ -98,15 +103,17 @@ void main() {
     vm.dispose();
   });
 
-  test('signal level is clamped to 0..4; garbage replies are ignored',
-      () async {
-    final repo = FakeSr1(panel(signal: '9'));
-    repo.replies['007'] = 'noise';
-    final vm = await load(repo);
-    expect(vm.signalStrengthLevel, 4);
-    expect(vm.outputSounderStatus, 'OFF'); // default, noise ignored
-    vm.dispose();
-  });
+  test(
+    'signal level is clamped to 0..4; garbage replies are ignored',
+    () async {
+      final repo = FakeSr1(panel(signal: '9'));
+      repo.replies['007'] = 'noise';
+      final vm = await load(repo);
+      expect(vm.signalStrengthLevel, 4);
+      expect(vm.outputSounderStatus, 'OFF'); // default, noise ignored
+      vm.dispose();
+    },
+  );
 
   test('panel not answering → connection unhealthy + failure event', () async {
     final vm = PanelSR1ViewModel(socketRepository: FakeSr1({}));

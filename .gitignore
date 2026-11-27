@@ -47,3 +47,8 @@ app.*.map.json
 # Platform build output (never commit)
 android/build/
 ios/build/
+
+# Backend copies kept next to the app for reference — never commit.
+# common/ holds DB credentials and Firebase service-account keys.
+/app_services/
+/common/

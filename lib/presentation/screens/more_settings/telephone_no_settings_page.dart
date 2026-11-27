@@ -17,11 +17,10 @@ class TelephoneNoSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create:
-          (_) => TelephoneNoSettingsViewModel(
-            socketRepository: SocketRepository(),
-            panelData: panelData, // pass into VM if needed
-          ),
+      create: (_) => TelephoneNoSettingsViewModel(
+        socketRepository: SocketRepository(),
+        panelData: panelData, // pass into VM if needed
+      ),
       child: const _TelephoneNoSettingsView(),
     );
   }
@@ -133,31 +132,29 @@ class _TelephoneNoSettingsViewState extends State<_TelephoneNoSettingsView> {
   }) {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                child: const Text("No"),
-                onPressed: () => Navigator.pop(context),
-              ),
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor:
-                      destructive ? AppColors.greyDark : AppColors.colorPrimary,
-                ),
-                child: const Text("Yes"),
-                onPressed: () {
-                  Navigator.pop(context);
-                  onYes();
-                },
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            child: const Text("No"),
+            onPressed: () => Navigator.pop(context),
           ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: destructive
+                  ? AppColors.greyDark
+                  : AppColors.colorPrimary,
+            ),
+            child: const Text("Yes"),
+            onPressed: () {
+              Navigator.pop(context);
+              onYes();
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,130 +164,118 @@ class _TelephoneNoSettingsViewState extends State<_TelephoneNoSettingsView> {
       builder: (_, vm, __) {
         return Scaffold(
           backgroundColor: Colors.grey.shade100,
-          appBar: CustomAppBar(pageName: 'Telephone Numbers', isFilter: false,isDash: false,),
-          body:
-              vm.isLoading && _controllers[0].text.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : Stack(
-                    children: [
-                      SafeArea(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 10,
-                          ),
-                          child: Column(
-                            children: [
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: 10,
-                                itemBuilder: (_, i) {
-                                  return _TelephoneRow(
-                                    index: i,
-                                    controller: _controllers[i],
-                                    setting: vm.settings[i],
-                                    onNumberChanged:
-                                        (v) =>
-                                            vm.updateLocalSetting(i, number: v),
-                                    onTypeChanged:
-                                        (t) =>
-                                            vm.updateLocalSetting(i, type: t),
-                                  );
-                                },
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed:
-                                            vm.isUpdating
-                                                ? null
-                                                : () {
-                                                  _showConfirm(
-                                                    title: "Discard Changes?",
-                                                    content:
-                                                        "Your changes will not be saved.",
-                                                    destructive: true,
-                                                    onYes:
-                                                        () =>
-                                                            vm.cancelChanges(),
-                                                  );
-                                                },
-                                        style: OutlinedButton.styleFrom(
-                                          backgroundColor: AppColors.white,
-                                          foregroundColor:
-                                              AppColors.colorPrimary,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
+          appBar: CustomAppBar(
+            pageName: 'Telephone Numbers',
+            isFilter: false,
+            isDash: false,
+          ),
+          body: vm.isLoading && _controllers[0].text.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : Stack(
+                  children: [
+                    SafeArea(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 10,
+                        ),
+                        child: Column(
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: 10,
+                              itemBuilder: (_, i) {
+                                return _TelephoneRow(
+                                  index: i,
+                                  controller: _controllers[i],
+                                  setting: vm.settings[i],
+                                  onNumberChanged: (v) =>
+                                      vm.updateLocalSetting(i, number: v),
+                                  onTypeChanged: (t) =>
+                                      vm.updateLocalSetting(i, type: t),
+                                );
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: vm.isUpdating
+                                          ? null
+                                          : () {
+                                              _showConfirm(
+                                                title: "Discard Changes?",
+                                                content:
+                                                    "Your changes will not be saved.",
+                                                destructive: true,
+                                                onYes: () => vm.cancelChanges(),
+                                              );
+                                            },
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: AppColors.white,
+                                        foregroundColor: AppColors.colorPrimary,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
                                         ),
-                                        child: const Text("CANCEL"),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed:
-                                            vm.isUpdating
-                                                ? null
-                                                : () {
-                                                  _showConfirm(
-                                                    title: "Update All?",
-                                                    content:
-                                                        "Are you sure you want to update all 10 numbers?",
-                                                    onYes:
-                                                        () =>
-                                                            vm.submitAllChanges(),
-                                                  );
-                                                },
-                                        icon: const Icon(
-                                          Icons.upload,
-                                          size: 18,
-                                        ),
-                                        label: const Text("UPDATE"),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.colorPrimaryDark,
-                                          foregroundColor: AppColors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                          elevation: 3,
                                         ),
                                       ),
+                                      child: const Text("CANCEL"),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: vm.isUpdating
+                                          ? null
+                                          : () {
+                                              _showConfirm(
+                                                title: "Update All?",
+                                                content:
+                                                    "Are you sure you want to update all 10 numbers?",
+                                                onYes: () =>
+                                                    vm.submitAllChanges(),
+                                              );
+                                            },
+                                      icon: const Icon(Icons.upload, size: 18),
+                                      label: const Text("UPDATE"),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            AppColors.colorPrimaryDark,
+                                        foregroundColor: AppColors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        elevation: 3,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
 
-                      if (vm.isUpdating)
-                        Container(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                    ],
-                  ),
+                    if (vm.isUpdating)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                ),
         );
       },
     );
@@ -401,13 +386,12 @@ class _TelephoneRowState extends State<_TelephoneRow> {
                         filled: true,
                         fillColor: const Color(0xFFF8F9FD),
                         hintText: "10-digit number",
-                        suffixIcon:
-                            widget.controller.text.isNotEmpty
-                                ? IconButton(
-                                  onPressed: () => widget.controller.clear(),
-                                  icon: const Icon(Icons.close, size: 18),
-                                )
-                                : null,
+                        suffixIcon: widget.controller.text.isNotEmpty
+                            ? IconButton(
+                                onPressed: () => widget.controller.clear(),
+                                icon: const Icon(Icons.close, size: 18),
+                              )
+                            : null,
                         prefixIcon: const Icon(Icons.phone, size: 18),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -424,26 +408,23 @@ class _TelephoneRowState extends State<_TelephoneRow> {
                     child: DropdownButtonFormField<AlertType>(
                       isExpanded: true,
                       value: widget.setting.type,
-                      items:
-                          AlertType.values.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(
-                                type.displayName,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                      onChanged:
-                          _dropdownEnabled
-                              ? (v) => widget.onTypeChanged(v!)
-                              : null,
+                      items: AlertType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(
+                            type.displayName,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: _dropdownEnabled
+                          ? (v) => widget.onTypeChanged(v!)
+                          : null,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor:
-                            _dropdownEnabled
-                                ? const Color(0xFFF8F9FD)
-                                : Colors.grey.shade200,
+                        fillColor: _dropdownEnabled
+                            ? const Color(0xFFF8F9FD)
+                            : Colors.grey.shade200,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,

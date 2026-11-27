@@ -195,8 +195,8 @@ class MqttRepository {
   // }
 
   Future<SecurityContext> _getSecurityContext() async {
-    final certsReady =
-        await CertificateStore.instance.ensureCertificatesAvailable();
+    final certsReady = await CertificateStore.instance
+        .ensureCertificatesAvailable();
     if (!certsReady) {
       throw Exception('MQTT certificates unavailable');
     }

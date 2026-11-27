@@ -17,7 +17,7 @@ Future<bool?> showConfirmationDialog({
         backgroundColor: AppColors.lightGrey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15,vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +49,9 @@ Future<bool?> showConfirmationDialog({
                       onPressed: () => Navigator.of(dialogContext).pop(true),
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25), // corner radius here
+                          borderRadius: BorderRadius.circular(
+                            25,
+                          ), // corner radius here
                         ),
                         backgroundColor: AppColors.colorPrimary,
                         foregroundColor: AppColors.white,

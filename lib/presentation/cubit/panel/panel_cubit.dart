@@ -131,7 +131,12 @@ class PanelCubit extends Cubit<PanelState> {
         final updated = await _updateLocalPanel(panelId, changes);
 
         if (updated != null) {
-          emit(UpdatePanelsSuccess(msg: "Updated Successfully", panelData: updated));
+          emit(
+            UpdatePanelsSuccess(
+              msg: "Updated Successfully",
+              panelData: updated,
+            ),
+          );
         }
 
         // 3. Force refresh from server (since server saved it)
@@ -259,8 +264,6 @@ class PanelCubit extends Cubit<PanelState> {
         version: version,
       );
 
-
-
       if (response.status) {
         emit(AddPanelSuccess(message: response.msg));
         getPanel(userId: userId);
@@ -340,8 +343,9 @@ class PanelCubit extends Cubit<PanelState> {
     required String password,
   }) async {
     emit(PanelLoading());
-    final formattedPassword =
-        password.startsWith("00") ? password : "00$password";
+    final formattedPassword = password.startsWith("00")
+        ? password
+        : "00$password";
     final repo = fourGRepository;
     if (repo == null) {
       emit(AddPanelFailure(message: "MQTT service not available"));
@@ -548,7 +552,6 @@ class PanelCubit extends Cubit<PanelState> {
     }
   }
 
-
   // ===========================================================================
   // 5. GENERAL UPDATE
   // ===========================================================================
@@ -584,7 +587,12 @@ class PanelCubit extends Cubit<PanelState> {
         final updated = await _updateLocalPanel(panelId, {key: value});
 
         if (updated != null) {
-          emit(UpdatePanelsSuccess(msg: "Updated Successfully", panelData: updated));
+          emit(
+            UpdatePanelsSuccess(
+              msg: "Updated Successfully",
+              panelData: updated,
+            ),
+          );
         }
 
         // 2. Force refresh from server
@@ -704,9 +712,9 @@ class PanelCubit extends Cubit<PanelState> {
 
   // --- Local Database Helpers ---
   Future<PanelData?> _updateLocalPanel(
-      int panelId,
-      Map<String, dynamic> changes,
-      ) async {
+    int panelId,
+    Map<String, dynamic> changes,
+  ) async {
     // Check Pending Adds
     List<PanelData> pending = await _getPendingList(PENDING_ADDS_KEY);
     int idx = pending.indexWhere((p) => p.pnlId == panelId);
@@ -794,9 +802,9 @@ class PanelCubit extends Cubit<PanelState> {
   }
 
   Future<void> _savePendingActions(
-      String key,
-      List<Map<String, dynamic>> list,
-      ) async {
+    String key,
+    List<Map<String, dynamic>> list,
+  ) async {
     await SharedPreferenceHelper.setString(key, json.encode(list));
   }
 }

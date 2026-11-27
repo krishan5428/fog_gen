@@ -64,11 +64,10 @@ class _FourGMqttSettingsScreenState extends State<FourGMqttSettingsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => FourGMqttTelephoneSettingsScreen(
-                    panelData: widget.panelData,
-                    fourGRepository: widget.fourGRepository,
-                  ),
+              builder: (context) => FourGMqttTelephoneSettingsScreen(
+                panelData: widget.panelData,
+                fourGRepository: widget.fourGRepository,
+              ),
             ),
           );
         },
@@ -80,11 +79,10 @@ class _FourGMqttSettingsScreenState extends State<FourGMqttSettingsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => FourGMqttZoneMappingsScreen(
-                    panelData: widget.panelData,
-                    fourGRepository: widget.fourGRepository,
-                  ),
+              builder: (context) => FourGMqttZoneMappingsScreen(
+                panelData: widget.panelData,
+                fourGRepository: widget.fourGRepository,
+              ),
             ),
           );
         },
@@ -96,11 +94,10 @@ class _FourGMqttSettingsScreenState extends State<FourGMqttSettingsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => FourGMqttAudioSettingsScreen(
-                    panelData: widget.panelData,
-                    fourGRepository: widget.fourGRepository,
-                  ),
+              builder: (context) => FourGMqttAudioSettingsScreen(
+                panelData: widget.panelData,
+                fourGRepository: widget.fourGRepository,
+              ),
             ),
           );
         },
@@ -506,14 +503,13 @@ class _FourGMqttSettingsScreenState extends State<FourGMqttSettingsScreen> {
         fontWeight: FontWeight.w600,
         color: readOnly ? Colors.grey.shade600 : Colors.black87,
       ),
-      inputFormatters:
-          isNumber && !readOnly
-              ? [
-                FilteringTextInputFormatter.digitsOnly,
-                if (maxLength != null)
-                  LengthLimitingTextInputFormatter(maxLength),
-              ]
-              : null,
+      inputFormatters: isNumber && !readOnly
+          ? [
+              FilteringTextInputFormatter.digitsOnly,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ]
+          : null,
       decoration: InputDecoration(
         labelText: label,
         counterText: "",
@@ -525,14 +521,13 @@ class _FourGMqttSettingsScreenState extends State<FourGMqttSettingsScreen> {
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
         ),
-        prefixIcon:
-            icon != null
-                ? Icon(
-                  icon,
-                  color: readOnly ? Colors.grey.shade400 : Colors.grey.shade600,
-                  size: 20,
-                )
-                : null,
+        prefixIcon: icon != null
+            ? Icon(
+                icon,
+                color: readOnly ? Colors.grey.shade400 : Colors.grey.shade600,
+                size: 20,
+              )
+            : null,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,

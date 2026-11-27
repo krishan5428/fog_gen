@@ -136,9 +136,7 @@ class _ChangeUserNameBottomSheetState extends State<ChangeUserName> {
                     backgroundColor: AppColors.colorPrimary,
                     foregroundColor: AppColors.white,
                   ),
-                  child: const Text(
-                    "Submit",
-                  ),
+                  child: const Text("Submit"),
                 ),
               ],
             ),

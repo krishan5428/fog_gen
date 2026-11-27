@@ -183,8 +183,9 @@ class _FourGMqttAudioSettingsScreenState
     if (splitData[2] == "03" && splitData[3] == "01") {
       final statusPart = splitData[5].split('*')[0];
       final audioMask = statusPart.split("");
-      final List<String> validHexes =
-          audioMask.where((c) => c.isNotEmpty).toList();
+      final List<String> validHexes = audioMask
+          .where((c) => c.isNotEmpty)
+          .toList();
 
       if (validHexes.length >= 30) {
         _syncLocalItemsWithHexData(validHexes.sublist(0, 30));
@@ -299,8 +300,9 @@ class _FourGMqttAudioSettingsScreenState
             final voiceNo = element["filename"]?.toString();
             if (voiceNo == null || voiceNo.isEmpty) continue;
 
-            final match =
-                currentPanelList.where((e) => e.voiceNo == voiceNo).toList();
+            final match = currentPanelList
+                .where((e) => e.voiceNo == voiceNo)
+                .toList();
 
             if (match.isNotEmpty) {
               final existing = match.first;
@@ -659,213 +661,204 @@ class _FourGMqttAudioSettingsScreenState
 
   void _showAddAudioSheet(int index, VoiceModel item) {
     final voiceNo = item.voiceNo;
-    final slotNo =
-        voiceNo.contains("_") ? voiceNo.split("_")[1].split(".")[0] : "";
+    final slotNo = voiceNo.contains("_")
+        ? voiceNo.split("_")[1].split(".")[0]
+        : "";
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder:
-          (sheetContext) => StatefulBuilder(
-            builder: (context, setSheetState) {
-              final isPreviewPlaying = _playingIndex == -1;
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final isPreviewPlaying = _playingIndex == -1;
 
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1D5DB),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 12,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+                const SizedBox(height: 20),
+                Text(
+                  "Add Audio File",
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD1D5DB),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                const SizedBox(height: 6),
+                Text(
+                  "Audio No. $slotNo",
+                  style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () async {
+                    await _pickAudioFile(index);
+                    setSheetState(() {});
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _selectedFilePath != null
+                            ? AppColors.colorPrimary
+                            : const Color(0xFFE5E7EB),
+                        width: _selectedFilePath != null ? 1.5 : 1,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Add Audio File",
-                      style: TextStyle(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      "Audio No. $slotNo",
-                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 24),
-                    GestureDetector(
-                      onTap: () async {
-                        await _pickAudioFile(index);
-                        setSheetState(() {});
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                          horizontal: 16,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _selectedFilePath != null
+                              ? Icons.audio_file_rounded
+                              : Icons.folder_open_rounded,
+                          color: _selectedFilePath != null
+                              ? AppColors.colorPrimary
+                              : Colors.grey,
+                          size: 22,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color:
-                                _selectedFilePath != null
-                                    ? AppColors.colorPrimary
-                                    : const Color(0xFFE5E7EB),
-                            width: _selectedFilePath != null ? 1.5 : 1,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedFilePath != null
+                                ? _selectedFilePath!.split("/").last
+                                : "Browse audio file",
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: _selectedFilePath != null
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: _selectedFilePath != null
+                                  ? Colors.black87
+                                  : Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _selectedFilePath != null
-                                  ? Icons.audio_file_rounded
-                                  : Icons.folder_open_rounded,
-                              color:
-                                  _selectedFilePath != null
-                                      ? AppColors.colorPrimary
-                                      : Colors.grey,
-                              size: 22,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _selectedFilePath != null
-                                    ? _selectedFilePath!.split("/").last
-                                    : "Browse audio file",
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight:
-                                      _selectedFilePath != null
-                                          ? FontWeight.w600
-                                          : FontWeight.w400,
-                                  color:
-                                      _selectedFilePath != null
-                                          ? Colors.black87
-                                          : Colors.grey,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (_selectedFilePath != null)
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                color: Color(0xFF16A34A),
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_selectedFilePath != null)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                                isPreviewPlaying
-                                    ? Colors.red
-                                    : AppColors.colorPrimary,
-                            side: BorderSide(
-                              color:
-                                  isPreviewPlaying
-                                      ? Colors.red
-                                      : AppColors.colorPrimary,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () async {
-                            if (isPreviewPlaying) {
-                              await _audioPlayer?.stop();
-                              setState(() {
-                                _playingIndex = null;
-                              });
-                            } else {
-                              await _playAudio(-1, _selectedFilePath!);
-                            }
-                            setSheetState(() {});
-                          },
-                          icon: Icon(
-                            isPreviewPlaying
-                                ? Icons.stop_rounded
-                                : Icons.play_arrow_rounded,
+                        if (_selectedFilePath != null)
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: Color(0xFF16A34A),
                             size: 20,
                           ),
-                          label: Text(
-                            isPreviewPlaying ? "Stop Preview" : "Preview Audio",
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (_selectedFilePath != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isPreviewPlaying
+                            ? Colors.red
+                            : AppColors.colorPrimary,
+                        side: BorderSide(
+                          color: isPreviewPlaying
+                              ? Colors.red
+                              : AppColors.colorPrimary,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _selectedFilePath != null
-                                  ? AppColors.colorPrimary
-                                  : const Color(0xFFE5E7EB),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed:
-                            _selectedFilePath != null
-                                ? () {
-                                  _audioPlayer?.stop();
-                                  _confirmAudioSelection(index);
-                                  Navigator.pop(context);
-                                }
-                                : null,
-                        child: Text(
-                          "Confirm",
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                _selectedFilePath != null
-                                    ? Colors.white
-                                    : Colors.grey,
-                          ),
+                      onPressed: () async {
+                        if (isPreviewPlaying) {
+                          await _audioPlayer?.stop();
+                          setState(() {
+                            _playingIndex = null;
+                          });
+                        } else {
+                          await _playAudio(-1, _selectedFilePath!);
+                        }
+                        setSheetState(() {});
+                      },
+                      icon: Icon(
+                        isPreviewPlaying
+                            ? Icons.stop_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 20,
+                      ),
+                      label: Text(
+                        isPreviewPlaying ? "Stop Preview" : "Preview Audio",
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedFilePath != null
+                          ? AppColors.colorPrimary
+                          : const Color(0xFFE5E7EB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: _selectedFilePath != null
+                        ? () {
+                            _audioPlayer?.stop();
+                            _confirmAudioSelection(index);
+                            Navigator.pop(context);
+                          }
+                        : null,
+                    child: Text(
+                      "Confirm",
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: _selectedFilePath != null
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
-          ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -954,138 +947,128 @@ class _FourGMqttAudioSettingsScreenState
       body: Column(
         children: [
           Expanded(
-            child:
-                _isLoading && _audioItems.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      itemCount: _audioItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _audioItems[index];
-                        final statusCode =
-                            index < _deviceStatuses.length
-                                ? _deviceStatuses[index]
-                                : null;
-                        final hasFile =
-                            item.voiceSize != "0" ||
-                            item.path.isNotEmpty ||
-                            item.isDevice == 1 ||
-                            statusCode == "1";
-                        final isSelected = _selectedIndices.contains(index);
+            child: _isLoading && _audioItems.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    itemCount: _audioItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _audioItems[index];
+                      final statusCode = index < _deviceStatuses.length
+                          ? _deviceStatuses[index]
+                          : null;
+                      final hasFile =
+                          item.voiceSize != "0" ||
+                          item.path.isNotEmpty ||
+                          item.isDevice == 1 ||
+                          statusCode == "1";
+                      final isSelected = _selectedIndices.contains(index);
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          elevation: 1.5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: InkWell(
-                            onTap:
-                                isBusy
-                                    ? null
-                                    : () => _showAddAudioSheet(index, item),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: Checkbox(
-                                      value: isSelected,
-                                      onChanged:
-                                          isBusy || !hasFile
-                                              ? null
-                                              : (val) {
-                                                setState(() {
-                                                  if (val == true) {
-                                                    if (_selectedIndices
-                                                            .length >=
-                                                        5) {
-                                                      _showToast(
-                                                        "Select up to 5 files maximum.",
-                                                        type:
-                                                            ToastificationType
-                                                                .warning,
-                                                      );
-                                                      return;
-                                                    }
-                                                    _selectedIndices.add(index);
-                                                  } else {
-                                                    _selectedIndices.remove(
-                                                      index,
-                                                    );
-                                                  }
-                                                });
-                                              },
-                                      activeColor: AppColors.colorPrimary,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4),
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        elevation: 1.5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: InkWell(
+                          onTap: isBusy
+                              ? null
+                              : () => _showAddAudioSheet(index, item),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    value: isSelected,
+                                    onChanged: isBusy || !hasFile
+                                        ? null
+                                        : (val) {
+                                            setState(() {
+                                              if (val == true) {
+                                                if (_selectedIndices.length >=
+                                                    5) {
+                                                  _showToast(
+                                                    "Select up to 5 files maximum.",
+                                                    type: ToastificationType
+                                                        .warning,
+                                                  );
+                                                  return;
+                                                }
+                                                _selectedIndices.add(index);
+                                              } else {
+                                                _selectedIndices.remove(index);
+                                              }
+                                            });
+                                          },
+                                    activeColor: AppColors.colorPrimary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFECEFF1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.audiotrack_rounded,
+                                    color: hasFile
+                                        ? AppColors.colorPrimary
+                                        : Colors.grey.shade400,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.voiceNo,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFECEFF1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.audiotrack_rounded,
-                                      color:
-                                          hasFile
-                                              ? AppColors.colorPrimary
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _getFileSizeDisplay(item.voiceSize),
+                                        style: TextStyle(
+                                          fontSize: 11.sp,
+                                          color: hasFile
+                                              ? Colors.grey.shade600
                                               : Colors.grey.shade400,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.voiceNo,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black87,
-                                          ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _getFileSizeDisplay(item.voiceSize),
-                                          style: TextStyle(
-                                            fontSize: 11.sp,
-                                            color:
-                                                hasFile
-                                                    ? Colors.grey.shade600
-                                                    : Colors.grey.shade400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  _getStatusPill(item, statusCode),
-                                ],
-                              ),
+                                ),
+                                _getStatusPill(item, statusCode),
+                              ],
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
+                  ),
           ),
           SafeArea(
             child: Container(

@@ -278,7 +278,6 @@ class SharedPreferenceHelper {
     }
   }
 
-
   static Future<bool> saveDeviceToken(String token) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return await prefs.setString(userTokenKey, token);

@@ -38,7 +38,10 @@ final panel = PanelData.fromJson({
 });
 
 Future<TelephoneNoSettingsViewModel> load(FakeSr1 repo) async {
-  final vm = TelephoneNoSettingsViewModel(panelData: panel, socketRepository: repo);
+  final vm = TelephoneNoSettingsViewModel(
+    panelData: panel,
+    socketRepository: repo,
+  );
   await Future<void>.delayed(Duration.zero);
   await Future<void>.delayed(Duration.zero);
   return vm;

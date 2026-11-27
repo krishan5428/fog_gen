@@ -121,32 +121,29 @@ class FourGMqttService {
     List<int> outputs = const [1, 2, 3],
     bool viaDashboard = true,
   }) async {
-    Future<String?> readRecord(int output) =>
-        _enqueue(
-          imei: imei,
-          payload: FourGMqttCommands.readOutputSettings(
-            imei: imei,
-            passcode: passcode,
-            output: output,
-          ),
-          isReply: _readReply("011"),
-        ).reply;
+    Future<String?> readRecord(int output) => _enqueue(
+      imei: imei,
+      payload: FourGMqttCommands.readOutputSettings(
+        imei: imei,
+        passcode: passcode,
+        output: output,
+      ),
+      isReply: _readReply("011"),
+    ).reply;
 
     List<String>? states;
     if (viaDashboard) {
-      final dashboard =
-          await _enqueue(
-            imei: imei,
-            payload: FourGMqttCommands.readDashboard(
-              imei: imei,
-              passcode: passcode,
-            ),
-            isReply: _readReply("001"),
-          ).reply;
-      states =
-          dashboard == null
-              ? null
-              : FourGMqttParser.parseDashboardOutputStates(dashboard);
+      final dashboard = await _enqueue(
+        imei: imei,
+        payload: FourGMqttCommands.readDashboard(
+          imei: imei,
+          passcode: passcode,
+        ),
+        isReply: _readReply("001"),
+      ).reply;
+      states = dashboard == null
+          ? null
+          : FourGMqttParser.parseDashboardOutputStates(dashboard);
       if (states == null) return const [];
     }
 
@@ -164,25 +161,23 @@ class FourGMqttService {
         }
       }
 
-      final write =
-          record == null
-              ? null
-              : FourGMqttCommands.enableOutputFromSettings(
-                imei: imei,
-                passcode: passcode,
-                readResponse: record,
-              );
+      final write = record == null
+          ? null
+          : FourGMqttCommands.enableOutputFromSettings(
+              imei: imei,
+              passcode: passcode,
+              readResponse: record,
+            );
       if (write == null) {
         _logger.w("ENABLE OUTPUT $output | Could not read Output Settings");
         continue;
       }
 
-      final ack =
-          await _enqueue(
-            imei: imei,
-            payload: write,
-            isReply: _writeReply("011"),
-          ).reply;
+      final ack = await _enqueue(
+        imei: imei,
+        payload: write,
+        isReply: _writeReply("011"),
+      ).reply;
       if (_isWriteSuccess(ack)) {
         enabled.add(output);
       } else {

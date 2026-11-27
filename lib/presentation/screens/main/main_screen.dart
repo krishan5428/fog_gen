@@ -945,7 +945,10 @@ Widget _buildConnectionStatus(MainViewModel viewModel) {
           shape: BoxShape.circle,
           color: statusColor,
           boxShadow: [
-            BoxShadow(color: statusColor.withValues(alpha: 0.5), blurRadius: 8.0),
+            BoxShadow(
+              color: statusColor.withValues(alpha: 0.5),
+              blurRadius: 8.0,
+            ),
           ],
         ),
       ),

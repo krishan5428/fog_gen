@@ -77,11 +77,9 @@ void showPanelIdDialog(
                     controller: rvalueController,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    validator:
-                        (value) =>
-                            value == null || value.length < 6
-                                ? 'Enter valid R Value'
-                                : null,
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Enter valid R Value'
+                        : null,
                   ),
                   VerticalSpace(),
                   FormSection(
@@ -89,11 +87,9 @@ void showPanelIdDialog(
                     controller: lvalueController,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    validator:
-                        (value) =>
-                            value == null || value.length < 6
-                                ? 'Enter valid L Value'
-                                : null,
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Enter valid L Value'
+                        : null,
                   ),
                   VerticalSpace(),
                   FormSection(
@@ -101,11 +97,9 @@ void showPanelIdDialog(
                     controller: panelIdController,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    validator:
-                        (value) =>
-                            value == null || value.length < 6
-                                ? 'Enter valid Panel ID'
-                                : null,
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Enter valid Panel ID'
+                        : null,
                   ),
                   if (errorText != null)
                     Padding(
@@ -158,7 +152,10 @@ void showPanelIdDialog(
                           );
 
                           if (result == true) {
-                            ProgressDialog.show(context, message: 'Updating Panel ID data...');
+                            ProgressDialog.show(
+                              context,
+                              message: 'Updating Panel ID data...',
+                            );
                             final response = await socketRepository
                                 .sendPacketSR1(
                                   Packets.getPacket(
@@ -179,7 +176,10 @@ void showPanelIdDialog(
                             }
                           } else {
                             CustomNavigation.instance.pop(context);
-                            SnackBarHelper.showSnackBar(context, 'Operation Cancelled');
+                            SnackBarHelper.showSnackBar(
+                              context,
+                              'Operation Cancelled',
+                            );
                           }
                         },
                         child: const Text("Submit"),

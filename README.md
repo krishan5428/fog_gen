@@ -10,7 +10,7 @@ Package name: `fog_gen_new`. Current version: see `version:` in [pubspec.yaml](p
 | --- | --- | --- |
 | FogShield Pro / Nexus / Edge (SR1 panels) | TCP to the panel's static IP, then local IP; SMS fallback | [lib/core/responses/socket_repository.dart](lib/core/responses/socket_repository.dart), [lib/core/utils/packets.dart](lib/core/utils/packets.dart) |
 | G4 devices (F02L G4, F04L G4, FCOM G4) | MQTT over TLS to AWS IoT, by IMEI | [lib/features/mqtt/](lib/features/mqtt/), flow in [docs/G4_MQTT_FLOW.md](docs/G4_MQTT_FLOW.md) |
-| Backend (users, panels, vendors, logs) | HTTPS, `WebUrlConstants.baseUrl` | [lib/core/api/](lib/core/api/), [lib/core/data/repo_impl/](lib/core/data/repo_impl/) |
+| Backend (users, panels, vendors, logs) | HTTPS to FogShield's own folder `app_services/fogshield/` (`WebUrlConstants.baseUrl`), FireNex-style; see [docs/PLAN_FOGSHIELD_BACKEND.md](docs/PLAN_FOGSHIELD_BACKEND.md) | [lib/core/api/](lib/core/api/), [lib/core/data/repo_impl/](lib/core/data/repo_impl/) |
 | Push alerts | Firebase Cloud Messaging | [lib/main.dart](lib/main.dart), [lib/app/fogshield_app.dart](lib/app/fogshield_app.dart) |
 
 The panel list is offline-first: it is cached, and adds/updates/deletes made offline are queued and replayed on the next refresh (`PanelCubit`). G4 devices are never saved offline.

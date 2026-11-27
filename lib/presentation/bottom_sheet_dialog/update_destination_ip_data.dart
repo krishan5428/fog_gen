@@ -123,15 +123,14 @@ void showDestinationIPUpdateData(
                       ),
                       underline: const SizedBox(),
                       hint: Text('$title Server'),
-                      items:
-                          ['DISABLE', 'IP', 'GPRS', 'IP+GPRS']
-                              .map(
-                                (option) => DropdownMenuItem(
-                                  value: option,
-                                  child: Text(option),
-                                ),
-                              )
-                              .toList(),
+                      items: ['DISABLE', 'IP', 'GPRS', 'IP+GPRS']
+                          .map(
+                            (option) => DropdownMenuItem(
+                              value: option,
+                              child: Text(option),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setState(() => selectedLetter = value);
@@ -156,22 +155,21 @@ void showDestinationIPUpdateData(
                   VerticalSpace(),
                   if (errorMessages.isNotEmpty)
                     Column(
-                      children:
-                          errorMessages
-                              .map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.only(top: 6.0),
-                                  child: Text(
-                                    e,
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                      children: errorMessages
+                          .map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(top: 6.0),
+                              child: Text(
+                                e,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   const SizedBox(height: 20),
                   Row(

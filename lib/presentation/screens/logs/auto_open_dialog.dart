@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../constants/app_colors.dart';
 
-
 class AutoOpenDialog extends StatefulWidget {
   const AutoOpenDialog({super.key});
 
@@ -52,8 +51,10 @@ class _AutoOpenDialogState extends State<AutoOpenDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel',
-              style: TextStyle(color: AppColors.colorPrimary)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: AppColors.colorPrimary),
+          ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),

@@ -9,7 +9,11 @@ All notable changes to the FogShield app. Newest first. Dates are commit dates.
 - Test suite (unit, view-model, screen smoke tests) and a manual test checklist.
 - README.
 
+### Changed (backend)
+- The app now talks only to FogShield's own backend folder `app_services/fogshield/` (panels, logs, users, vendors), built like FireNex, with its own tables (`tbl_panel_fogshield`, `tbl_fogshield_users`, …). Fresh start: accounts made on the old shared backend are not carried over — sign up again.
+
 ### Fixed
+- Login failure now shows the server's reason ("User not registered", "Invalid mobile or password") instead of "Something went wrong!".
 - A panel update or delete rejected by the server was shown as "Updated/Deleted Offline" and queued, because a reply with a missing or differently named key crashed the parser.
 - A panel added offline could be sent to the server twice when two list refreshes ran at once.
 - Logout left the previous user's profile, password, panel list and offline queue on the phone; the next user saw the old panels and the old user's offline changes were sent under the new account.

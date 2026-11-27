@@ -527,8 +527,6 @@ class _PanelSR1ViewState extends State<_PanelSR1View> {
         );
     }
   }
-
-
 }
 
 class _SystemErrorIndicator extends StatefulWidget {

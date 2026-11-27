@@ -38,7 +38,10 @@ void main() {
     await SharedPreferenceHelper.setIntruIdForPanelSimNumber('98', 'i1');
     expect(await SharedPreferenceHelper.getFireIdForPanelSimNumber('98'), 'f1');
     await SharedPreferenceHelper.clearIdsForPanelSimNumber('98');
-    expect(await SharedPreferenceHelper.getIntruIdForPanelSimNumber('98'), null);
+    expect(
+      await SharedPreferenceHelper.getIntruIdForPanelSimNumber('98'),
+      null,
+    );
   });
 
   test('logout removes everything that belongs to the previous user', () async {
@@ -89,12 +92,14 @@ void main() {
     expect(prefs.getString('user_pass'), isNull);
   });
 
-  test('an old plain-text password is moved to secure storage on first read',
-      () async {
-    SharedPreferences.setMockInitialValues({'user_pass': 'old'});
-    expect(await SharedPreferenceHelper.getPass(), 'old');
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('user_pass'), isNull);
-    expect(await SharedPreferenceHelper.getPass(), 'old');
-  });
+  test(
+    'an old plain-text password is moved to secure storage on first read',
+    () async {
+      SharedPreferences.setMockInitialValues({'user_pass': 'old'});
+      expect(await SharedPreferenceHelper.getPass(), 'old');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('user_pass'), isNull);
+      expect(await SharedPreferenceHelper.getPass(), 'old');
+    },
+  );
 }

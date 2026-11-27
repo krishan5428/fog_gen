@@ -61,10 +61,9 @@ class AudioRepository {
     }
   }
 
-  int _nextId(List<VoiceModel> list) =>
-      list.isEmpty
-          ? 1
-          : list.map((e) => e.id ?? 0).reduce((a, b) => a > b ? a : b) + 1;
+  int _nextId(List<VoiceModel> list) => list.isEmpty
+      ? 1
+      : list.map((e) => e.id ?? 0).reduce((a, b) => a > b ? a : b) + 1;
 
   Future<List<VoiceModel>> getAllAudio() => _synchronized(() => _readAllRaw());
 

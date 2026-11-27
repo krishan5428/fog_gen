@@ -54,8 +54,11 @@ class _VendorUpdateBottomSheetDialogState
       // }
 
       if (mounted) {
-        CustomNavigation.instance.popWithResult(context: context,result: true);
-        SnackBarHelper.showSnackBar(context, '${widget.formKey.toUpperCase()} updated successfully');
+        CustomNavigation.instance.popWithResult(context: context, result: true);
+        SnackBarHelper.showSnackBar(
+          context,
+          '${widget.formKey.toUpperCase()} updated successfully',
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -113,13 +116,13 @@ class _VendorUpdateBottomSheetDialogState
                 _loading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.colorPrimary,
-                        foregroundColor: AppColors.white,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.colorPrimary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        onPressed: _save,
+                        child: const Text("Save"),
                       ),
-                      onPressed: _save,
-                      child: const Text("Save"),
-                    ),
               ],
             ),
           ),

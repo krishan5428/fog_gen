@@ -224,29 +224,31 @@ void main() {
 
   tearDown(() => cubit.close());
 
-  test('all checks pass → success, saved as 4GCOM with IMEI, nothing deleted',
-      () async {
-    final result = addResult(cubit);
-    add(cubit);
-    final s = await result;
-    await listRefreshed(cubit);
+  test(
+    'all checks pass → success, saved as 4GCOM with IMEI, nothing deleted',
+    () async {
+      final result = addResult(cubit);
+      add(cubit);
+      final s = await result;
+      await listRefreshed(cubit);
 
-    expect(s, isA<AddPanelSuccess>());
-    expect((s as AddPanelSuccess).panelAccNo, '004521');
-    expect(server.added.single['panelType'], '4GCOM');
-    expect(server.added.single['imei'], imei);
-    expect(server.added.single['password'], '001234');
-    expect(server.deleted, isEmpty);
-    expect(panel.calls, [
-      'connect $imei 001234',
-      'writeId 004521',
-      'readId',
-      'writeAdmin 9991945637',
-      'readAdmin',
-      'writeDest',
-      'readDest',
-    ]);
-  });
+      expect(s, isA<AddPanelSuccess>());
+      expect((s as AddPanelSuccess).panelAccNo, '004521');
+      expect(server.added.single['panelType'], '4GCOM');
+      expect(server.added.single['imei'], imei);
+      expect(server.added.single['password'], '001234');
+      expect(server.deleted, isEmpty);
+      expect(panel.calls, [
+        'connect $imei 001234',
+        'writeId 004521',
+        'readId',
+        'writeAdmin 9991945637',
+        'readAdmin',
+        'writeDest',
+        'readDest',
+      ]);
+    },
+  );
 
   test('handshake fails → nothing saved on the server', () async {
     panel.handshakeOk = false;
@@ -270,17 +272,19 @@ void main() {
     expect(prefs.getString(PanelCubit.PENDING_ADDS_KEY), isNull);
   });
 
-  test('server returns no account number → rollback, no device writes',
-      () async {
-    server.addResponse = AddPanelResponse(status: true, msg: 'ok', pnlId: 9);
-    final result = addResult(cubit);
-    add(cubit);
-    final s = await result;
+  test(
+    'server returns no account number → rollback, no device writes',
+    () async {
+      server.addResponse = AddPanelResponse(status: true, msg: 'ok', pnlId: 9);
+      final result = addResult(cubit);
+      add(cubit);
+      final s = await result;
 
-    expect((s as AddPanelFailure).message, contains('Device removed'));
-    expect(server.deleted, [9]);
-    expect(panel.calls.where((c) => c.startsWith('write')), isEmpty);
-  });
+      expect((s as AddPanelFailure).message, contains('Device removed'));
+      expect(server.deleted, [9]);
+      expect(panel.calls.where((c) => c.startsWith('write')), isEmpty);
+    },
+  );
 
   test('Device ID read-back mismatch → rollback', () async {
     panel.deviceIdReply =

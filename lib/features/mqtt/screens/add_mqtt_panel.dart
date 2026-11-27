@@ -236,8 +236,9 @@ class _AddMqttPanelPageState extends State<AddMqttPanelPage> {
     final panelState = context.read<PanelCubit>().state;
     List<String> existingImeis = [];
     if (panelState is GetPanelsSuccess) {
-      existingImeis =
-          panelState.panelsData.map((p) => p.panelImei.trim()).toList();
+      existingImeis = panelState.panelsData
+          .map((p) => p.panelImei.trim())
+          .toList();
     }
 
     // 1. Site Name Validation
@@ -302,10 +303,9 @@ class _AddMqttPanelPageState extends State<AddMqttPanelPage> {
       _showToast("Admin number and SIM number must be different.");
       return;
     }
-    final formattedSimNum =
-        simNum.length == 13 && simNum.startsWith('+91')
-            ? simNum.substring(3)
-            : simNum;
+    final formattedSimNum = simNum.length == 13 && simNum.startsWith('+91')
+        ? simNum.substring(3)
+        : simNum;
     if (panelSimNumbers.contains(formattedSimNum) ||
         panelSimNumbers.contains(simNum)) {
       _showToast('Device SIM number "$simNum" already exists.');

@@ -69,13 +69,13 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               _buildOption(
                 'Update Username',
-                    () => _openBottomSheet(
+                () => _openBottomSheet(
                   ChangeUserName(userId: userId!, formKey: 'name'),
                 ),
               ),
               _buildOption(
                 'Update Mobile Number',
-                    () => _openBottomSheet(
+                () => _openBottomSheet(
                   ChangeUserMobileBottomSheet(
                     userId: userId!,
                     formKey: 'mobile',
@@ -94,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
               }),
               _buildOption(
                 'Update Email',
-                    () => _openBottomSheet(
+                () => _openBottomSheet(
                   ChangeEmailAddressBottomSheet(
                     userId: userId!,
                     formKey: 'email',
@@ -138,42 +138,42 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: CustomAppBar(
         pageName: 'Profile',
         isFilter: false,
-        isProfile: true,isDash: false,
+        isProfile: true,
+        isDash: false,
         onMoreTaps: _showMoreOptions,
       ),
-      body:
-      isLoading
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                children: [
-                  buildContactItem(
-                    context,
-                    icon: Icons.person,
-                    text: name ?? 'N/A',
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        buildContactItem(
+                          context,
+                          icon: Icons.person,
+                          text: name ?? 'N/A',
+                        ),
+                        const Divider(),
+                        buildContactItem(
+                          context,
+                          icon: Icons.phone,
+                          text: phone ?? 'N/A',
+                        ),
+                        const Divider(),
+                        buildContactItem(
+                          context,
+                          icon: Icons.email,
+                          text: email ?? 'N/A',
+                        ),
+                      ],
+                    ),
                   ),
-                  const Divider(),
-                  buildContactItem(
-                    context,
-                    icon: Icons.phone,
-                    text: phone ?? 'N/A',
-                  ),
-                  const Divider(),
-                  buildContactItem(
-                    context,
-                    icon: Icons.email,
-                    text: email ?? 'N/A',
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: spacingBwtView),
         child: SafeArea(
@@ -259,9 +259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         FormSection(
                           label: 'Enter Password',
                           controller: passwordController,
-                          validator:
-                              (value) =>
-                          value == null || value.isEmpty
+                          validator: (value) => value == null || value.isEmpty
                               ? 'Invalid entry'
                               : null,
                         ),
@@ -288,8 +286,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed:
-                                () => CustomNavigation.instance.pop(context),
+                            onPressed: () =>
+                                CustomNavigation.instance.pop(context),
                             child: const Text(
                               'Cancel',
                               style: TextStyle(color: AppColors.colorAccent),
@@ -317,7 +315,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 if (password.isEmpty) {
                                   setState(() {
                                     errorMessage =
-                                    'Please enter your password.';
+                                        'Please enter your password.';
                                   });
                                   return;
                                 }

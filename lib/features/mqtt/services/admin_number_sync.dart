@@ -82,8 +82,9 @@ class AdminNumberSync {
   /// (SMS / Call / SMS & Call) and country code where they're usable.
   static String _adminSlot(String current, String adminNumber) {
     final sub = current.split('#');
-    final ability =
-        sub.isNotEmpty && const {"2", "3", "4"}.contains(sub[0]) ? sub[0] : "4";
+    final ability = sub.isNotEmpty && const {"2", "3", "4"}.contains(sub[0])
+        ? sub[0]
+        : "4";
     var cc = sub.length > 1 ? sub[1].trim() : "";
     if (cc.isEmpty || cc == "-" || cc == "NO CODE") cc = "+91";
     return "$ability#$cc#$adminNumber";
@@ -164,12 +165,11 @@ class AdminNumberSync {
     final ack = await sendAndAwaitWriteAck(
       mqttRepository: mqttService.mqttRepository,
       imei: imei,
-      send:
-          () => fourGRepository.assignAdminNumbers(
-            imei: imei,
-            passcode: wirePasscode,
-            formattedNumbers: updated,
-          ),
+      send: () => fourGRepository.assignAdminNumbers(
+        imei: imei,
+        passcode: wirePasscode,
+        formattedNumbers: updated,
+      ),
     );
     if (ack == false) {
       return const AdminWriteResult.failure("Device rejected the update");

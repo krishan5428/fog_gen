@@ -104,7 +104,8 @@ Future<void> setUpHarness() async {
   SharedPreferences.setMockInitialValues({
     'is_logged_in': true,
     'user_id': 3,
-    'user_data': '{"usr_id":3,"name":"Tester","email":"t@t.t","mobile":"9999999999"}',
+    'user_data':
+        '{"usr_id":3,"name":"Tester","email":"t@t.t","mobile":"9999999999"}',
   });
   FlutterSecureStorage.setMockInitialValues({'user_pass': 'secret'});
   PackageInfo.setMockInitialValues(
@@ -123,12 +124,17 @@ Future<void> setUpHarness() async {
 }
 
 /// The app's providers + ScreenUtil around [screen].
-Widget harness(Widget screen, {List<PanelData> panels = const []}) {
+Widget harness(
+  Widget screen, {
+  List<PanelData> panels = const [],
+  UserRepo? userRepo,
+}) {
+  final users = userRepo ?? NoUserRepo();
   return MultiProvider(
-    providers: [Provider<UserRepo>(create: (_) => NoUserRepo())],
+    providers: [Provider<UserRepo>(create: (_) => users)],
     child: MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => UserCubit(NoUserRepo())),
+        BlocProvider(create: (_) => UserCubit(users)),
         BlocProvider(create: (_) => PanelCubit(OfflinePanelRepo(panels))),
         BlocProvider(create: (_) => VendorCubit(NoVendorRepo())),
         BlocProvider(create: (_) => SiteCubit()),

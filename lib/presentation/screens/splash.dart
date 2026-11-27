@@ -75,7 +75,9 @@ class _SplashScreenState extends State<SplashScreen> {
       String? lastSavedToken = await SharedPreferenceHelper.getDeviceToken();
       int? userId = (await SharedPreferenceHelper.getUserData())?.usrId;
 
-      if (freshToken != null && userId != null && freshToken != lastSavedToken) {
+      if (freshToken != null &&
+          userId != null &&
+          freshToken != lastSavedToken) {
         debugPrint("🔄 Token changed. Syncing with server...");
 
         if (mounted) {
