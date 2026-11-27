@@ -325,7 +325,8 @@ if ($__standalone) {
     $raw  = file_get_contents('php://input');
     $data = json_decode($raw, true);
 
-    fsh4g_log("Raw: $raw");
+    // Never write the shared secret to the log: mask its value.
+    fsh4g_log("Raw: " . preg_replace('/("secret"\s*:\s*)"(?:[^"\\\\]|\\\\.)*"/', '$1"***"', (string)$raw));
 
     // Shared secret from config.php (g4_secret). Blank → refuse everything.
     $fsh4g_secret = fogshield_config('g4_secret');
