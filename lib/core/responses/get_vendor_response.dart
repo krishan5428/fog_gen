@@ -9,12 +9,10 @@ class GetVendorResponse {
   factory GetVendorResponse.fromJson(Map<String, dynamic> json) {
     return GetVendorResponse(
       status: json['status'] == true,
-      vendorData:
-          json['vendors'] != null
-              ? List<VendorData>.from(
-                json['vendors'].map((e) => VendorData.fromJson(e)),
-              )
-              : [],
+      // The vendor lives in the user's row: one "vendor" object, or none.
+      vendorData: json['vendor'] is Map<String, dynamic>
+          ? [VendorData.fromJson(json['vendor'])]
+          : [],
     );
   }
 }

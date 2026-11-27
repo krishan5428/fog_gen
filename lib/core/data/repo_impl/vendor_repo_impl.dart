@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../utils/auth_helper.dart';
 import '../../api/api_client.dart';
 import '../../api/web_url_constants.dart';
 import '../../repo/vendor_repo.dart';
@@ -21,12 +22,11 @@ class VendorRepoImpl implements VendorRepo {
     final response = await _dio.post(
       WebUrlConstants.addVendor,
       data: FormData.fromMap({
-        'user_id': userId,
+        'usr_id': userId,
         'vendor_name': vendorName,
         'vendor_email': vendorEmail,
-        'vendor_mobile': vendorMobile,
+        'vendor_mob_no': vendorMobile,
         'vendor_address': vendorAddress,
-        'created_at': createdAt,
       }),
     );
     return AddVendorResponse.fromJson(response.data);
@@ -37,7 +37,7 @@ class VendorRepoImpl implements VendorRepo {
     try {
       final response = await _dio.post(
         WebUrlConstants.getVendor,
-        data: FormData.fromMap({'user_id': userId}),
+        data: FormData.fromMap({'usr_id': userId}),
       );
       return GetVendorResponse.fromJson(response.data);
     } on DioException {
@@ -50,9 +50,11 @@ class VendorRepoImpl implements VendorRepo {
   @override
   Future<DeleteVendorResponse> deleteVendor(String vendorMobile) async {
     try {
+      // del_vendor.php clears the vendor stored in the logged-in user's row.
+      final userId = await SharedPreferenceHelper.getUserId();
       final response = await _dio.post(
         WebUrlConstants.delVendor,
-        data: FormData.fromMap({'vendor_mobile': vendorMobile}),
+        data: FormData.fromMap({'usr_id': userId?.toString() ?? ''}),
       );
       return DeleteVendorResponse.fromJson(response.data);
     } on DioException {

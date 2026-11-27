@@ -18,10 +18,12 @@ class VendorData {
   factory VendorData.fromJson(Map<String, dynamic> json) {
     return VendorData(
       // vendor_id: json['vendor_id'],
-      user_id: json['user_id']?.toString() ?? '',
+      user_id: (json['user_id'] ?? json['usr_id'])?.toString() ?? '',
       vendor_name: json['vendor_name'] ?? '',
       vendor_email: json['vendor_email'] ?? '',
-      vendor_mobile: json['vendor_mobile'] ?? '',
+      // Server: vendor_mob_no. Copy saved on the phone (toJson): vendor_mobile.
+      vendor_mobile:
+          (json['vendor_mobile'] ?? json['vendor_mob_no'])?.toString() ?? '',
       vendor_address: json['vendor_address'] ?? '',
     );
   }

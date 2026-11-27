@@ -49,12 +49,10 @@ void main() {
       expect(r.panelsData[1].isIpPanel, isTrue);
     });
 
-    test('vendors list', () {
+    test('vendor (stored in the user row)', () {
       final r = GetVendorResponse.fromJson({
         'status': true,
-        'vendors': [
-          {'user_id': 3, 'vendor_name': 'V'},
-        ],
+        'vendor': {'user_id': 3, 'vendor_name': 'V'},
       });
       expect(r.vendorData.single.user_id, '3');
       expect(r.vendorData.single.vendor_name, 'V');
@@ -86,6 +84,32 @@ void main() {
         }).vendorId,
         4,
       );
+    });
+  });
+
+  group('vendor reply details', () {
+    test('single "vendor" object with vendor_mob_no', () {
+      final r = GetVendorResponse.fromJson({
+        'status': true,
+        'vendor': {
+          'vendor_name': 'V',
+          'vendor_email': null,
+          'vendor_mob_no': '9111111111',
+          'vendor_address': 'Addr',
+        },
+      });
+      expect(r.vendorData, hasLength(1));
+      expect(r.vendorData.single.vendor_mobile, '9111111111');
+      expect(r.vendorData.single.vendor_email, '');
+    });
+
+    test('no vendor yet → empty list, not a throw', () {
+      final r = GetVendorResponse.fromJson({
+        'status': false,
+        'msg': 'No vendor details found for this user',
+      });
+      expect(r.status, isFalse);
+      expect(r.vendorData, isEmpty);
     });
   });
 
