@@ -102,4 +102,27 @@ void main() {
       expect(await SharedPreferenceHelper.getPass(), 'old');
     },
   );
+
+  test('a login saved by the old app (shared backend) is not trusted: '
+      'logged out on start, so its user id never reads another user\'s data',
+      () async {
+    // Old app version: logged in, user id from tbl_user, no backend marker.
+    SharedPreferences.setMockInitialValues({
+      'is_logged_in': true,
+      'user_id': 1,
+      'user_data': '{"usr_id":1,"name":"Old"}',
+      'cached_panel_list': '[{"pnl_id":5}]',
+    });
+    expect(await SharedPreferenceHelper.getLoginState(), isFalse);
+    expect(await SharedPreferenceHelper.getUserId(), isNull);
+    expect(await SharedPreferenceHelper.getUserData(), isNull);
+    expect(await SharedPreferenceHelper.getString('cached_panel_list'), isNull);
+  });
+
+  test('a login made on the FogShield backend stays logged in', () async {
+    await SharedPreferenceHelper.setLoginState(true, 1, 'android');
+    expect(await SharedPreferenceHelper.getLoginState(), isTrue);
+    expect(await SharedPreferenceHelper.getUserId(), 1);
+  });
 }
+

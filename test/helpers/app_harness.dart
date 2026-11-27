@@ -103,6 +103,7 @@ Future<void> _loadFonts() async {
 Future<void> setUpHarness() async {
   SharedPreferences.setMockInitialValues({
     'is_logged_in': true,
+    'login_backend': 'fogshield',
     'user_id': 3,
     'user_data':
         '{"usr_id":3,"name":"Tester","email":"t@t.t","mobile":"9999999999"}',

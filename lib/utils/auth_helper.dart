@@ -23,6 +23,12 @@ class SharedPreferenceHelper {
   // Cache keys
   static const String _keyCachedPanels = "cached_panel_list";
 
+  // Which backend the saved login belongs to. Logins saved by older app
+  // versions (shared root backend, tbl_user ids) have no marker: their user
+  // id would point at a different user in tbl_fogshield_users.
+  static const _keyBackend = 'login_backend';
+  static const _currentBackend = 'fogshield';
+
   // --- Login State ---
   static Future<void> setLoginState(
     bool isLoggedIn,
@@ -33,12 +39,22 @@ class SharedPreferenceHelper {
     await prefs.setBool(_keyIsLoggedIn, isLoggedIn);
     await prefs.setInt(_keyUserId, userId);
     await prefs.setString(_keyDeviceType, deviceType);
+    await prefs.setString(_keyBackend, _currentBackend);
   }
 
+  /// True only for a login made on the FogShield backend. A login saved by
+  /// an older app version is cleared (with the old user's cached data), so
+  /// the user logs in again instead of reading someone else's panels.
   static Future<bool> getLoginState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_keyIsLoggedIn) ?? false;
+      final loggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
+      if (loggedIn && prefs.getString(_keyBackend) != _currentBackend) {
+        AppLogger.d("Saved login is from the old backend — clearing it");
+        await clearLoginState();
+        return false;
+      }
+      return loggedIn;
     } catch (e) {
       if (kDebugMode) {
         AppLogger.d("Error reading login state: $e");
@@ -104,6 +120,7 @@ class SharedPreferenceHelper {
   static Future<void> clearLoginState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyIsLoggedIn);
+    await prefs.remove(_keyBackend);
     await prefs.remove(_keyUserId);
     await prefs.remove(_keyDeviceType);
     await prefs.remove(_keyIsDialogShown);
