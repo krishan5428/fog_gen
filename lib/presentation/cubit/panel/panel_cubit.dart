@@ -207,7 +207,8 @@ class PanelCubit extends Cubit<PanelState> {
     required String static_ip_address,
     required String static_port_no,
     required String password,
-    required String panel_acc_no,
+    // G4 panels get their number from the server, so they pass none.
+    String panel_acc_no = '',
     required String mac_id,
     required String version,
     String imei = '',
