@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fog_gen_new/features/mqtt/screens/add_mqtt_panel.dart';
 import 'package:fog_gen_new/presentation/dialog/panel_type.dart';
 import 'package:fog_gen_new/presentation/screens/about_us.dart';
@@ -75,6 +78,55 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 30));
     });
+  });
+
+  // G4 device details read the saved user's role, as in FireNex.
+  Future<void> openG4Details(WidgetTester tester, String? role) async {
+    phone(tester);
+    final user = {
+      'usr_id': 3,
+      'name': 'Tester',
+      'mobile': '9999999999',
+      'role': ?role,
+    };
+    SharedPreferences.setMockInitialValues({
+      'is_logged_in': true,
+      'login_backend': 'fogshield',
+      'user_id': 3,
+      'user_data': jsonEncode(user),
+    });
+    await tester.pumpWidget(
+      harness(
+        MqttPanelDetailsScreen(
+          panelData: testPanel(imei: '861919084418721', type: '4GCOM'),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.scrollUntilVisible(
+      find.byIcon(role == null ? Icons.delete : Icons.send),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+
+  testWidgets('G4 details: a customer (FogShield default) sees DELETE DEVICE', (
+    tester,
+  ) async {
+    await openG4Details(tester, null);
+    expect(find.text('DELETE DEVICE'), findsOneWidget);
+    expect(find.text('RELEASE TO MARKET'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
+  });
+
+  testWidgets('G4 details: a factory worker sees RELEASE TO MARKET '
+      '(FireNex behaviour)', (tester) async {
+    await openG4Details(tester, 'factory_worker');
+    expect(find.text('RELEASE TO MARKET'), findsOneWidget);
+    expect(find.text('DELETE DEVICE'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 30));
   });
 
   testWidgets('Panel type dialog lists FogShield models and the 3 G4 models', (
