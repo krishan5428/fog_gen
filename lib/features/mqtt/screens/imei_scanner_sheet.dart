@@ -44,56 +44,55 @@ Future<String?> showImeiScanner(BuildContext context) async {
 Future<void> _showPermissionDeniedDialog(BuildContext context) {
   return showDialog(
     context: context,
-    builder:
-        (ctx) => AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(cornerRadius),
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cornerRadius),
+      ),
+      title: const Row(
+        children: [
+          Icon(
+            Icons.camera_alt_outlined,
+            color: AppColors.colorPrimary,
+            size: 20,
           ),
-          title: const Row(
-            children: [
-              Icon(
-                Icons.camera_alt_outlined,
-                color: AppColors.colorPrimary,
-                size: 20,
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Camera Access Required',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          content: const Text(
-            'Camera permission is needed to scan the IMEI barcode.\n\n'
-            'Please enable camera access for this app in Settings.',
-            style: TextStyle(fontSize: 13, height: 1.5),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Camera Access Required',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.colorPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(cornerRadius),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(ctx);
-                openAppSettings();
-              },
-              child: const Text(
-                'Open Settings',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          ],
+          ),
+        ],
+      ),
+      content: const Text(
+        'Camera permission is needed to scan the IMEI barcode.\n\n'
+        'Please enable camera access for this app in Settings.',
+        style: TextStyle(fontSize: 13, height: 1.5),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
         ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.colorPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(cornerRadius),
+            ),
+          ),
+          onPressed: () {
+            Navigator.pop(ctx);
+            openAppSettings();
+          },
+          child: const Text(
+            'Open Settings',
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -248,8 +247,9 @@ class _ImeiScannerSheetState extends State<_ImeiScannerSheet> {
                               torchOn
                                   ? Icons.flashlight_on
                                   : Icons.flashlight_off,
-                              color:
-                                  torchOn ? Colors.yellowAccent : Colors.white,
+                              color: torchOn
+                                  ? Colors.yellowAccent
+                                  : Colors.white,
                             ),
                             onPressed: () {
                               try {
@@ -269,46 +269,42 @@ class _ImeiScannerSheetState extends State<_ImeiScannerSheet> {
             ),
           ),
           Expanded(
-            child:
-                ctrl == null
-                    ? _cameraUnavailable()
-                    : Stack(
-                      children: [
-                        MobileScanner(
-                          controller: ctrl,
-                          onDetect: _onDetect,
-                          onDetectError: (error, stack) {
-                            debugPrint('IMEI_SCAN detect error: $error');
-                          },
-                          errorBuilder:
-                              (context, error) => _cameraUnavailable(
-                                detail: error.errorDetails?.message,
-                              ),
+            child: ctrl == null
+                ? _cameraUnavailable()
+                : Stack(
+                    children: [
+                      MobileScanner(
+                        controller: ctrl,
+                        onDetect: _onDetect,
+                        onDetectError: (error, stack) {
+                          debugPrint('IMEI_SCAN detect error: $error');
+                        },
+                        errorBuilder: (context, error) => _cameraUnavailable(
+                          detail: error.errorDetails?.message,
                         ),
-                        if (_recovering)
-                          Container(
-                            color: Colors.black54,
-                            child: const Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircularProgressIndicator(
+                      ),
+                      if (_recovering)
+                        Container(
+                          color: Colors.black54,
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(color: Colors.white),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Camera initializing...',
+                                  style: TextStyle(
                                     color: Colors.white,
+                                    fontSize: 13,
                                   ),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    'Camera initializing...',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
+                  ),
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 4),

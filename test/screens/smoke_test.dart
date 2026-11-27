@@ -53,7 +53,8 @@ void main() {
     'Edit panel': () => EditPanelScreen(panelData: testPanel()),
     'More settings': () => MoreSettingsScreen(panelData: testPanel()),
     'Telephone numbers': () => TelephoneNoSettingsPage(panelData: testPanel()),
-    'Add number (Solitare)': () => AddNumberSolitarePage(panelData: testPanel()),
+    'Add number (Solitare)': () =>
+        AddNumberSolitarePage(panelData: testPanel()),
     'Logs': () => LogsScreen(panelData: testPanel()),
     'SR1 control (main)': () => MainScreen(panelData: testPanel()),
     'Profile': () => const ProfilePage(),
@@ -76,11 +77,10 @@ void main() {
     });
   });
 
-  testWidgets('Panel type dialog lists FogShield models and the 3 G4 models',
-      (tester) async {
-    await tester.pumpWidget(
-      harness(const Scaffold(body: PanelTypeDialog())),
-    );
+  testWidgets('Panel type dialog lists FogShield models and the 3 G4 models', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness(const Scaffold(body: PanelTypeDialog())));
     expect(find.text('FogShield Pro'), findsOneWidget);
     expect(find.text('4G (MQTT) DEVICES'), findsOneWidget);
     await tester.scrollUntilVisible(

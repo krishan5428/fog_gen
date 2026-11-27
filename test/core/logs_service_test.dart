@@ -62,21 +62,24 @@ void main() {
   });
   tearDown(() => ApiClient.dio.httpClientAdapter = original);
 
-  test('success returns the logs, sends user headers and caches them', () async {
-    adapter.body = {
-      'status': true,
-      'logs': [
-        {'event': 'Fire', 'time': 't1'},
-      ],
-    };
-    final logs = await fetch();
-    expect(logs.single['event'], 'Fire');
-    expect(adapter.last!.headers['Usr'], '3');
-    expect(adapter.last!.path, endsWith('fetch_logs.php'));
+  test(
+    'success returns the logs, sends user headers and caches them',
+    () async {
+      adapter.body = {
+        'status': true,
+        'logs': [
+          {'event': 'Fire', 'time': 't1'},
+        ],
+      };
+      final logs = await fetch();
+      expect(logs.single['event'], 'Fire');
+      expect(adapter.last!.headers['Usr'], '3');
+      expect(adapter.last!.path, endsWith('fetch_logs.php'));
 
-    adapter.body = null; // offline now
-    expect((await fetch()).single['event'], 'Fire');
-  });
+      adapter.body = null; // offline now
+      expect((await fetch()).single['event'], 'Fire');
+    },
+  );
 
   test('status false → empty list, cache untouched', () async {
     adapter.body = {'status': false, 'msg': 'none'};

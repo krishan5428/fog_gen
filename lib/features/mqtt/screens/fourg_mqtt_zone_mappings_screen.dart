@@ -194,8 +194,8 @@ class _FourGMqttZoneMappingsScreenState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.colorPrimary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.colorPrimary.withValues(alpha: 
-                      0.5,
+                    disabledBackgroundColor: AppColors.colorPrimary.withValues(
+                      alpha: 0.5,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -299,14 +299,13 @@ class _FourGMqttZoneMappingsScreenState
             zoneCount,
             (i) => DropdownMenuItem(value: i, child: Text('Input ${i + 1}')),
           ),
-          onChanged:
-              _isBusy
-                  ? null
-                  : (val) {
-                    if (val != null && val != _selectedIndex) {
-                      setState(() => _applySelection(val));
-                    }
-                  },
+          onChanged: _isBusy
+              ? null
+              : (val) {
+                  if (val != null && val != _selectedIndex) {
+                    setState(() => _applySelection(val));
+                  }
+                },
         ),
       ),
     );
@@ -418,8 +417,9 @@ class _FourGMqttZoneMappingsScreenState
                   Switch(
                     value: _enabled,
                     activeThumbColor: AppColors.colorPrimary,
-                    onChanged:
-                        _isSaving ? null : (v) => setState(() => _enabled = v),
+                    onChanged: _isSaving
+                        ? null
+                        : (v) => setState(() => _enabled = v),
                   ),
                 ],
               ),

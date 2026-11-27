@@ -177,13 +177,17 @@ void main() {
     });
 
     test('no logs → empty; service error → error', () async {
-      final empty = LogsViewModel(logsService: FakeLogs(<Map<String, dynamic>>[]), panelData: p);
+      final empty = LogsViewModel(
+        logsService: FakeLogs(<Map<String, dynamic>>[]),
+        panelData: p,
+      );
       final err = LogsViewModel(
         logsService: FakeLogs(Exception('x')),
         panelData: p,
       );
       await until(
-        () => empty.state != LogsState.loading && err.state != LogsState.loading,
+        () =>
+            empty.state != LogsState.loading && err.state != LogsState.loading,
       );
       expect(empty.state, LogsState.empty);
       expect(err.state, LogsState.error);

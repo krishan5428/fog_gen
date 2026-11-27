@@ -26,8 +26,8 @@ class LogsViewModel extends ChangeNotifier {
   LogsViewModel({
     required LogsService logsService,
     required PanelData panelData,
-  })  : _logsService = logsService,
-        _panelData = panelData {
+  }) : _logsService = logsService,
+       _panelData = panelData {
     fetchLogs();
   }
 
@@ -87,7 +87,8 @@ class LogsViewModel extends ChangeNotifier {
         _log.i("Storage permission granted.");
       } else {
         _log.i(
-            "Android >= 30 detected, no explicit storage permission required.");
+          "Android >= 30 detected, no explicit storage permission required.",
+        );
       }
     }
 
@@ -110,11 +111,13 @@ class LogsViewModel extends ChangeNotifier {
             pw.TableHelper.fromTextArray(
               headers: ['Alert Name', 'Time', 'Date'],
               data: _logs
-                  .map((log) => [
-                        log.message,
-                        timeFormatter.format(log.timestamp),
-                        dateFormatter.format(log.timestamp)
-                      ])
+                  .map(
+                    (log) => [
+                      log.message,
+                      timeFormatter.format(log.timestamp),
+                      dateFormatter.format(log.timestamp),
+                    ],
+                  )
                   .toList(),
             ),
           ],
@@ -168,7 +171,8 @@ class LogsViewModel extends ChangeNotifier {
 
         _log.i("PDF saved on iOS at: $publicPath");
         _log.i(
-            "User can find it in Files > On My iPhone > <App Name> > fogshield/logs");
+          "User can find it in Files > On My iPhone > <App Name> > fogshield/logs",
+        );
       }
 
       if (context.mounted) {
@@ -178,7 +182,8 @@ class LogsViewModel extends ChangeNotifier {
       // 4. COUNTDOWN / AUTO-OPEN DIALOG
       if (!context.mounted) return;
       _log.i("Showing countdown dialog for auto-open...");
-      final bool shouldOpen = await showDialog<bool>(
+      final bool shouldOpen =
+          await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (context) => const AutoOpenDialog(),
@@ -213,9 +218,8 @@ class LogsViewModel extends ChangeNotifier {
   }
 
   void _showToast(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      duration: const Duration(seconds: 3),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
   }
 }

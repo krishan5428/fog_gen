@@ -221,15 +221,14 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
       return false;
     }
     final panelSimNumbers = context.read<PanelSimNumberCubit>().state;
-    final formattedSim =
-        simNumber.length == 13 && simNumber.startsWith('+91')
-            ? simNumber.substring(3)
-            : simNumber;
+    final formattedSim = simNumber.length == 13 && simNumber.startsWith('+91')
+        ? simNumber.substring(3)
+        : simNumber;
     final currentFormattedSim =
         widget.panelData.panelSimNumber.length == 13 &&
-                widget.panelData.panelSimNumber.startsWith('+91')
-            ? widget.panelData.panelSimNumber.substring(3)
-            : widget.panelData.panelSimNumber;
+            widget.panelData.panelSimNumber.startsWith('+91')
+        ? widget.panelData.panelSimNumber.substring(3)
+        : widget.panelData.panelSimNumber;
     if (formattedSim != currentFormattedSim &&
         (panelSimNumbers.contains(formattedSim) ||
             panelSimNumbers.contains(simNumber))) {
@@ -372,19 +371,17 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
   Future<void> _deletePanel() async {
     final firstConfirm = await showConfirmationDialog(
       context: context,
-      message:
-          _isFactoryWorker
-              ? 'Are you sure you want to release this device to market?'
-              : 'Are you sure you want to delete this device?',
+      message: _isFactoryWorker
+          ? 'Are you sure you want to release this device to market?'
+          : 'Are you sure you want to delete this device?',
     );
     if (firstConfirm != true) return;
 
     final secondConfirm = await showConfirmationDialog(
       context: context,
-      message:
-          _isFactoryWorker
-              ? 'After releasing the Device, you will no longer have access to it.\nSure?'
-              : 'After deleting the Device, you will not configure the device.\nSure?',
+      message: _isFactoryWorker
+          ? 'After releasing the Device, you will no longer have access to it.\nSure?'
+          : 'After deleting the Device, you will not configure the device.\nSure?',
     );
     if (secondConfirm != true) return;
 
@@ -629,16 +626,12 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor:
-                        _isFactoryWorker
-                            ? Colors.blue
-                            : Colors.red,
+                    foregroundColor: _isFactoryWorker
+                        ? Colors.blue
+                        : Colors.red,
                     elevation: 0,
                     side: BorderSide(
-                      color:
-                          _isFactoryWorker
-                              ? Colors.blue
-                              : Colors.red,
+                      color: _isFactoryWorker ? Colors.blue : Colors.red,
                       width: 1.0,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -648,15 +641,11 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
                   ),
                   onPressed: _deletePanel,
                   icon: Icon(
-                    _isFactoryWorker
-                        ? Icons.send
-                        : Icons.delete,
+                    _isFactoryWorker ? Icons.send : Icons.delete,
                     size: 18,
                   ),
                   label: Text(
-                    _isFactoryWorker
-                        ? "RELEASE TO MARKET"
-                        : "DELETE DEVICE",
+                    _isFactoryWorker ? "RELEASE TO MARKET" : "DELETE DEVICE",
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w800,
@@ -733,14 +722,18 @@ class _MqttPanelDetailsScreenState extends State<MqttPanelDetailsScreen> {
   }
 
   Widget _buildWarrantyCard() {
-    final startDayStr =
-        startDate != null ? DateFormat('dd/MM/yyyy').format(startDate!) : '-';
-    final startTimeStr =
-        startDate != null ? DateFormat('HH:mm:ss').format(startDate!) : '-';
-    final endDayStr =
-        endDate != null ? DateFormat('dd/MM/yyyy').format(endDate!) : '-';
-    final endTimeStr =
-        endDate != null ? DateFormat('HH:mm:ss').format(endDate!) : '-';
+    final startDayStr = startDate != null
+        ? DateFormat('dd/MM/yyyy').format(startDate!)
+        : '-';
+    final startTimeStr = startDate != null
+        ? DateFormat('HH:mm:ss').format(startDate!)
+        : '-';
+    final endDayStr = endDate != null
+        ? DateFormat('dd/MM/yyyy').format(endDate!)
+        : '-';
+    final endTimeStr = endDate != null
+        ? DateFormat('HH:mm:ss').format(endDate!)
+        : '-';
 
     return Container(
       width: double.infinity,

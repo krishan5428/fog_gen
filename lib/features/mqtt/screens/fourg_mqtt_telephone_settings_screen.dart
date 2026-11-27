@@ -99,51 +99,48 @@ class _FourGMqttTelephoneSettingsScreenState
 
     final restore = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              "Admin number missing on device",
-              style: TextStyle(
-                fontFamily: 'Montserrat',
-                fontWeight: FontWeight.bold,
-                fontSize: 16.sp,
-              ),
-            ),
-            content: Text(
-              "The device has no admin number, so it won't send alerts to "
-              "anyone. Restore the admin number from your account "
-              "(+91 $accountAdmin)?",
-              style: TextStyle(fontFamily: 'Montserrat', fontSize: 14.sp),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text(
-                  "NOT NOW",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  "RESTORE",
-                  style: TextStyle(
-                    color: AppColors.colorPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Admin number missing on device",
+          style: TextStyle(
+            fontFamily: 'Montserrat',
+            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
           ),
+        ),
+        content: Text(
+          "The device has no admin number, so it won't send alerts to "
+          "anyone. Restore the admin number from your account "
+          "(+91 $accountAdmin)?",
+          style: TextStyle(fontFamily: 'Montserrat', fontSize: 14.sp),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text(
+              "NOT NOW",
+              style: TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Montserrat',
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              "RESTORE",
+              style: TextStyle(
+                color: AppColors.colorPrimary,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Montserrat',
+              ),
+            ),
+          ),
+        ],
+      ),
     );
     if (restore != true || !mounted) return;
 
@@ -375,84 +372,79 @@ class _FourGMqttTelephoneSettingsScreenState
         isDash: false,
         onBack: () => Navigator.pop(context),
       ),
-      body:
-          _isLoading && _tempNumbers.isEmpty
-              ? const SizedBox.shrink()
-              : Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: _tempNumbers.length,
-                      itemBuilder: (context, index) {
-                        return _buildTelephoneCard(index);
-                      },
+      body: _isLoading && _tempNumbers.isEmpty
+          ? const SizedBox.shrink()
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _tempNumbers.length,
+                    itemBuilder: (context, index) {
+                      return _buildTelephoneCard(index);
+                    },
                   ),
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: Colors.grey.shade300),
-                                ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: Colors.grey.shade300),
                               ),
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                "CANCEL",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Montserrat',
-                                ),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              "CANCEL",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.colorPrimary,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.colorPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              onPressed: _saveAllSettings,
-                              child: const Text(
-                                "SAVE ALL",
-                                style: TextStyle(
-                                  fontFamily: 'Montserrat',
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                            ),
+                            onPressed: _saveAllSettings,
+                            child: const Text(
+                              "SAVE ALL",
+                              style: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -552,8 +544,9 @@ class _FourGMqttTelephoneSettingsScreenState
                       horizontal: 12,
                       vertical: 10,
                     ),
-                    hintText:
-                        index == 0 ? '10 digit number' : '10 digit number',
+                    hintText: index == 0
+                        ? '10 digit number'
+                        : '10 digit number',
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     border: OutlineInputBorder(
@@ -578,8 +571,8 @@ class _FourGMqttTelephoneSettingsScreenState
               isExpanded: true,
               initialValue:
                   alertOptions.any((opt) => opt['value'] == data.ability)
-                      ? data.ability
-                      : '0',
+                  ? data.ability
+                  : '0',
               decoration: InputDecoration(
                 labelText: 'Alert Mode',
                 labelStyle: TextStyle(
@@ -601,21 +594,20 @@ class _FourGMqttTelephoneSettingsScreenState
                   borderSide: const BorderSide(color: AppColors.colorPrimary),
                 ),
               ),
-              items:
-                  alertOptions
-                      .map(
-                        (opt) => DropdownMenuItem(
-                          value: opt['value'],
-                          child: Text(
-                            opt['label']!,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+              items: alertOptions
+                  .map(
+                    (opt) => DropdownMenuItem(
+                      value: opt['value'],
+                      child: Text(
+                        opt['label']!,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                      )
-                      .toList(),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {

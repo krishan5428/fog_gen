@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:fog_gen_new/core/api/web_url_constants.dart';
+
 class ApiClient {
   static final Dio dio = Dio(
     BaseOptions(

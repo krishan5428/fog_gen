@@ -14,12 +14,11 @@ class PanelResponse {
   factory PanelResponse.fromJson(Map<String, dynamic> json) {
     return PanelResponse(
       status: json['status'] == true,
-      panelsData:
-          json['panels'] != null
-              ? List<PanelData>.from(
-                json['panels'].map((e) => PanelData.fromJson(e)),
-              )
-              : [],
+      panelsData: json['panels'] != null
+          ? List<PanelData>.from(
+              json['panels'].map((e) => PanelData.fromJson(e)),
+            )
+          : [],
       msg: (json['msg'] ?? json['message'])?.toString() ?? '',
     );
   }

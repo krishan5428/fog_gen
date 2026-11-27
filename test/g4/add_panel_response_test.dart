@@ -57,7 +57,10 @@ void main() {
     };
 
     test('panel_imei round-trips through fromJson/toJson', () {
-      final p = PanelData.fromJson({...base(), 'panel_imei': '861919084418721'});
+      final p = PanelData.fromJson({
+        ...base(),
+        'panel_imei': '861919084418721',
+      });
       expect(p.panelImei, '861919084418721');
       expect(PanelData.fromJson(p.toJson()).panelImei, '861919084418721');
     });

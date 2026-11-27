@@ -152,10 +152,9 @@ class OutputControlsWidget extends StatelessWidget {
                   onPressed: () {
                     _showConfirmationDialog(
                       context: context,
-                      title:
-                          isSounderOn
-                              ? "Turn Sounder OFF?"
-                              : "Turn Sounder ON?",
+                      title: isSounderOn
+                          ? "Turn Sounder OFF?"
+                          : "Turn Sounder ON?",
                       content:
                           "Are you sure you want to turn the sounder ${isSounderOn ? "OFF" : "ON"}?",
                       onConfirm: () {
@@ -204,10 +203,9 @@ class OutputControlsWidget extends StatelessWidget {
                   onPressed: () {
                     _showConfirmationDialog(
                       context: context,
-                      title:
-                          isFanOn
-                              ? "Turn Exhaust Fan OFF?"
-                              : "Turn Exhaust Fan ON?",
+                      title: isFanOn
+                          ? "Turn Exhaust Fan OFF?"
+                          : "Turn Exhaust Fan ON?",
                       content:
                           "Are you sure you want to turn the exhaust fan ${isFanOn ? "OFF" : "ON"}?",
                       onConfirm: () {

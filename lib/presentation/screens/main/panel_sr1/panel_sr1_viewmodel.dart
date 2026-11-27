@@ -302,8 +302,9 @@ class PanelSR1ViewModel extends ChangeNotifier {
     // text contains it anywhere: an 008 reply with mains code 9 ("…009") or
     // an 011 time of 10:09 ("100915…") also contains "009" and used to be
     // parsed as the user-status reply.
-    final packetId =
-        data.startsWith("S*") && data.length >= 5 ? data.substring(2, 5) : "";
+    final packetId = data.startsWith("S*") && data.length >= 5
+        ? data.substring(2, 5)
+        : "";
     const knownIds = {"007", "008", "009", "011", "020"};
     final isValidPacket = data.endsWith("*E") && knownIds.contains(packetId);
 

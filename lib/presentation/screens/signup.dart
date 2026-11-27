@@ -99,7 +99,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
@@ -195,15 +194,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           color: AppColors.colorPrimary,
                           decoration: TextDecoration.underline,
                         ),
-                        recognizer:
-                            TapGestureRecognizer()
-                              ..onTap = () {
-                                showUrlDialog(
-                                  context,
-                                  policyUrl,
-                                  'Terms & Privacy Policy',
-                                );
-                              },
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            showUrlDialog(
+                              context,
+                              policyUrl,
+                              'Terms & Privacy Policy',
+                            );
+                          },
                       ),
                     ),
                   ],
@@ -253,12 +251,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return TextField(
       obscureText: isPassword,
       controller: controller,
-      keyboardType:
-          isNumber
-              ? TextInputType.phone
-              : isEmail
-              ? TextInputType.emailAddress
-              : TextInputType.text,
+      keyboardType: isNumber
+          ? TextInputType.phone
+          : isEmail
+          ? TextInputType.emailAddress
+          : TextInputType.text,
       maxLength: maxLength,
       decoration: InputDecoration(
         labelText: hintText,

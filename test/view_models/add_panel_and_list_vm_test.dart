@@ -37,8 +37,8 @@ AddPanelViewModel filled({
   return vm;
 }
 
-String? validate(AddPanelViewModel vm, {List<String> sites = const []}) =>
-    vm.validateForm(existingSiteNames: sites, existingPanelSims: ['1111111111']);
+String? validate(AddPanelViewModel vm, {List<String> sites = const []}) => vm
+    .validateForm(existingSiteNames: sites, existingPanelSims: ['1111111111']);
 
 /// Local SR1 panel that answers the connect packet with [reply].
 Future<ServerSocket> sr1(String reply) async {
@@ -82,27 +82,29 @@ void main() {
   });
 
   group('AddPanelViewModel.connectToPanel (local SR1 stand-in)', () {
-    test('connected: parses MAC, version and account no. into save data',
-        () async {
-      SharedPreferences.setMockInitialValues({'user_id': 3});
-      final s = await sr1(
-        'S*000#1#004145098123236254#123456789123456#0#V0.1.1C#999999*E',
-      );
-      final vm = filled(port: '${s.port}', ip: '127.0.0.1');
+    test(
+      'connected: parses MAC, version and account no. into save data',
+      () async {
+        SharedPreferences.setMockInitialValues({'user_id': 3});
+        final s = await sr1(
+          'S*000#1#004145098123236254#123456789123456#0#V0.1.1C#999999*E',
+        );
+        final vm = filled(port: '${s.port}', ip: '127.0.0.1');
 
-      expect(await vm.connectToPanel(), ConnectionStatus.connected);
-      expect(Application().mPassword, '1234');
-      final data = (await vm.prepareSaveData(
-        panelType: 'FOGGER PANEL',
-        panelName: 'FogShield Pro',
-      ))!;
-      expect(data['pnl_mac'], '004145098123236254');
-      expect(data['pnl_ver'], 'V0.1.1C');
-      expect(data['pnl_acc_no'], '999999');
-      expect(data['usr_id'], '3');
-      expect(data['pnl_type'], 'FOGGER PANEL');
-      await s.close();
-    });
+        expect(await vm.connectToPanel(), ConnectionStatus.connected);
+        expect(Application().mPassword, '1234');
+        final data = (await vm.prepareSaveData(
+          panelType: 'FOGGER PANEL',
+          panelName: 'FogShield Pro',
+        ))!;
+        expect(data['pnl_mac'], '004145098123236254');
+        expect(data['pnl_ver'], 'V0.1.1C');
+        expect(data['pnl_acc_no'], '999999');
+        expect(data['usr_id'], '3');
+        expect(data['pnl_type'], 'FOGGER PANEL');
+        await s.close();
+      },
+    );
 
     test('already connected elsewhere', () async {
       final s = await sr1('S*000#3#*E');
@@ -179,5 +181,4 @@ void main() {
       expect(vm.loadFailed, isFalse);
     });
   });
-
 }

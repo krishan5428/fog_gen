@@ -73,19 +73,18 @@ abstract class PanelRepo {
   );
 
   Future<UpdatePanelResponse> updatePanelData(
-      String userId,
-      int panelId,
-      String key,
-      String value
-      );
+    String userId,
+    int panelId,
+    String key,
+    String value,
+  );
 
   Future<UpdatePanelResponse> updatePanelDataInList(
-      String userId,
-      int panelId,
-      List<String> keys,
-      List<dynamic> values,
-      );
-
+    String userId,
+    int panelId,
+    List<String> keys,
+    List<dynamic> values,
+  );
 
   Future<UpdatePanelResponse> updateSolitareMobileNumber(
     String userId,

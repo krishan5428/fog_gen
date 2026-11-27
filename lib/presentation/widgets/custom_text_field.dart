@@ -42,9 +42,11 @@ class CustomTextField extends StatelessWidget {
       obscureText: isPassword,
       maxLines: maxLines,
       maxLength: maxLength,
-      style: TextStyle(fontSize: fontSize, color: enabled ? Colors.black : Colors.grey),
-      keyboardType:
-      isNumber
+      style: TextStyle(
+        fontSize: fontSize,
+        color: enabled ? Colors.black : Colors.grey,
+      ),
+      keyboardType: isNumber
           ? const TextInputType.numberWithOptions(decimal: true)
           : isEmail
           ? TextInputType.emailAddress
@@ -53,14 +55,17 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: hintText,
         errorText: errorText,
-        prefixIcon:
-        icon != null ? Icon(icon, color: AppColors.colorAccent) : null,
+        prefixIcon: icon != null
+            ? Icon(icon, color: AppColors.colorAccent)
+            : null,
         labelStyle: const TextStyle(color: AppColors.colorPrimary),
         border: const OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.colorAccent),
         ),
         filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey.shade100, // Visual feedback for disabled state
+        fillColor: enabled
+            ? Colors.white
+            : Colors.grey.shade100, // Visual feedback for disabled state
         focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.colorPrimary, width: 1.5),
         ),

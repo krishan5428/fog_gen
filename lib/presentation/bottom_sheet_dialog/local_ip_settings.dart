@@ -158,19 +158,18 @@ void showLocalIpSettings(
                     Padding(
                       padding: const EdgeInsets.only(top: 12.0),
                       child: Column(
-                        children:
-                            errorMessages
-                                .map(
-                                  (e) => Text(
-                                    e,
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                        children: errorMessages
+                            .map(
+                              (e) => Text(
+                                e,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
                   const SizedBox(height: 20),

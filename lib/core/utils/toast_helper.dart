@@ -22,8 +22,9 @@ class ToastHelper {
   }) {
     if (!context.mounted) return;
 
-    final resolved =
-        type != null ? _forType(type, title) : _infer(message, title);
+    final resolved = type != null
+        ? _forType(type, title)
+        : _infer(message, title);
 
     toastification.show(
       context: context,

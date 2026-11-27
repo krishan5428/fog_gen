@@ -99,13 +99,10 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<PanelResponse> getPanels(
-      String userId, {
-        String appType = 'FogShield',
-      }) async {
-    final formData = FormData.fromMap({
-      'usr_id': userId,
-      'app_type': appType,
-    });
+    String userId, {
+    String appType = 'FogShield',
+  }) async {
+    final formData = FormData.fromMap({'usr_id': userId, 'app_type': appType});
 
     try {
       final response = await _dio.post(
@@ -124,10 +121,7 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<DeletePanelResponse> deletePanel(String userId, int panelId) async {
-    final formData = FormData.fromMap({
-      'pnl_id': panelId,
-      'usr_id': userId,
-    });
+    final formData = FormData.fromMap({'pnl_id': panelId, 'usr_id': userId});
 
     try {
       final response = await _dio.post(
@@ -146,11 +140,11 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<UpdatePanelResponse> updatePanelData(
-      String userId,
-      int panelId,
-      String key,
-      String value,
-      ) async {
+    String userId,
+    int panelId,
+    String key,
+    String value,
+  ) async {
     final formData = FormData.fromMap({
       'pnl_id': panelId,
       'usr_id': userId,
@@ -185,15 +179,12 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<UpdatePanelResponse> updatePanelDataInList(
-      String userId,
-      int panelId,
-      List<String> keys,
-      List<dynamic> values,
-      ) async {
-    final Map<String, dynamic> formMap = {
-      'pnl_id': panelId,
-      'usr_id': userId,
-    };
+    String userId,
+    int panelId,
+    List<String> keys,
+    List<dynamic> values,
+  ) async {
+    final Map<String, dynamic> formMap = {'pnl_id': panelId, 'usr_id': userId};
 
     for (int i = 0; i < keys.length; i++) {
       formMap[keys[i]] = values[i];
@@ -227,49 +218,53 @@ class PanelRepositoryImpl implements PanelRepo {
 
   @override
   Future<UpdatePanelResponse> updateAddress(
-      String userId,
-      int panelId,
-      String address,
-      ) async => updatePanelData(userId, panelId, 'site_address', address);
+    String userId,
+    int panelId,
+    String address,
+  ) async => updatePanelData(userId, panelId, 'site_address', address);
 
   @override
   Future<UpdatePanelResponse> updateAdminCode(
-      String userId,
-      int panelId,
-      int adminCode,
-      ) async =>
+    String userId,
+    int panelId,
+    int adminCode,
+  ) async =>
       updatePanelData(userId, panelId, 'admin_code', adminCode.toString());
 
   @override
   Future<UpdatePanelResponse> updateAdminMobileNumber(
-      String userId,
-      int panelId,
-      String adminMobileNumber,
-      ) async =>
-      updatePanelData(userId, panelId, 'admin_mobile_number', adminMobileNumber);
+    String userId,
+    int panelId,
+    String adminMobileNumber,
+  ) async => updatePanelData(
+    userId,
+    panelId,
+    'admin_mobile_number',
+    adminMobileNumber,
+  );
 
   @override
   Future<UpdatePanelResponse> updatePanelSimNumber(
-      String userId,
-      int panelId,
-      String panelSimNumber,
-      ) async =>
+    String userId,
+    int panelId,
+    String panelSimNumber,
+  ) async =>
       updatePanelData(userId, panelId, 'panel_sim_number', panelSimNumber);
 
   @override
   Future<UpdatePanelResponse> updateSiteName(
-      String userId,
-      int panelId,
-      String siteName,
-      ) async => updatePanelData(userId, panelId, 'site_name', siteName);
+    String userId,
+    int panelId,
+    String siteName,
+  ) async => updatePanelData(userId, panelId, 'site_name', siteName);
 
   @override
   Future<UpdatePanelResponse> updateSolitareMobileNumber(
-      String userId,
-      int panelId,
-      String index,
-      String number,
-      ) async {
+    String userId,
+    int panelId,
+    String index,
+    String number,
+  ) async {
     final key = "mobile_number$index";
     return updatePanelData(userId, panelId, key, number);
   }

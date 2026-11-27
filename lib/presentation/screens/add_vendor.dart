@@ -118,7 +118,7 @@ class _AddVendorPageState extends State<AddVendorUI> {
       final confirmed = await showConfirmationDialog(
         context: context,
         message:
-        'Do you want to add vendor named ${vendorNameController.text.trim()}?',
+            'Do you want to add vendor named ${vendorNameController.text.trim()}?',
       );
 
       if (confirmed == true) {
@@ -278,8 +278,7 @@ class _AddVendorPageState extends State<AddVendorUI> {
                         if (_currentStep > 0) const SizedBox(width: 10),
                         Expanded(
                           child: CustomButton(
-                            buttonText:
-                            _currentStep == _steps.length - 1
+                            buttonText: _currentStep == _steps.length - 1
                                 ? "SUBMIT"
                                 : "NEXT",
                             buttonTextSize: fontSize,

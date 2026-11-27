@@ -176,7 +176,7 @@ class SocketRepository {
 
         // Listen for data
         socket.listen(
-              (data) {
+          (data) {
             final response = utf8.decode(data).trim();
             _logger.i("📥 RECEIVE ← ${t.ip}:${t.port} | response=$response");
 

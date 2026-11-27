@@ -42,30 +42,29 @@ class CustomButton extends StatelessWidget {
                 ),
         ),
         onPressed: onPressed,
-        child:
-            icon == null
-                ? Text(
-                  buttonText.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: buttonTextSize,
-                  ),
-                )
-                : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      buttonText.toUpperCase(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: buttonTextSize,
-                      ),
-                    ),
-                  ],
+        child: icon == null
+            ? Text(
+                buttonText.toUpperCase(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: buttonTextSize,
                 ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    buttonText.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: buttonTextSize,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

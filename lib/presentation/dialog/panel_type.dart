@@ -26,7 +26,10 @@ class PanelTypeDialog extends StatelessWidget {
                 children: [
                   // Title with background color
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.colorPrimary,
                       borderRadius: BorderRadius.circular(8),

@@ -84,7 +84,10 @@ void main() {
       ..mIPAddress = '127.0.0.1'
       ..mPortNumber = local.port;
 
-    expect(await SocketRepository().sendPacketSR1('S*1234#R#000#1*E'), 'STATIC');
+    expect(
+      await SocketRepository().sendPacketSR1('S*1234#R#000#1*E'),
+      'STATIC',
+    );
     expect(local.received, isEmpty);
   });
 
@@ -99,19 +102,25 @@ void main() {
     expect(await SocketRepository().sendPacketSR1('S*1234#R#000#1*E'), 'LOCAL');
   });
 
-  test('static IP connects but never answers → falls back to the local IP',
-      () async {
-    final silent = await panel();
-    final local = await panel(reply: 'LOCAL');
-    app
-      ..mStaticIPAddress = '127.0.0.1'
-      ..mStaticPortNumber = silent.port
-      ..mIPAddress = '127.0.0.1'
-      ..mPortNumber = local.port;
+  test(
+    'static IP connects but never answers → falls back to the local IP',
+    () async {
+      final silent = await panel();
+      final local = await panel(reply: 'LOCAL');
+      app
+        ..mStaticIPAddress = '127.0.0.1'
+        ..mStaticPortNumber = silent.port
+        ..mIPAddress = '127.0.0.1'
+        ..mPortNumber = local.port;
 
-    expect(await SocketRepository().sendPacketSR1('S*1234#R#000#1*E'), 'LOCAL');
-    expect(local.received, hasLength(1));
-  }, timeout: const Timeout(Duration(seconds: 15)));
+      expect(
+        await SocketRepository().sendPacketSR1('S*1234#R#000#1*E'),
+        'LOCAL',
+      );
+      expect(local.received, hasLength(1));
+    },
+    timeout: const Timeout(Duration(seconds: 15)),
+  );
 
   test('no reachable target → error, queue keeps working after it', () async {
     app
@@ -160,33 +169,32 @@ void main() {
     ];
     await Future.wait(f);
 
-    expect(p.received, [
-      'S*1234#R#001*E',
-      'S*1234#W#009*E',
-      'S*1234#R#002*E',
-    ]);
+    expect(p.received, ['S*1234#R#001*E', 'S*1234#W#009*E', 'S*1234#R#002*E']);
   });
 
-  test('stopAllActivity cancels queued requests and refuses new ones',
-      () async {
-    final p = await panel();
-    app
-      ..mIPAddress = '127.0.0.1'
-      ..mPortNumber = p.port;
-    final repo = SocketRepository();
+  test(
+    'stopAllActivity cancels queued requests and refuses new ones',
+    () async {
+      final p = await panel();
+      app
+        ..mIPAddress = '127.0.0.1'
+        ..mPortNumber = p.port;
+      final repo = SocketRepository();
 
-    final first = repo.sendPacketSR1('S*1234#R#001*E');
-    final queued = repo.sendPacketSR1('S*1234#R#002*E');
-    first.catchError((_) => '');
-    repo.stopAllActivity();
+      final first = repo.sendPacketSR1('S*1234#R#001*E');
+      final queued = repo.sendPacketSR1('S*1234#R#002*E');
+      first.catchError((_) => '');
+      repo.stopAllActivity();
 
-    await expectLater(queued, throwsA(contains('cancelled')));
-    await expectLater(
-      repo.sendPacketSR1('S*1234#R#003*E'),
-      throwsA(isA<Exception>()),
-    );
-    expect(repo.queueSize, 0);
-  }, timeout: const Timeout(Duration(seconds: 15)));
+      await expectLater(queued, throwsA(contains('cancelled')));
+      await expectLater(
+        repo.sendPacketSR1('S*1234#R#003*E'),
+        throwsA(isA<Exception>()),
+      );
+      expect(repo.queueSize, 0);
+    },
+    timeout: const Timeout(Duration(seconds: 15)),
+  );
 
   test('disconnect packet goes out directly', () async {
     final p = await panel();

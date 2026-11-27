@@ -139,7 +139,9 @@ class AddPanelViewModel extends ChangeNotifier {
         String accNoPart = parts[6]; // 999999*E
         _pnlAccNo = accNoPart.replaceAll('*E', ''); // 999999
 
-        debugPrint("✅ Parsed Info - Mac: $_pnlMac, Ver: $_pnlVer, Acc: $_pnlAccNo");
+        debugPrint(
+          "✅ Parsed Info - Mac: $_pnlMac, Ver: $_pnlVer, Acc: $_pnlAccNo",
+        );
       }
     } catch (e) {
       debugPrint("⚠️ Failed to parse hardware info: $e");

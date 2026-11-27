@@ -146,9 +146,7 @@ class _ChangeUserPasswordBottomSheetState
                     foregroundColor: AppColors.white,
                   ),
                   onPressed: _handleSubmit,
-                  child: const Text(
-                    "Submit",
-                  ),
+                  child: const Text("Submit"),
                 ),
               ],
             ),

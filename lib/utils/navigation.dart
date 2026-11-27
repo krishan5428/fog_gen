@@ -6,16 +6,13 @@ class CustomNavigation {
 
   // Singleton instance
   static final CustomNavigation _instance =
-  CustomNavigation._privateConstructor();
+      CustomNavigation._privateConstructor();
 
   // Public accessor
   static CustomNavigation get instance => _instance;
 
   // Push a new screen and get a result (supports await and null safety)
-  Future<T?> push<T>({
-    required BuildContext context,
-    required Widget screen,
-  }) {
+  Future<T?> push<T>({required BuildContext context, required Widget screen}) {
     if (!context.mounted) return Future.value(null);
     return Navigator.push<T>(
       context,
@@ -46,7 +43,7 @@ class CustomNavigation {
     return Navigator.pushAndRemoveUntil<T>(
       context,
       MaterialPageRoute(builder: (_) => screen),
-          (route) => false,
+      (route) => false,
     );
   }
 

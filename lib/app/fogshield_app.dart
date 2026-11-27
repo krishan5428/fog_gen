@@ -86,10 +86,7 @@ class _FogShieldAppState extends State<FogShieldApp> {
           alignment: Alignment.topCenter,
           autoCloseDuration: const Duration(seconds: 5),
           animationDuration: const Duration(milliseconds: 300),
-          icon: const Icon(
-            Icons.info_outline,
-            color: AppColors.colorPrimary,
-          ),
+          icon: const Icon(Icons.info_outline, color: AppColors.colorPrimary),
           primaryColor: AppColors.colorPrimary,
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,

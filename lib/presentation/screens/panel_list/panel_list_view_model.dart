@@ -28,7 +28,6 @@ class PanelListViewModel extends ChangeNotifier {
 
   void fetchPanels(BuildContext context) {
     if (userId != null) {
-
       context.read<PanelCubit>().getPanel(userId: userId.toString());
     }
   }

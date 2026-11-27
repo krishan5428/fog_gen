@@ -220,10 +220,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
           _logger.d(
             "DEBUG MAINS INVERSION: panelTypeUpper='$panelTypeUpper', panelName='$nameUpper', isCommunicatorType=$isCommunicatorType, rawPowerStatus='$rawPowerStatus'",
           );
-          mainsStatus =
-              isCommunicatorType
-                  ? (rawPowerStatus == "1" ? "MAINS ON" : "MAINS OFF")
-                  : (rawPowerStatus == "0" ? "MAINS ON" : "MAINS OFF");
+          mainsStatus = isCommunicatorType
+              ? (rawPowerStatus == "1" ? "MAINS ON" : "MAINS OFF")
+              : (rawPowerStatus == "0" ? "MAINS ON" : "MAINS OFF");
 
           // Battery Status: 0 = Normal (100%), 1 = Low
           batteryPercent = rawBatteryStatus == "1" ? "Low" : "100";
@@ -1130,25 +1129,21 @@ class _MqttControlScreenState extends State<MqttControlScreen>
               Navigator.pop(context, "disconnected");
             }
           },
-          extraActions:
-              _isConnected
-                  ? [
-                    IconButton(
-                      icon:
-                          _isRefreshing
-                              ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Icon(Icons.refresh),
-                      color: AppColors.colorPrimary,
-                      onPressed: _isRefreshing ? null : _onRefresh,
-                    ),
-                  ]
-                  : null,
+          extraActions: _isConnected
+              ? [
+                  IconButton(
+                    icon: _isRefreshing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh),
+                    color: AppColors.colorPrimary,
+                    onPressed: _isRefreshing ? null : _onRefresh,
+                  ),
+                ]
+              : null,
         ),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -1275,100 +1270,95 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                         // Disconnect Button
                         Expanded(
                           child: InkWell(
-                            onTap:
-                                _isConnecting || _isReconnecting
-                                    ? null
-                                    : () async {
-                                      if (_isConnected) {
-                                        _showConfirmationDialog(
-                                          title: "Disconnect Device",
-                                          message:
-                                              "Are you sure you want to disconnect from this device?",
-                                          onConfirm: () async {
-                                            _connectAttemptId++;
-                                            _wantConnected = false;
-                                            await _sendDisconnectAndCleanup();
-                                            if (!mounted) return;
-                                            setState(() {
-                                              _isConnected = false;
-                                              _isConnecting = false;
-                                              _connectionFailed = true;
-                                              _hasDashboardData = false;
-                                            });
-                                            _showFeedback(
-                                              "Device Disconnected",
-                                            );
-                                          },
-                                        );
-                                      } else {
-                                        _connectPanel();
-                                      }
-                                    },
+                            onTap: _isConnecting || _isReconnecting
+                                ? null
+                                : () async {
+                                    if (_isConnected) {
+                                      _showConfirmationDialog(
+                                        title: "Disconnect Device",
+                                        message:
+                                            "Are you sure you want to disconnect from this device?",
+                                        onConfirm: () async {
+                                          _connectAttemptId++;
+                                          _wantConnected = false;
+                                          await _sendDisconnectAndCleanup();
+                                          if (!mounted) return;
+                                          setState(() {
+                                            _isConnected = false;
+                                            _isConnecting = false;
+                                            _connectionFailed = true;
+                                            _hasDashboardData = false;
+                                          });
+                                          _showFeedback("Device Disconnected");
+                                        },
+                                      );
+                                    } else {
+                                      _connectPanel();
+                                    }
+                                  },
                             borderRadius: BorderRadius.circular(30),
                             child: Container(
                               height: 40,
                               decoration: BoxDecoration(
-                                color:
-                                    _isConnected
-                                        ? const Color(0xFFD32F2F)
-                                        : const Color(0xFF757575),
+                                color: _isConnected
+                                    ? const Color(0xFFD32F2F)
+                                    : const Color(0xFF757575),
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              child:
-                                  _isConnecting || _isReconnecting
-                                      ? Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
+                              child: _isConnecting || _isReconnecting
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
                                           ),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            _isReconnecting
-                                                ? "RECONNECTING..."
-                                                : "CONNECTING...",
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 10.5.sp,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                      : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            _isConnected
-                                                ? Icons.link_off
-                                                : Icons.link,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          _isReconnecting
+                                              ? "RECONNECTING..."
+                                              : "CONNECTING...",
+                                          style: TextStyle(
                                             color: Colors.white,
-                                            size: 15,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 10.5.sp,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            _isConnected
-                                                ? "DISCONNECT"
-                                                : "CONNECT",
-                                            style: GoogleFonts.montserrat(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 10.5.sp,
-                                              letterSpacing: 0.5,
-                                            ),
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          _isConnected
+                                              ? Icons.link_off
+                                              : Icons.link,
+                                          color: Colors.white,
+                                          size: 15,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _isConnected
+                                              ? "DISCONNECT"
+                                              : "CONNECT",
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 10.5.sp,
+                                            letterSpacing: 0.5,
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
                         ),
@@ -1382,8 +1372,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                       children: [
                         PulsingStatusDot(
                           isConnected: _isConnected,
-                          color:
-                              _isReconnecting ? const Color(0xFFF2994A) : null,
+                          color: _isReconnecting
+                              ? const Color(0xFFF2994A)
+                              : null,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -1393,12 +1384,11 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                               ? "CONNECTED"
                               : "DISCONNECTED",
                           style: GoogleFonts.montserrat(
-                            color:
-                                _isReconnecting
-                                    ? const Color(0xFFF2994A)
-                                    : _isConnected
-                                    ? const Color(0xFF2ECC71)
-                                    : const Color(0xFFD32F2F),
+                            color: _isReconnecting
+                                ? const Color(0xFFF2994A)
+                                : _isConnected
+                                ? const Color(0xFF2ECC71)
+                                : const Color(0xFFD32F2F),
                             fontWeight: FontWeight.w900,
                             fontSize: 11.sp,
                             letterSpacing: 0.5,
@@ -1497,10 +1487,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                 style: TextStyle(
                                   fontSize: 13.5.sp,
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      signalValue > 0
-                                          ? const Color(0xFF27AE60)
-                                          : const Color(0xFFD32F2F),
+                                  color: signalValue > 0
+                                      ? const Color(0xFF27AE60)
+                                      : const Color(0xFFD32F2F),
                                 ),
                               ),
                             ),
@@ -1542,14 +1531,13 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                       mainsStatus == "MAINS ON"
                                           ? Icons.power
                                           : Icons.battery_alert,
-                                      color:
-                                          mainsStatus == "MAINS ON"
-                                              ? const Color(
-                                                0xFF27AE60,
-                                              ).withValues(alpha: 0.28)
-                                              : const Color(
-                                                0xFFF2994A,
-                                              ).withValues(alpha: 0.28),
+                                      color: mainsStatus == "MAINS ON"
+                                          ? const Color(
+                                              0xFF27AE60,
+                                            ).withValues(alpha: 0.28)
+                                          : const Color(
+                                              0xFFF2994A,
+                                            ).withValues(alpha: 0.28),
                                       size: 30,
                                     ),
                                   ),
@@ -1565,7 +1553,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                         mainsStatus == "MAINS ON"
                                             ? Icons.power
                                             : Icons.battery_alert,
-                                        color: Colors.black.withValues(alpha: 0.18),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.18,
+                                        ),
                                         size: 30,
                                       ),
                                     ),
@@ -1575,10 +1565,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                     mainsStatus == "MAINS ON"
                                         ? Icons.power
                                         : Icons.battery_alert,
-                                    color:
-                                        mainsStatus == "MAINS ON"
-                                            ? const Color(0xFF27AE60)
-                                            : const Color(0xFFF2994A),
+                                    color: mainsStatus == "MAINS ON"
+                                        ? const Color(0xFF27AE60)
+                                        : const Color(0xFFF2994A),
                                     size: 30,
                                   ),
                                 ],
@@ -1592,10 +1581,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                                 style: TextStyle(
                                   fontSize: 13.5.sp,
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      mainsStatus == "MAINS ON"
-                                          ? const Color(0xFF27AE60)
-                                          : const Color(0xFFF2994A),
+                                  color: mainsStatus == "MAINS ON"
+                                      ? const Color(0xFF27AE60)
+                                      : const Color(0xFFF2994A),
                                 ),
                               ),
                             ),
@@ -1805,9 +1793,8 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      LogsScreen(panelData: logsPanelData),
+                              builder: (context) =>
+                                  LogsScreen(panelData: logsPanelData),
                             ),
                           );
                         },
@@ -1924,11 +1911,10 @@ class _MqttControlScreenState extends State<MqttControlScreen>
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder:
-                                  (context) => FourGMqttSettingsScreen(
-                                    panelData: settingsPanelData,
-                                    fourGRepository: fourGRepository,
-                                  ),
+                              builder: (context) => FourGMqttSettingsScreen(
+                                panelData: settingsPanelData,
+                                fourGRepository: fourGRepository,
+                              ),
                             ),
                           );
 
@@ -2107,10 +2093,9 @@ class _MqttControlScreenState extends State<MqttControlScreen>
               width: 7,
               height: heights[index],
               decoration: BoxDecoration(
-                color:
-                    index < signalValue
-                        ? const Color(0xFF27AE60)
-                        : const Color(0xFFE0E0E0),
+                color: index < signalValue
+                    ? const Color(0xFF27AE60)
+                    : const Color(0xFFE0E0E0),
                 borderRadius: BorderRadius.circular(3),
                 boxShadow: [
                   BoxShadow(
@@ -2258,7 +2243,9 @@ class _PulsingStatusDotState extends State<PulsingStatusDot>
                 height: 8 + (_controller.value * 12),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: color.withValues(alpha: 0.35 * (1.0 - _controller.value)),
+                  color: color.withValues(
+                    alpha: 0.35 * (1.0 - _controller.value),
+                  ),
                 ),
               ),
               // Inner glowing status dot

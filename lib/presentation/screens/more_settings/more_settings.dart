@@ -62,7 +62,11 @@ class _MoreSettingsContent extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(pageName: 'More Settings', isFilter: false,isDash: false,),
+      appBar: CustomAppBar(
+        pageName: 'More Settings',
+        isFilter: false,
+        isDash: false,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: GridView.builder(
@@ -83,7 +87,10 @@ class _MoreSettingsContent extends StatelessWidget {
     );
   }
 
-  void _showDestinationSelectionDialog(BuildContext context, MoreSettingsViewModel vm) {
+  void _showDestinationSelectionDialog(
+    BuildContext context,
+    MoreSettingsViewModel vm,
+  ) {
     final fontSize = Responsive.fontSize(context);
 
     showDialog(
